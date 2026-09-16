@@ -1,19 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-
-export type HotMarket = {
-  headline: string;
-  odds: string;
-};
-
-const mockHotMarkets = [
-  { headline: "Fed Rate Cut", odds: "80¢" },
-  { headline: "Starship Reaches Orbit", odds: "60¢" },
-  { headline: "Bitcoin Above $100K", odds: "73¢" },
-  { headline: "U.S. Recession This Year", odds: "22¢" },
-  { headline: "Ethereum ETF Inflows", odds: "68¢" },
-] satisfies readonly HotMarket[];
+import { mockHotMarkets } from "@/api/mock/hot-markets";
+import type { HotMarket } from "@/types";
 
 export async function getHotMarkets(): Promise<readonly HotMarket[]> {
   return mockHotMarkets;

@@ -1,8 +1,9 @@
 "use client";
 
-import { type HotMarket, useGetHotMarkets } from "@/api/getHotMarkets";
+import { useGetHotMarkets } from "@/api/getHotMarkets";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import type { HotMarket } from "@/types";
 
 function handleMarketSelect() {}
 

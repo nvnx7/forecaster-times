@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 480" role="img" aria-labelledby="title description">
+  <title id="title">Engraving of a federal reserve building</title>
+  <desc id="description">A monochrome newspaper engraving of a neoclassical central bank building.</desc>
+  <rect width="1440" height="480" fill="#e7d8bf"/>
+  <g stroke="#221b0b" fill="none" stroke-width="2" opacity=".5">
+    <path d="M0 80h1440M0 120h1440M0 160h1440M0 200h1440M0 240h1440M0 280h1440M0 320h1440M0 360h1440M0 400h1440"/>
+    <path d="M140 0 0 140M280 0 0 280M420 0 0 420M560 0 80 480M700 0 220 480M840 0 360 480M980 0 500 480M1120 0 640 480M1260 0 780 480M1400 0 920 480M1440 100 1060 480M1440 240 1200 480M1440 380 1340 480"/>
+  </g>
+  <g fill="#221b0b">
+    <path d="M225 365h990v28H225zM275 337h890v28H275zM315 310h810v27H315zM362 194h716l-358-100z"/>
+    <path d="M370 201h700v13H370z" fill="#fff0d6"/>
+    <path d="M405 218h68v92h-68zM505 218h68v92h-68zM605 218h68v92h-68zM767 218h68v92h-68zM867 218h68v92h-68zM967 218h68v92h-68z" fill="#fff0d6"/>
+    <path d="M684 230h72v80h-72z" fill="#fff0d6"/>
+    <path d="M714 75h12v90h-12z"/>
+    <path d="M702 75h36l-18-35z"/>
+  </g>
+  <text x="720" y="452" text-anchor="middle" fill="#221b0b" font-family="Georgia,serif" font-size="22" letter-spacing="8">THE FEDERAL RESERVE</text>
+</svg>

@@ -147,6 +147,80 @@
     animation-play-state: paused;
   }
 
+  .article-columns {
+    column-gap: 1.25rem;
+  }
+
+  .article-paragraph {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    font-family: var(--font-source-serif);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+
+  .article-paragraph:first-child::first-letter {
+    float: left;
+    margin: 0.1em 0.1em 0 0;
+    font-family: var(--font-heading);
+    font-size: 4.6em;
+    font-weight: 700;
+    line-height: 0.7;
+  }
+
+  .article-pullquote {
+    break-inside: avoid;
+    margin: 0 0 1rem;
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1.05;
+  }
+
+  .article-subheading {
+    break-after: avoid;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .article-market {
+    break-inside: avoid;
+    width: min(100%, 18rem);
+    margin-bottom: 1rem;
+  }
+
+  .article-market-float-left {
+    float: left;
+    margin-right: 1.25rem;
+  }
+
+  .article-market-float-right {
+    float: right;
+    margin-left: 1.25rem;
+  }
+
+  .article-market-full-width {
+    break-inside: avoid;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 48rem) {
+    .article-columns {
+      column-count: 2;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .article-columns {
+      column-count: 3;
+    }
+  }
+
   .edition-viewport {
     min-height: 100dvh;
     padding: 0.75rem;
