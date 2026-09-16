@@ -1,10 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource/libre-caslon-display/400.css";
+@import "@fontsource/crimson-text/400.css";
+@import "@fontsource/crimson-text/600.css";
+@import "@fontsource/crimson-text/700.css";
 @import "@fontsource/source-serif-4/400.css";
 @import "@fontsource/source-serif-4/500.css";
 @import "@fontsource/source-serif-4/600.css";
+@import "@fontsource/source-serif-4/400-italic.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 @import "@fontsource/jetbrains-mono/600.css";
@@ -12,9 +15,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-libre-caslon);
+  --font-heading: var(--font-crimson-text);
   --font-sans: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
+  --color-canvas: var(--canvas);
   --color-positive: var(--positive);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -57,10 +61,14 @@
 }
 
 :root {
-  --font-libre-caslon: "Libre Caslon Display", Georgia, serif;
+  --font-crimson-text: "Crimson Text", Georgia, serif;
   --font-source-serif: "Source Serif 4", Georgia, serif;
   --font-jetbrains-mono: "JetBrains Mono", "Courier New", monospace;
-  --background: #fff8f2;
+  --background: #fff0d6;
+  --canvas: #ffffff;
+  --paper-edge: #c9b186;
+  --paper-inset: #fff8e8;
+  --paper-depth: #e3cfaa;
   --foreground: #221b0b;
   --card: #f4efe6;
   --card-foreground: #221b0b;
@@ -101,11 +109,11 @@
   }
 
   html {
-    @apply bg-background;
+    @apply bg-canvas;
   }
 
   body {
-    @apply bg-background font-sans text-foreground antialiased;
+    @apply bg-canvas font-sans text-foreground antialiased;
   }
 
   button:not(:disabled),
@@ -116,5 +124,64 @@
   ::selection {
     background: var(--accent);
     color: var(--foreground);
+  }
+}
+
+@layer components {
+  .masthead-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-synthesis: none;
+    line-height: 0.84;
+    letter-spacing: -0.055em;
+  }
+
+  .hot-markets-track {
+    display: flex;
+    width: max-content;
+    align-items: baseline;
+    animation: hot-markets-scroll 30s linear infinite;
+  }
+
+  .hot-markets-ticker:hover .hot-markets-track {
+    animation-play-state: paused;
+  }
+
+  .edition-viewport {
+    min-height: 100dvh;
+    padding: 0.75rem;
+  }
+
+  .edition-paper {
+    width: min(100%, 90rem);
+    min-height: calc(100dvh - 1.5rem);
+    margin-inline: auto;
+    border: 1px solid var(--paper-edge);
+    background: var(--background);
+    box-shadow:
+      inset 0 0 0 3px var(--paper-inset),
+      1px 1px 0 var(--paper-depth);
+  }
+
+  @media (min-width: 48rem) {
+    .edition-viewport {
+      padding: 2rem;
+    }
+
+    .edition-paper {
+      min-height: calc(100dvh - 4rem);
+    }
+  }
+
+  @keyframes hot-markets-scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hot-markets-track {
+      animation: none;
+    }
   }
 }

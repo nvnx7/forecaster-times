@@ -14,6 +14,12 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        newspaper:
+          "h-auto bg-transparent px-0 font-sans text-sm font-semibold tracking-[0.04em] text-muted-foreground hover:text-foreground focus-visible:ring-0",
+        newspaperActive:
+          "h-auto bg-transparent px-0 font-sans text-sm font-bold tracking-[0.04em] text-foreground hover:text-foreground focus-visible:ring-0",
+        marketTicker:
+          "h-auto gap-2 bg-transparent px-0 font-mono text-sm font-semibold tracking-[0.035em] text-foreground hover:text-destructive focus-visible:ring-0",
         destructive:
           "bg-destructive text-primary-foreground hover:bg-destructive/85 focus-visible:border-destructive focus-visible:ring-destructive/20",
         link: "text-primary underline-offset-4 hover:underline",
