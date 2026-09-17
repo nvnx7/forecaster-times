@@ -3,6 +3,8 @@ export const editorialConfig = {
   liveMetricsTtlSeconds: 60,
   editionRefreshLeadSeconds: 5 * 60,
   generationTimeoutMs: 120_000,
+  generationRetryCount: 2,
+  generationRetryBaseDelayMs: 1_000,
   story: {
     kickerMaxWords: 6,
     headline: {

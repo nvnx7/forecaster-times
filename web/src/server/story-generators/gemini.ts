@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
+import axiosRetry from "axios-retry";
 import { z } from "zod";
 
 import { editorialConfig } from "@/config/editorial";
@@ -220,8 +221,31 @@ function getGeminiErrorDetails(error: unknown) {
     status: error.response?.status,
     apiStatus: upstreamError?.status,
     apiMessage: upstreamError?.message,
+    responseBody: toLoggableResponse(error.response?.data),
     message: error.message,
   };
+}
+
+function toLoggableResponse(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const serialized = typeof value === "string" ? value : JSON.stringify(value);
+
+  return serialized?.slice(0, 2_000);
+}
+
+function shouldRetryGeminiRequest(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status;
+
+  return (
+    status === 408 || status === 429 || (status !== undefined && status >= 500)
+  );
 }
 
 function toStory(
@@ -255,6 +279,25 @@ export class GeminiStoryGenerator implements StoryGenerator {
         "api-revision": "2026-05-20",
       },
       timeout: editorialConfig.generationTimeoutMs,
+    });
+
+    axiosRetry(this.client, {
+      retries: editorialConfig.generationRetryCount,
+      retryCondition: shouldRetryGeminiRequest,
+      retryDelay: (retryCount, error) =>
+        axiosRetry.exponentialDelay(
+          retryCount,
+          error,
+          editorialConfig.generationRetryBaseDelayMs,
+        ),
+      shouldResetTimeout: false,
+      onRetry: (retryCount, error) => {
+        logger.warn("Gemini story generation retry scheduled", {
+          retryCount,
+          status: error.response?.status,
+          message: error.message,
+        });
+      },
     });
   }
 
