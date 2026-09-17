@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { editorialConfig } from "@/config/editorial";
 import { geminiApiKey, geminiModel } from "@/config/env";
+import { logger } from "@/lib/logger";
 import type {
   StoryGenerator,
   StoryGeneratorInput,
@@ -220,21 +221,40 @@ export class GeminiStoryGenerator implements StoryGenerator {
   }
 
   async generateStory(input: StoryGeneratorInput): Promise<Story> {
-    const { data } = await this.client.post<GeminiGenerateContentResponse>(
-      `/models/${encodeURIComponent(geminiModel)}:generateContent`,
-      {
-        contents: [{ parts: [{ text: createPrompt(input.market) }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseJsonSchema: generatedStoryJsonSchema,
-        },
-      },
-    );
-    const generatedStory = generatedStorySchema.parse(
-      JSON.parse(extractText(data)) as unknown,
-    );
+    logger.info("Gemini story generation started", {
+      model: geminiModel,
+      marketId: input.market.market_id,
+    });
 
-    return toStory(input.market, generatedStory);
+    try {
+      const { data } = await this.client.post<GeminiGenerateContentResponse>(
+        `/models/${encodeURIComponent(geminiModel)}:generateContent`,
+        {
+          contents: [{ parts: [{ text: createPrompt(input.market) }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseJsonSchema: generatedStoryJsonSchema,
+          },
+        },
+      );
+      const text = extractText(data);
+      const generatedStory = generatedStorySchema.parse(
+        JSON.parse(text) as unknown,
+      );
+
+      logger.info("Gemini story generation completed", {
+        marketId: input.market.market_id,
+        responseCharacters: text.length,
+      });
+
+      return toStory(input.market, generatedStory);
+    } catch (error) {
+      logger.error("Gemini story generation failed", {
+        marketId: input.market.market_id,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
   }
 }
 

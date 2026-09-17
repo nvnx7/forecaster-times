@@ -12,6 +12,7 @@ import {
   s3Region,
   s3SecretAccessKey,
 } from "@/config/env";
+import { logger } from "@/lib/logger";
 
 const s3ForcePathStyle = true;
 export const s3FrontPageObjectKey = "editions/front-page/current.json";
@@ -39,6 +40,8 @@ export class S3Client {
   });
 
   async getJson<T>(key: string): Promise<T> {
+    logger.debug("S3 JSON read started", { key });
+
     try {
       const response = await this.client.send(
         new GetObjectCommand({ Bucket: s3Bucket, Key: key }),
@@ -48,8 +51,19 @@ export class S3Client {
         throw new Error(`Object has no body: ${key}`);
       }
 
-      return JSON.parse(await response.Body.transformToString("utf-8")) as T;
+      const document = JSON.parse(
+        await response.Body.transformToString("utf-8"),
+      ) as T;
+
+      logger.info("S3 JSON read completed", { key });
+
+      return document;
     } catch (error) {
+      logger.error("S3 JSON read failed", {
+        key,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+
       if (
         error instanceof S3ServiceException &&
         ["NoSuchKey", "NotFound", "NoSuchBucket"].includes(error.name)
@@ -62,14 +76,26 @@ export class S3Client {
   }
 
   async putJson(key: string, value: unknown): Promise<void> {
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: s3Bucket,
-        Key: key,
-        Body: JSON.stringify(value),
-        ContentType: "application/json; charset=utf-8",
-      }),
-    );
+    logger.debug("S3 JSON write started", { key });
+
+    try {
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: s3Bucket,
+          Key: key,
+          Body: JSON.stringify(value),
+          ContentType: "application/json; charset=utf-8",
+        }),
+      );
+
+      logger.info("S3 JSON write completed", { key });
+    } catch (error) {
+      logger.error("S3 JSON write failed", {
+        key,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
   }
 }
 

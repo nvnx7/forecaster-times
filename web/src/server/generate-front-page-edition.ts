@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { frontPageSchema } from "@/server/front-page-schema";
 import { generateFrontPageStory } from "@/server/generate-front-page-story";
 import { nansen } from "@/server/nansen";
@@ -88,24 +89,47 @@ function createFrontPage(
  * operation and must only run through a secured internal trigger.
  */
 export async function generateFrontPageEdition(): Promise<FrontPage> {
-  const { data: markets } = await nansen.listPolymarketMarkets({
-    status: "active",
-    orderBy: [{ field: "volume_24hr", direction: "DESC" }],
-    pagination: { page: 1, perPage: hotMarketLimit },
-  });
-  const [leadMarket] = markets;
+  const operationId = crypto.randomUUID();
 
-  if (!leadMarket) {
-    throw new Error("Nansen returned no active markets for the front page.");
+  logger.info("Front-page edition generation started", { operationId });
+
+  try {
+    const { data: markets } = await nansen.listPolymarketMarkets({
+      status: "active",
+      orderBy: [{ field: "volume_24hr", direction: "DESC" }],
+      pagination: { page: 1, perPage: hotMarketLimit },
+    });
+    const [leadMarket] = markets;
+
+    if (!leadMarket) {
+      throw new Error("Nansen returned no active markets for the front page.");
+    }
+
+    logger.info("Front-page lead market selected", {
+      operationId,
+      marketCount: markets.length,
+      marketId: leadMarket.market_id,
+    });
+
+    const generatedStory = await generateFrontPageStory(leadMarket);
+    const frontPage = frontPageSchema.parse(
+      createFrontPage(withMarketPanel(generatedStory, leadMarket), markets),
+    );
+
+    await s3.putJson(s3FrontPageObjectKey, frontPage);
+
+    logger.info("Front-page edition generation completed", {
+      operationId,
+      editionId: frontPage.edition.id,
+      objectKey: s3FrontPageObjectKey,
+    });
+
+    return frontPage;
+  } catch (error) {
+    logger.error("Front-page edition generation failed", {
+      operationId,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    throw error;
   }
-
-  const generatedStory = await generateFrontPageStory(leadMarket);
-
-  const frontPage = frontPageSchema.parse(
-    createFrontPage(withMarketPanel(generatedStory, leadMarket), markets),
-  );
-
-  await s3.putJson(s3FrontPageObjectKey, frontPage);
-
-  return frontPage;
 }

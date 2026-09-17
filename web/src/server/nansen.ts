@@ -2,6 +2,7 @@ import axios, { type AxiosInstance } from "axios";
 import { z } from "zod";
 
 import { nansenApiBaseUrl, nansenApiKey } from "@/config/env";
+import { logger } from "@/lib/logger";
 import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
@@ -63,24 +64,44 @@ export class NansenClient {
   async listPolymarketMarkets(
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
-    const response = await this.client.post<unknown>(
-      "/api/v1/prediction-market/market-screener",
-      {
-        order_by: params.orderBy,
-        status: params.status,
-        tags: params.tags,
-        min_liquidity: params.minLiquidity,
-        min_volume_24hr: params.minVolume24hr,
-        pagination: params.pagination && {
-          page: params.pagination.page,
-          per_page: params.pagination.perPage,
-        },
-      },
-    );
+    logger.debug("Nansen market screener request", {
+      status: params.status,
+      orderBy: params.orderBy,
+      tags: params.tags,
+      pagination: params.pagination,
+    });
 
-    return listPolymarketMarketsResponseSchema.parse(
-      response.data,
-    ) as ListPolymarketMarketsResponse;
+    try {
+      const response = await this.client.post<unknown>(
+        "/api/v1/prediction-market/market-screener",
+        {
+          order_by: params.orderBy,
+          status: params.status,
+          tags: params.tags,
+          min_liquidity: params.minLiquidity,
+          min_volume_24hr: params.minVolume24hr,
+          pagination: params.pagination && {
+            page: params.pagination.page,
+            per_page: params.pagination.perPage,
+          },
+        },
+      );
+      const markets = listPolymarketMarketsResponseSchema.parse(
+        response.data,
+      ) as ListPolymarketMarketsResponse;
+
+      logger.info("Nansen market screener response", {
+        marketCount: markets.data.length,
+        requestId: response.headers["x-request-id"],
+      });
+
+      return markets;
+    } catch (error) {
+      logger.error("Nansen market screener failed", {
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
   }
 }
 
