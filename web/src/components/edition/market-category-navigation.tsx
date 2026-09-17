@@ -2,20 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { marketCategories } from "@/config/categories";
 
-const marketCategories = [
-  "Front Page",
-  "World",
-  "Politics",
-  "Money",
-  "Technology",
-  "Crypto",
-  "Sports",
-  "Culture",
-  "Oddities",
+const navigationCategories = [
+  { id: "front-page", label: "Front Page" },
+  ...marketCategories,
 ] as const;
 
-const activeMarketCategory = "Front Page";
+const activeMarketCategoryId = "front-page";
 
 function handleCategorySelect() {}
 
@@ -28,21 +22,21 @@ export function MarketCategoryNavigation() {
           <span className="font-mono text-xs font-semibold tracking-[0.08em] text-destructive uppercase">
             Markets
           </span>
-          {marketCategories.map((category) => (
+          {navigationCategories.map((category) => (
             <Button
-              key={category}
+              key={category.id}
               type="button"
               variant={
-                category === activeMarketCategory
+                category.id === activeMarketCategoryId
                   ? "newspaperActive"
                   : "newspaper"
               }
               onClick={handleCategorySelect}
               aria-current={
-                category === activeMarketCategory ? "page" : undefined
+                category.id === activeMarketCategoryId ? "page" : undefined
               }
             >
-              {category}
+              {category.label}
             </Button>
           ))}
         </div>
