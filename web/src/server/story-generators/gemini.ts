@@ -1,0 +1,241 @@
+import axios, { type AxiosInstance } from "axios";
+import { z } from "zod";
+
+import { editorialConfig } from "@/config/editorial";
+import { geminiApiKey, geminiModel } from "@/config/env";
+import type {
+  StoryGenerator,
+  StoryGeneratorInput,
+} from "@/server/story-generators/interface";
+import type { Story } from "@/types";
+
+const wordCount = (value: string) =>
+  value.trim().split(/\s+/).filter(Boolean).length;
+
+function boundedText(maxWords: number) {
+  return z
+    .string()
+    .trim()
+    .min(1)
+    .refine((value) => wordCount(value) <= maxWords, {
+      message: `Must contain at most ${maxWords} words.`,
+    });
+}
+
+const generatedStorySchema = z.object({
+  section: z.enum([
+    "world",
+    "politics",
+    "money",
+    "technology",
+    "crypto",
+    "sports",
+    "culture",
+    "oddities",
+  ]),
+  kicker: boundedText(editorialConfig.story.kickerMaxWords),
+  headline: z.object({
+    long: boundedText(editorialConfig.story.headline.longMaxWords),
+    medium: boundedText(editorialConfig.story.headline.mediumMaxWords),
+    short: boundedText(editorialConfig.story.headline.shortMaxWords),
+  }),
+  dek: boundedText(editorialConfig.story.dekMaxWords),
+  body: z
+    .array(
+      z.discriminatedUnion("type", [
+        z.object({
+          type: z.literal("paragraph"),
+          text: boundedText(editorialConfig.story.body.paragraphMaxWords),
+        }),
+        z.object({
+          type: z.literal("pullquote"),
+          text: boundedText(editorialConfig.story.body.pullquoteMaxWords),
+        }),
+        z.object({
+          type: z.literal("subheading"),
+          text: boundedText(editorialConfig.story.body.subheadingMaxWords),
+        }),
+      ]),
+    )
+    .min(editorialConfig.story.body.minBlocks)
+    .max(editorialConfig.story.body.maxBlocks)
+    .refine(
+      (blocks) =>
+        blocks.reduce((total, block) => total + wordCount(block.text), 0) <=
+        editorialConfig.story.body.maxWords,
+      {
+        message: `Body must contain at most ${editorialConfig.story.body.maxWords} words.`,
+      },
+    ),
+});
+
+type GeneratedStory = z.infer<typeof generatedStorySchema>;
+
+const generatedStoryJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["section", "kicker", "headline", "dek", "body"],
+  properties: {
+    section: {
+      type: "string",
+      enum: [
+        "world",
+        "politics",
+        "money",
+        "technology",
+        "crypto",
+        "sports",
+        "culture",
+        "oddities",
+      ],
+    },
+    kicker: { type: "string" },
+    headline: {
+      type: "object",
+      additionalProperties: false,
+      required: ["long", "medium", "short"],
+      properties: {
+        long: { type: "string" },
+        medium: { type: "string" },
+        short: { type: "string" },
+      },
+    },
+    dek: { type: "string" },
+    body: {
+      type: "array",
+      minItems: editorialConfig.story.body.minBlocks,
+      maxItems: editorialConfig.story.body.maxBlocks,
+      items: {
+        oneOf: [
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["type", "text"],
+            properties: {
+              type: { type: "string", enum: ["paragraph"] },
+              text: { type: "string" },
+            },
+          },
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["type", "text"],
+            properties: {
+              type: { type: "string", enum: ["pullquote"] },
+              text: { type: "string" },
+            },
+          },
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["type", "text"],
+            properties: {
+              type: { type: "string", enum: ["subheading"] },
+              text: { type: "string" },
+            },
+          },
+        ],
+      },
+    },
+  },
+} as const;
+
+type GeminiGenerateContentResponse = {
+  candidates?: {
+    content?: {
+      parts?: { text?: string }[];
+    };
+  }[];
+};
+
+function createPrompt(market: StoryGeneratorInput["market"]): string {
+  return `You are the careful front-page editor of Probability Press, a vintage-style newspaper covering prediction markets.
+
+Write a grounded lead story from this Nansen market snapshot only:
+${JSON.stringify(market)}
+
+Rules:
+- Treat every supplied value as market data, not proof of real-world events.
+- Never invent causes, sources, quotes, outcomes, people, or external facts.
+- Use cautious attribution such as "traders priced" or "the market implied".
+- Return the requested JSON only. Do not use Markdown.
+- Do not include market prices, market IDs, illustrations, bylines, metadata, or trade calls-to-action; the application owns those fields.
+
+Copy limits:
+- kicker: at most ${editorialConfig.story.kickerMaxWords} words.
+- headline.long: at most ${editorialConfig.story.headline.longMaxWords} words.
+- headline.medium: at most ${editorialConfig.story.headline.mediumMaxWords} words.
+- headline.short: at most ${editorialConfig.story.headline.shortMaxWords} words.
+- dek: at most ${editorialConfig.story.dekMaxWords} words.
+- body: ${editorialConfig.story.body.minBlocks} to ${editorialConfig.story.body.maxBlocks} blocks and at most ${editorialConfig.story.body.maxWords} words in total.
+- each paragraph: at most ${editorialConfig.story.body.paragraphMaxWords} words.
+- each pullquote: at most ${editorialConfig.story.body.pullquoteMaxWords} words.
+- each subheading: at most ${editorialConfig.story.body.subheadingMaxWords} words.`;
+}
+
+function extractText(response: GeminiGenerateContentResponse): string {
+  const text = response.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
+
+  if (!text) {
+    throw new Error("Gemini returned no generated story content.");
+  }
+
+  return text;
+}
+
+function toStory(
+  market: StoryGeneratorInput["market"],
+  story: GeneratedStory,
+): Story {
+  return {
+    id: `story-${market.market_id}`,
+    section: story.section,
+    kicker: story.kicker,
+    headline: story.headline,
+    dek: story.dek,
+    body: story.body,
+    meta: {
+      publishedAt: new Date().toISOString(),
+      sourceLabel: "Nansen Prediction Market",
+    },
+  };
+}
+
+/** Gemini-backed implementation of the common editorial generator contract. */
+export class GeminiStoryGenerator implements StoryGenerator {
+  private readonly client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: "https://generativelanguage.googleapis.com/v1beta",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": geminiApiKey,
+      },
+      timeout: 45_000,
+    });
+  }
+
+  async generateStory(input: StoryGeneratorInput): Promise<Story> {
+    const { data } = await this.client.post<GeminiGenerateContentResponse>(
+      `/models/${encodeURIComponent(geminiModel)}:generateContent`,
+      {
+        contents: [{ parts: [{ text: createPrompt(input.market) }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseJsonSchema: generatedStoryJsonSchema,
+        },
+      },
+    );
+    const generatedStory = generatedStorySchema.parse(
+      JSON.parse(extractText(data)) as unknown,
+    );
+
+    return toStory(input.market, generatedStory);
+  }
+}
+
+export const geminiStoryGenerator = new GeminiStoryGenerator();

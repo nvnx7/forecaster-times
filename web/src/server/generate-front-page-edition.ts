@@ -6,13 +6,6 @@ import type { FrontPage, MarketPanel, PolymarketMarket, Story } from "@/types";
 
 const hotMarketLimit = 5;
 
-export class StoryGenerationNotConfiguredError extends Error {
-  constructor() {
-    super("The front-page story generator has not been configured.");
-    this.name = "StoryGenerationNotConfiguredError";
-  }
-}
-
 function clampProbability(value: number): number {
   return Math.min(Math.max(value, 0), 1);
 }
@@ -107,10 +100,6 @@ export async function generateFrontPageEdition(): Promise<FrontPage> {
   }
 
   const generatedStory = await generateFrontPageStory(leadMarket);
-
-  if (!generatedStory) {
-    throw new StoryGenerationNotConfiguredError();
-  }
 
   const frontPage = frontPageSchema.parse(
     createFrontPage(withMarketPanel(generatedStory, leadMarket), markets),

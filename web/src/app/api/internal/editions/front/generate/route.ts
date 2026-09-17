@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { internalEditionApiKey } from "@/config/env";
-import {
-  generateFrontPageEdition,
-  StoryGenerationNotConfiguredError,
-} from "@/server/generate-front-page-edition";
+import { generateFrontPageEdition } from "@/server/generate-front-page-edition";
 import { s3FrontPageObjectKey } from "@/server/s3";
 
 export const runtime = "nodejs";
@@ -29,10 +26,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof StoryGenerationNotConfiguredError) {
-      return NextResponse.json({ error: error.message }, { status: 503 });
-    }
-
     console.error("Unable to generate the front-page edition", error);
 
     return NextResponse.json(
