@@ -1,6 +1,7 @@
 import {
   S3Client as AwsS3Client,
   GetObjectCommand,
+  PutObjectCommand,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
 
@@ -58,6 +59,17 @@ export class S3Client {
 
       throw error;
     }
+  }
+
+  async putJson(key: string, value: unknown): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: s3Bucket,
+        Key: key,
+        Body: JSON.stringify(value),
+        ContentType: "application/json; charset=utf-8",
+      }),
+    );
   }
 }
 
