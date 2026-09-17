@@ -1,9 +1,8 @@
 "use client";
 
-import { useGetHotMarkets } from "@/api/getHotMarkets";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import type { HotMarket } from "@/types";
+import type { MarketStrip } from "@/types";
 
 function handleMarketSelect() {}
 
@@ -11,7 +10,7 @@ function TickerItems({
   markets,
   isDuplicate = false,
 }: {
-  markets: readonly HotMarket[];
+  markets: ReadonlyArray<MarketStrip["items"][number]>;
   isDuplicate?: boolean;
 }) {
   return (
@@ -21,22 +20,32 @@ function TickerItems({
     >
       {markets.map((market) => (
         <Button
-          key={market.headline}
+          key={market.id}
           type="button"
           variant="marketTicker"
           onClick={handleMarketSelect}
           tabIndex={isDuplicate ? -1 : undefined}
         >
-          <span>{market.headline}</span>
-          <span className="text-destructive">{market.odds}</span>
+          <span>{market.label}</span>
+          <span className="text-destructive">
+            {Math.round(market.probability * 100)}¢
+          </span>
         </Button>
       ))}
     </div>
   );
 }
 
-export function HotMarketsTicker() {
-  const { data: hotMarkets = [] } = useGetHotMarkets();
+export function HotMarketsTicker({
+  marketStrip,
+}: {
+  marketStrip?: MarketStrip;
+}) {
+  const hotMarkets = marketStrip?.items ?? [];
+
+  if (hotMarkets.length === 0) {
+    return null;
+  }
 
   return (
     <section

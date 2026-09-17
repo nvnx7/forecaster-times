@@ -1,18 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { mockFrontPage } from "@/api/mock/front-page";
+import axios from "axios";
+
 import type { FrontPage } from "@/types";
 
 export async function getFrontPage(): Promise<FrontPage> {
-  return mockFrontPage;
+  const { data } = await axios.get<FrontPage>("/api/front");
+
+  return data;
 }
 
 export function useGetFrontPage() {
   return useQuery({
-    queryKey: ["frontPage"],
+    queryKey: ["front-page"],
     queryFn: getFrontPage,
-    placeholderData: mockFrontPage,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
