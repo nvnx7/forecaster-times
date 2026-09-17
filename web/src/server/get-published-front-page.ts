@@ -1,6 +1,5 @@
-import { s3FrontPageObjectKey } from "@/config/env";
 import { frontPageSchema } from "@/server/front-page-schema";
-import { s3 } from "@/server/s3";
+import { s3, s3FrontPageObjectKey } from "@/server/s3";
 import type { FrontPage } from "@/types";
 
 /**

@@ -8,7 +8,4 @@ export const s3SecretAccessKey = process.env.S3_SECRET_ACCESS_KEY as string;
 export const s3Region = (process.env.S3_REGION ?? "us-east-1") as string;
 
 export const s3Bucket = process.env.S3_BUCKET as string;
-export const s3ForcePathStyle = process.env.S3_FORCE_PATH_STYLE === "true";
-export const s3FrontPageObjectKey =
-  process.env.S3_FRONT_PAGE_OBJECT_KEY ?? "editions/front-page/current.json";
 export const awsSessionToken = process.env.AWS_SESSION_TOKEN as string;

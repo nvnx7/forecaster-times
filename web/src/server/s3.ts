@@ -9,10 +9,12 @@ import {
   s3AccessKeyId,
   s3Bucket,
   s3Endpoint,
-  s3ForcePathStyle,
   s3Region,
   s3SecretAccessKey,
 } from "@/config/env";
+
+const s3ForcePathStyle = true;
+export const s3FrontPageObjectKey = "editions/front-page/current.json";
 
 export class ObjectNotFoundError extends Error {
   constructor(key: string) {
