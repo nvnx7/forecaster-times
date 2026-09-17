@@ -8,4 +8,3 @@ export const s3SecretAccessKey = process.env.S3_SECRET_ACCESS_KEY as string;
 export const s3Region = (process.env.S3_REGION ?? "us-east-1") as string;
 
 export const s3Bucket = process.env.S3_BUCKET as string;
-export const awsSessionToken = process.env.AWS_SESSION_TOKEN as string;

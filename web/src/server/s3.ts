@@ -5,7 +5,6 @@ import {
 } from "@aws-sdk/client-s3";
 
 import {
-  awsSessionToken,
   s3AccessKeyId,
   s3Bucket,
   s3Endpoint,
@@ -34,7 +33,6 @@ export class S3Client {
         ? {
             accessKeyId: s3AccessKeyId,
             secretAccessKey: s3SecretAccessKey,
-            sessionToken: awsSessionToken || undefined,
           }
         : undefined,
   });
