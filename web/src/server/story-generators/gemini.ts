@@ -2,13 +2,15 @@ import axios, { type AxiosInstance } from "axios";
 import { z } from "zod";
 
 import { editorialConfig } from "@/config/editorial";
-import { geminiApiKey, geminiModel } from "@/config/env";
+import { geminiApiKey } from "@/config/env";
 import { logger } from "@/lib/logger";
 import type {
   StoryGenerator,
   StoryGeneratorInput,
 } from "@/server/story-generators/interface";
 import type { Story } from "@/types";
+
+const geminiModel = "gemini-3.8-flash";
 
 const wordCount = (value: string) =>
   value.trim().split(/\s+/).filter(Boolean).length;
@@ -246,10 +248,11 @@ export class GeminiStoryGenerator implements StoryGenerator {
 
   constructor() {
     this.client = axios.create({
-      baseURL: "https://generativelanguage.googleapis.com/v1beta2",
+      baseURL: "https://generativelanguage.googleapis.com/v1beta",
       headers: {
         "content-type": "application/json",
         "x-goog-api-key": geminiApiKey,
+        "api-revision": "2026-05-20",
       },
       timeout: 45_000,
     });
