@@ -1,0 +1,223 @@
+.loader {
+  width: min(100%, 22rem);
+  padding: 1rem;
+  color: var(--primary);
+  text-align: center;
+}
+
+.illustration {
+  display: block;
+  width: min(100%, 12.75rem);
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.paper {
+  fill: var(--background);
+}
+
+.imprint {
+  fill: currentColor;
+  font-family: var(--font-heading);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.carriage {
+  animation: carriage 12s linear infinite;
+}
+
+.keyLetter {
+  fill: currentColor;
+  font-family: var(--font-heading);
+  font-size: 4px;
+}
+
+.typeSlug {
+  fill: currentColor;
+  animation: strike 0.35s steps(2, end) infinite;
+}
+
+.sheet {
+  animation: feed 12s infinite;
+}
+
+.lineOne,
+.lineTwo,
+.lineThree {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: first-line 12s steps(18, end) infinite;
+}
+
+.lineTwo {
+  animation-name: second-line;
+}
+
+.lineThree {
+  animation-name: third-line;
+}
+
+.hammer {
+  fill: var(--background);
+  animation: strike 1.4s steps(2, end) infinite;
+}
+
+.phrases {
+  display: grid;
+  margin-top: 0.75rem;
+  font-family: var(--font-source-serif);
+  font-size: 0.9375rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.phrase {
+  grid-area: 1 / 1;
+  opacity: 0;
+  animation: phrase 16s linear infinite;
+}
+
+.phrase:nth-child(2) {
+  animation-delay: 4s;
+}
+.phrase:nth-child(3) {
+  animation-delay: 8s;
+}
+.phrase:nth-child(4) {
+  animation-delay: 12s;
+}
+
+@keyframes carriage {
+  0%,
+  5%,
+  27%,
+  52%,
+  90%,
+  100% {
+    transform: translateX(0);
+  }
+  24%,
+  49%,
+  74%,
+  85% {
+    transform: translate(-40px, -4.8px);
+  }
+}
+
+@keyframes feed {
+  0%,
+  24% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  27%,
+  49% {
+    transform: translateY(-7px);
+  }
+  52%,
+  74% {
+    transform: translateY(-14px);
+  }
+  78%,
+  85% {
+    transform: translateY(-21px);
+    opacity: 1;
+  }
+  90% {
+    transform: translateY(-21px);
+    opacity: 1;
+  }
+  91% {
+    transform: translateY(-21px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes first-line {
+  0%,
+  5% {
+    stroke-dashoffset: 80;
+  }
+  24%,
+  90% {
+    stroke-dashoffset: 0;
+  }
+  91%,
+  100% {
+    stroke-dashoffset: 80;
+  }
+}
+
+@keyframes second-line {
+  0%,
+  27% {
+    stroke-dashoffset: 80;
+  }
+  49%,
+  90% {
+    stroke-dashoffset: 0;
+  }
+  91%,
+  100% {
+    stroke-dashoffset: 80;
+  }
+}
+
+@keyframes third-line {
+  0%,
+  52% {
+    stroke-dashoffset: 80;
+  }
+  74%,
+  90% {
+    stroke-dashoffset: 0;
+  }
+  91%,
+  100% {
+    stroke-dashoffset: 80;
+  }
+}
+
+@keyframes strike {
+  to {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes phrase {
+  0%,
+  25%,
+  100% {
+    opacity: 0;
+  }
+  3%,
+  22% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader *,
+  .loader *::before,
+  .loader *::after {
+    animation: none;
+  }
+
+  .sheet {
+    transform: translateY(-14px);
+  }
+  .lineOne,
+  .lineTwo,
+  .lineThree {
+    stroke-dashoffset: 0;
+  }
+  .phrase:first-child {
+    opacity: 1;
+  }
+}
