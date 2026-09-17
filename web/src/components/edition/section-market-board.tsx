@@ -1,0 +1,68 @@
+import { Separator } from "@/components/ui/separator";
+import type { MarketBoard } from "@/types";
+
+function formatProbability(probability: number) {
+  return `${Math.round(probability * 100)}¢`;
+}
+
+function formatChange(change: number) {
+  return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
+}
+
+function formatVolume(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function SectionMarketBoard({ board }: { board: MarketBoard }) {
+  return (
+    <section
+      aria-labelledby="market-board-title"
+      className="flex flex-col gap-3"
+    >
+      <Separator tone="ink" />
+      <header className="text-center">
+        <h2
+          id="market-board-title"
+          className="font-heading text-2xl font-semibold tracking-[0.04em] uppercase"
+        >
+          {board.title}
+        </h2>
+        {board.subtitle ? (
+          <p className="font-sans text-base italic text-muted-foreground">
+            {board.subtitle}
+          </p>
+        ) : null}
+      </header>
+      <div className="grid gap-x-5 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
+        {board.items.map((item) => (
+          <article key={item.id} className="flex flex-col gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
+              <h3 className="font-sans text-base leading-5 font-semibold">
+                {item.label}
+              </h3>
+              <p className="font-heading text-2xl leading-none font-semibold">
+                {formatProbability(item.probability)}
+              </p>
+              <p className="font-sans text-sm text-muted-foreground">
+                {item.change24h !== undefined
+                  ? formatChange(item.change24h)
+                  : ""}
+              </p>
+              <p className="font-sans text-sm text-muted-foreground">
+                {item.volume24hUsd !== undefined
+                  ? `Vol. ${formatVolume(item.volume24hUsd)}`
+                  : ""}
+              </p>
+            </div>
+            <Separator />
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}

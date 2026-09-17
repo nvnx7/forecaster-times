@@ -3,8 +3,10 @@ import type { FrontPage } from "@/types";
 
 export function EditionMetadata({
   edition,
+  pageNumber,
 }: {
   edition: FrontPage["edition"];
+  pageNumber: FrontPage["pageNumber"];
 }) {
   return (
     <section aria-label="Edition information" className="flex flex-col gap-2">
@@ -21,11 +23,12 @@ export function EditionMetadata({
             {edition.editionLabel}
           </p>
         ) : null}
-        {edition.tagline ? (
-          <p className="col-span-12 text-center md:col-span-4 md:text-right">
-            {edition.tagline}
+        <div className="col-span-12 flex items-center justify-between md:col-span-4">
+          {edition.tagline ? <p>{edition.tagline}</p> : <span />}
+          <p className="font-heading text-base leading-none text-foreground">
+            {pageNumber}
           </p>
-        ) : null}
+        </div>
       </div>
       <Separator />
     </section>

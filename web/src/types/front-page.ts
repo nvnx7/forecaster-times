@@ -21,6 +21,7 @@ export type MarketPanel = {
   change24h?: number;
   volume24hUsd?: number;
   liquidityUsd?: number;
+  openInterestUsd?: number;
   tradeUrl?: string;
   placement?: "float-left" | "float-right" | "full-width";
 };
@@ -79,6 +80,7 @@ export type SidebarBlock =
   | { type: "text"; title: string; body: string };
 
 export type FrontPage = {
+  pageNumber: number;
   edition: {
     id: string;
     date: string;

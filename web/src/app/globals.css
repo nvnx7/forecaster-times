@@ -147,8 +147,15 @@
     animation-play-state: paused;
   }
 
+  .article-body-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
   .article-columns {
     column-gap: 1.25rem;
+    column-fill: balance;
   }
 
   .article-paragraph {
@@ -187,20 +194,8 @@
     line-height: 1.1;
   }
 
-  .article-market {
-    break-inside: avoid;
-    width: min(100%, 18rem);
-    margin-bottom: 1rem;
-  }
-
-  .article-market-float-left {
-    float: left;
-    margin-right: 1.25rem;
-  }
-
-  .article-market-float-right {
-    float: right;
-    margin-left: 1.25rem;
+  .article-market-aside {
+    align-self: stretch;
   }
 
   .article-market-full-width {
@@ -216,8 +211,14 @@
   }
 
   @media (min-width: 64rem) {
-    .article-columns {
-      column-count: 3;
+    .article-body-layout.has-market {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+      align-items: start;
+    }
+
+    .article-market-aside {
+      align-self: start;
     }
   }
 

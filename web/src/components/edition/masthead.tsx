@@ -1,4 +1,5 @@
 import { EditionDate } from "@/components/edition/edition-date";
+import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
 
 function MastheadRule() {
@@ -37,9 +38,7 @@ function LeftFolio() {
 function Nameplate() {
   return (
     <div className="order-first flex flex-col items-center gap-3 text-center lg:order-none">
-      <p className="font-heading text-lg leading-none tracking-[0.18em] text-muted-foreground uppercase">
-        P · P
-      </p>
+      <Logo size={56} priority />
       <h1 className="masthead-title text-5xl uppercase md:text-7xl md:whitespace-nowrap">
         Probability Press
       </h1>

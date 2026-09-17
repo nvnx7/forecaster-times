@@ -1,6 +1,7 @@
 import type { FrontPage } from "@/types";
 
 export const mockFrontPage = {
+  pageNumber: 1,
   edition: {
     id: "edition-001",
     date: "2026-09-17",

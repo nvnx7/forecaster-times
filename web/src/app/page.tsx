@@ -1,5 +1,5 @@
-import { FrontPage } from "@/components/edition/front-page";
+import { NewspaperIssue } from "@/components/edition/newspaper-issue";
 
 export default function HomePage() {
-  return <FrontPage />;
+  return <NewspaperIssue />;
 }
