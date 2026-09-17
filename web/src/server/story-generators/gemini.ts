@@ -73,12 +73,12 @@ const generatedStorySchema = z.object({
 type GeneratedStory = z.infer<typeof generatedStorySchema>;
 
 const generatedStoryJsonSchema = {
-  type: "object",
+  type: "OBJECT",
   additionalProperties: false,
   required: ["section", "kicker", "headline", "dek", "body"],
   properties: {
     section: {
-      type: "string",
+      type: "STRING",
       enum: [
         "world",
         "politics",
@@ -90,49 +90,49 @@ const generatedStoryJsonSchema = {
         "oddities",
       ],
     },
-    kicker: { type: "string" },
+    kicker: { type: "STRING" },
     headline: {
-      type: "object",
+      type: "OBJECT",
       additionalProperties: false,
       required: ["long", "medium", "short"],
       properties: {
-        long: { type: "string" },
-        medium: { type: "string" },
-        short: { type: "string" },
+        long: { type: "STRING" },
+        medium: { type: "STRING" },
+        short: { type: "STRING" },
       },
     },
-    dek: { type: "string" },
+    dek: { type: "STRING" },
     body: {
-      type: "array",
+      type: "ARRAY",
       minItems: editorialConfig.story.body.minBlocks,
       maxItems: editorialConfig.story.body.maxBlocks,
       items: {
         oneOf: [
           {
-            type: "object",
+            type: "OBJECT",
             additionalProperties: false,
             required: ["type", "text"],
             properties: {
-              type: { type: "string", enum: ["paragraph"] },
-              text: { type: "string" },
+              type: { type: "STRING", enum: ["paragraph"] },
+              text: { type: "STRING" },
             },
           },
           {
-            type: "object",
+            type: "OBJECT",
             additionalProperties: false,
             required: ["type", "text"],
             properties: {
-              type: { type: "string", enum: ["pullquote"] },
-              text: { type: "string" },
+              type: { type: "STRING", enum: ["pullquote"] },
+              text: { type: "STRING" },
             },
           },
           {
-            type: "object",
+            type: "OBJECT",
             additionalProperties: false,
             required: ["type", "text"],
             properties: {
-              type: { type: "string", enum: ["subheading"] },
-              text: { type: "string" },
+              type: { type: "STRING", enum: ["subheading"] },
+              text: { type: "STRING" },
             },
           },
         ],
@@ -141,11 +141,14 @@ const generatedStoryJsonSchema = {
   },
 } as const;
 
-type GeminiGenerateContentResponse = {
-  candidates?: {
+type GeminiInteractionResponse = {
+  id?: string;
+  steps?: {
+    type?: string;
     content?: {
-      parts?: { text?: string }[];
-    };
+      type?: string;
+      text?: string;
+    }[];
   }[];
 };
 
@@ -184,9 +187,12 @@ Copy limits:
 - each subheading: at most ${editorialConfig.story.body.subheadingMaxWords} words.`;
 }
 
-function extractText(response: GeminiGenerateContentResponse): string {
-  const text = response.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? "")
+function extractText(response: GeminiInteractionResponse): string {
+  const text = response.steps
+    ?.filter((step) => step.type === "model_output")
+    .flatMap((step) => step.content ?? [])
+    .filter((content) => content.type === "text")
+    .map((content) => content.text ?? "")
     .join("")
     .trim();
 
@@ -240,7 +246,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
 
   constructor() {
     this.client = axios.create({
-      baseURL: "https://generativelanguage.googleapis.com/v1beta",
+      baseURL: "https://generativelanguage.googleapis.com/v1beta2",
       headers: {
         "content-type": "application/json",
         "x-goog-api-key": geminiApiKey,
@@ -256,14 +262,19 @@ export class GeminiStoryGenerator implements StoryGenerator {
     });
 
     try {
-      const { data } = await this.client.post<GeminiGenerateContentResponse>(
-        `/models/${encodeURIComponent(geminiModel)}:generateContent`,
+      const { data } = await this.client.post<GeminiInteractionResponse>(
+        "/interactions",
         {
-          contents: [{ parts: [{ text: createPrompt(input.market) }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseJsonSchema: generatedStoryJsonSchema,
-          },
+          model: geminiModel,
+          input: createPrompt(input.market),
+          store: false,
+          response_format: [
+            {
+              type: "text",
+              mime_type: "application/json",
+              schema: generatedStoryJsonSchema,
+            },
+          ],
         },
       );
       const text = extractText(data);
@@ -273,6 +284,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
 
       logger.info("Gemini story generation completed", {
         marketId: input.market.market_id,
+        interactionId: data.id,
         responseCharacters: text.length,
       });
 
