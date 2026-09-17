@@ -254,7 +254,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
         "x-goog-api-key": geminiApiKey,
         "api-revision": "2026-05-20",
       },
-      timeout: 45_000,
+      timeout: editorialConfig.generationTimeoutMs,
     });
   }
 
@@ -262,6 +262,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
     logger.info("Gemini story generation started", {
       model: geminiModel,
       marketId: input.market.market_id,
+      timeoutMs: editorialConfig.generationTimeoutMs,
     });
 
     try {

@@ -2,6 +2,7 @@ export const editorialConfig = {
   editionWindowSeconds: 24 * 60 * 60,
   liveMetricsTtlSeconds: 60,
   editionRefreshLeadSeconds: 5 * 60,
+  generationTimeoutMs: 120_000,
   story: {
     kickerMaxWords: 6,
     headline: {
