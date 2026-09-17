@@ -149,6 +149,16 @@ type GeminiGenerateContentResponse = {
   }[];
 };
 
+const geminiErrorResponseSchema = z.object({
+  error: z
+    .object({
+      code: z.number().optional(),
+      message: z.string().optional(),
+      status: z.string().optional(),
+    })
+    .optional(),
+});
+
 function createPrompt(market: StoryGeneratorInput["market"]): string {
   return `You are the careful front-page editor of Probability Press, a vintage-style newspaper covering prediction markets.
 
@@ -185,6 +195,25 @@ function extractText(response: GeminiGenerateContentResponse): string {
   }
 
   return text;
+}
+
+function getGeminiErrorDetails(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return {
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+
+  const upstreamError = geminiErrorResponseSchema.safeParse(
+    error.response?.data,
+  ).data?.error;
+
+  return {
+    status: error.response?.status,
+    apiStatus: upstreamError?.status,
+    apiMessage: upstreamError?.message,
+    message: error.message,
+  };
 }
 
 function toStory(
@@ -251,7 +280,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
     } catch (error) {
       logger.error("Gemini story generation failed", {
         marketId: input.market.market_id,
-        message: error instanceof Error ? error.message : "Unknown error",
+        ...getGeminiErrorDetails(error),
       });
       throw error;
     }
