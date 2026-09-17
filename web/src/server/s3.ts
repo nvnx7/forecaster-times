@@ -7,7 +7,7 @@ import {
 
 import {
   s3AccessKeyId,
-  s3Bucket,
+  s3BucketName,
   s3Endpoint,
   s3Region,
   s3SecretAccessKey,
@@ -58,7 +58,7 @@ export class S3Client {
 
   async getJson<T>(key: string): Promise<T> {
     logger.debug("S3 JSON read started", {
-      bucket: s3Bucket,
+      bucket: s3BucketName,
       endpoint: s3Endpoint,
       forcePathStyle: s3ForcePathStyle,
       key,
@@ -67,7 +67,7 @@ export class S3Client {
 
     try {
       const response = await this.client.send(
-        new GetObjectCommand({ Bucket: s3Bucket, Key: key }),
+        new GetObjectCommand({ Bucket: s3BucketName, Key: key }),
       );
 
       if (!response.Body) {
@@ -100,7 +100,7 @@ export class S3Client {
 
   async putJson(key: string, value: unknown): Promise<void> {
     logger.debug("S3 JSON write started", {
-      bucket: s3Bucket,
+      bucket: s3BucketName,
       endpoint: s3Endpoint,
       forcePathStyle: s3ForcePathStyle,
       key,
@@ -110,7 +110,7 @@ export class S3Client {
     try {
       await this.client.send(
         new PutObjectCommand({
-          Bucket: s3Bucket,
+          Bucket: s3BucketName,
           Key: key,
           Body: JSON.stringify(value),
           ContentType: "application/json; charset=utf-8",

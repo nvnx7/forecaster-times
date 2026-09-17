@@ -8,11 +8,10 @@ export const internalEditionApiKey = process.env
   .INTERNAL_EDITION_API_KEY as string;
 
 export const geminiApiKey = process.env.API_KEY_GEMINI as string;
-export const geminiModel = process.env.GEMINI_MODEL ?? "gemini-3.8-flash";
 export const nodeEnv = process.env.NODE_ENV as string;
 
 export const s3Endpoint = process.env.S3_ENDPOINT_URL as string;
 export const s3AccessKeyId = process.env.S3_ACCESS_KEY_ID as string;
 export const s3SecretAccessKey = process.env.S3_SECRET_ACCESS_KEY as string;
 export const s3Region = process.env.S3_REGION as string;
-export const s3Bucket = process.env.S3_BUCKET_NAME as string;
+export const s3BucketName = process.env.S3_BUCKET_NAME as string;
