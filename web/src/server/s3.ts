@@ -24,6 +24,23 @@ export class ObjectNotFoundError extends Error {
   }
 }
 
+function getS3ErrorDetails(error: unknown) {
+  if (error instanceof S3ServiceException) {
+    return {
+      name: error.name,
+      message: error.message,
+      statusCode: error.$metadata.httpStatusCode,
+      requestId: error.$metadata.requestId,
+      attempts: error.$metadata.attempts,
+    };
+  }
+
+  return {
+    name: error instanceof Error ? error.name : "UnknownError",
+    message: error instanceof Error ? error.message : "Unknown error",
+  };
+}
+
 /** A small S3-compatible object-store client for published editorial assets. */
 export class S3Client {
   private readonly client = new AwsS3Client({
@@ -40,7 +57,13 @@ export class S3Client {
   });
 
   async getJson<T>(key: string): Promise<T> {
-    logger.debug("S3 JSON read started", { key });
+    logger.debug("S3 JSON read started", {
+      bucket: s3Bucket,
+      endpoint: s3Endpoint,
+      forcePathStyle: s3ForcePathStyle,
+      key,
+      region: s3Region,
+    });
 
     try {
       const response = await this.client.send(
@@ -61,7 +84,7 @@ export class S3Client {
     } catch (error) {
       logger.error("S3 JSON read failed", {
         key,
-        message: error instanceof Error ? error.message : "Unknown error",
+        ...getS3ErrorDetails(error),
       });
 
       if (
@@ -76,7 +99,13 @@ export class S3Client {
   }
 
   async putJson(key: string, value: unknown): Promise<void> {
-    logger.debug("S3 JSON write started", { key });
+    logger.debug("S3 JSON write started", {
+      bucket: s3Bucket,
+      endpoint: s3Endpoint,
+      forcePathStyle: s3ForcePathStyle,
+      key,
+      region: s3Region,
+    });
 
     try {
       await this.client.send(
@@ -92,7 +121,7 @@ export class S3Client {
     } catch (error) {
       logger.error("S3 JSON write failed", {
         key,
-        message: error instanceof Error ? error.message : "Unknown error",
+        ...getS3ErrorDetails(error),
       });
       throw error;
     }
