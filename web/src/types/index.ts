@@ -11,6 +11,12 @@ export type {
 } from "./front-page";
 export type { HotMarket } from "./hot-market";
 export type {
+  ListPolymarketMarketsParams,
+  ListPolymarketMarketsResponse,
+  PolymarketMarket,
+  PolymarketMarketSortField,
+} from "./polymarket-market";
+export type {
   MarketBoard,
   SectionBrief,
   SectionLayoutVariant,
