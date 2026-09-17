@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { internalEditionApiKey } from "@/config/env";
+import { internalEditionApiKey, nodeEnv } from "@/config/env";
 import { logger } from "@/lib/logger";
 import { generateFrontPageEdition } from "@/server/generate-front-page-edition";
 import { s3FrontPageObjectKey } from "@/server/s3";
@@ -10,8 +10,10 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   if (
-    !internalEditionApiKey ||
-    request.headers.get("authorization") !== `Bearer ${internalEditionApiKey}`
+    nodeEnv !== "development" &&
+    (!internalEditionApiKey ||
+      request.headers.get("authorization") !==
+        `Bearer ${internalEditionApiKey}`)
   ) {
     logger.warn("Front-page generation request rejected");
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
