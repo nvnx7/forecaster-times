@@ -1,9 +1,10 @@
 export type {
   Brief,
   FrontPage,
+  FrontPageHotMarket,
   Illustration,
   MarketPanel,
-  MarketStrip,
+  MarketReference,
   ParagraphBlock,
   SidebarBlock,
   Story,

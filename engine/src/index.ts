@@ -22,11 +22,12 @@ export {
 export type {
   Brief,
   FrontPage,
+  FrontPageHotMarket,
   Illustration,
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
   MarketPanel,
-  MarketStrip,
+  MarketReference,
   ParagraphBlock,
   PolymarketMarket,
   PolymarketMarketSortField,
@@ -38,5 +39,6 @@ export {
   getMarketProbability,
   toMarketBrief,
   toMarketPanel,
+  toMarketReference,
   withMarketPanel,
 } from "./utils";

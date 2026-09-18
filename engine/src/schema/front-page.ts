@@ -15,9 +15,23 @@ const paragraphBlockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("pullquote"), text: z.string() }),
   z.object({ type: z.literal("subheading"), text: z.string() }),
 ]);
+const marketReferenceSchema = z.object({
+  marketId: z.string(),
+  question: z.string(),
+  slug: z.string().optional(),
+  eventId: z.string().optional(),
+  eventTitle: z.string().optional(),
+  active: z.boolean().optional(),
+  closed: z.boolean().optional(),
+  endDate: z.string().optional(),
+  negRisk: z.boolean().optional(),
+  tags: z.array(z.string()),
+  createdAt: z.string().optional(),
+});
 const marketPanelSchema = z.object({
   marketId: z.string(),
   question: z.string(),
+  marketReference: marketReferenceSchema.optional(),
   yes: z.number(),
   no: z.number(),
   change24h: z.number().optional(),
@@ -62,10 +76,7 @@ export const frontPageSchema = z.object({
   pageNumber: z.number().int().positive(),
   edition: z.object({
     id: z.string(),
-    date: z.string(),
-    displayDate: z.string(),
-    editionLabel: z.string().optional(),
-    tagline: z.string().optional(),
+    now: z.string().datetime(),
   }),
   leadStory: storySchema,
   secondaryStories: z.array(storySchema),
@@ -77,19 +88,14 @@ export const frontPageSchema = z.object({
       summary: z.string().optional(),
       probability: z.number().optional(),
       change24h: z.number().optional(),
+      market: marketReferenceSchema,
     }),
   ),
-  marketStrip: z
-    .object({
-      title: z.string(),
-      items: z.array(
-        z.object({
-          id: z.string(),
-          label: z.string(),
-          probability: z.number(),
-          change24h: z.number().optional(),
-        }),
-      ),
-    })
-    .optional(),
+  hotMarkets: z.array(
+    z.object({
+      market: marketReferenceSchema,
+      probability: z.number(),
+      change24h: z.number().optional(),
+    }),
+  ),
 });

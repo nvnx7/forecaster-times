@@ -52,7 +52,7 @@ export function FrontPage({ embedded = false }: { embedded?: boolean }) {
           edition={frontPage.edition}
           pageNumber={frontPage.pageNumber}
         />
-        <HotMarketsTicker marketStrip={frontPage.marketStrip} />
+        <HotMarketsTicker hotMarkets={frontPage.hotMarkets} />
         <MarketCategoryNavigation />
         <LeadStory story={frontPage.leadStory} />
         <SecondaryStoryRow stories={frontPage.secondaryStories.slice(0, 2)} />

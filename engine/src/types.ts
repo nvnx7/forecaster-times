@@ -16,6 +16,7 @@ export type ParagraphBlock =
 export type MarketPanel = {
   marketId: string;
   question: string;
+  marketReference?: MarketReference;
   yes: number;
   no: number;
   change24h?: number;
@@ -54,16 +55,33 @@ export type Brief = {
   summary?: string;
   probability?: number;
   change24h?: number;
+  market?: MarketReference;
 };
 
-export type MarketStrip = {
-  title: string;
-  items: {
-    id: string;
-    label: string;
-    probability: number;
-    change24h?: number;
-  }[];
+/**
+ * Immutable market context saved with an edition.
+ *
+ * Price, volume, and liquidity are deliberately excluded: callers should
+ * refresh those values from Nansen when they need a live quote.
+ */
+export type MarketReference = {
+  marketId: string;
+  question: string;
+  slug?: string;
+  eventId?: string;
+  eventTitle?: string;
+  active?: boolean;
+  closed?: boolean;
+  endDate?: string;
+  negRisk?: boolean;
+  tags: string[];
+  createdAt?: string;
+};
+
+export type FrontPageHotMarket = {
+  market: MarketReference;
+  probability: number;
+  change24h?: number;
 };
 
 export type SidebarBlock =
@@ -83,15 +101,12 @@ export type FrontPage = {
   pageNumber: number;
   edition: {
     id: string;
-    date: string;
-    displayDate: string;
-    editionLabel?: string;
-    tagline?: string;
+    now: string;
   };
   leadStory: Story;
   secondaryStories: Story[];
   briefs: Brief[];
-  marketStrip?: MarketStrip;
+  hotMarkets: FrontPageHotMarket[];
   sidebar?: SidebarBlock;
   footerStories?: Story[];
 };
@@ -124,16 +139,22 @@ export type PolymarketMarket = {
   active?: boolean | null;
   closed?: boolean | null;
   end_date?: string | null;
+  neg_risk?: boolean | null;
   tags?: string[] | null;
   volume?: number | null;
   volume_24hr?: number | null;
+  volume_1wk?: number | null;
+  volume_1mo?: number | null;
   liquidity?: number | null;
+  volume_change_pct?: number | null;
   open_interest?: number | null;
   best_bid?: number | null;
   best_ask?: number | null;
   last_trade_price?: number | null;
   one_day_price_change?: number | null;
   unique_traders_24h?: number | null;
+  created_at?: string | null;
+  age_hours?: number | null;
 };
 
 export type ListPolymarketMarketsResponse = {

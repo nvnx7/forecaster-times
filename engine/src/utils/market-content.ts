@@ -1,6 +1,28 @@
-import type { Brief, MarketPanel, PolymarketMarket, Story } from "../types";
+import type {
+  Brief,
+  MarketPanel,
+  MarketReference,
+  PolymarketMarket,
+  Story,
+} from "../types";
 
 import { getMarketProbability } from "./probability";
+
+export function toMarketReference(market: PolymarketMarket): MarketReference {
+  return {
+    marketId: market.market_id,
+    question: market.question ?? "Untitled prediction market",
+    slug: market.slug ?? undefined,
+    eventId: market.event_id ?? undefined,
+    eventTitle: market.event_title ?? undefined,
+    active: market.active ?? undefined,
+    closed: market.closed ?? undefined,
+    endDate: market.end_date ?? undefined,
+    negRisk: market.neg_risk ?? undefined,
+    tags: market.tags ?? [],
+    createdAt: market.created_at ?? undefined,
+  };
+}
 
 export function toMarketPanel(market: PolymarketMarket): MarketPanel {
   const yes = getMarketProbability(market);
@@ -8,6 +30,7 @@ export function toMarketPanel(market: PolymarketMarket): MarketPanel {
   return {
     marketId: market.market_id,
     question: market.question ?? "Untitled prediction market",
+    marketReference: toMarketReference(market),
     yes,
     no: 1 - yes,
     change24h: market.one_day_price_change ?? undefined,
@@ -37,5 +60,6 @@ export function toMarketBrief(market: PolymarketMarket): Brief {
     summary: `Traders price this outcome at ${Math.round(probability * 100)}¢${changeText}.`,
     probability,
     change24h,
+    market: toMarketReference(market),
   };
 }

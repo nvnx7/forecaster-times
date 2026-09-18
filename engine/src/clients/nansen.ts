@@ -16,16 +16,22 @@ const polymarketMarketSchema = z.object({
   active: z.boolean().nullable().optional(),
   closed: z.boolean().nullable().optional(),
   end_date: z.string().nullable().optional(),
+  neg_risk: z.boolean().nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   volume: z.number().nullable().optional(),
   volume_24hr: z.number().nullable().optional(),
+  volume_1wk: z.number().nullable().optional(),
+  volume_1mo: z.number().nullable().optional(),
   liquidity: z.number().nullable().optional(),
+  volume_change_pct: z.number().nullable().optional(),
   open_interest: z.number().nullable().optional(),
   best_bid: z.number().nullable().optional(),
   best_ask: z.number().nullable().optional(),
   last_trade_price: z.number().nullable().optional(),
   one_day_price_change: z.number().nullable().optional(),
   unique_traders_24h: z.number().int().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+  age_hours: z.number().nullable().optional(),
 });
 
 const listPolymarketMarketsResponseSchema = z.object({

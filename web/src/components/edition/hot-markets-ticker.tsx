@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import type { MarketStrip } from "@/types";
+import type { FrontPageHotMarket } from "@/types";
 
 function handleMarketSelect() {}
 
@@ -10,7 +10,7 @@ function TickerItems({
   markets,
   isDuplicate = false,
 }: {
-  markets: ReadonlyArray<MarketStrip["items"][number]>;
+  markets: ReadonlyArray<FrontPageHotMarket>;
   isDuplicate?: boolean;
 }) {
   return (
@@ -20,13 +20,13 @@ function TickerItems({
     >
       {markets.map((market) => (
         <Button
-          key={market.id}
+          key={market.market.marketId}
           type="button"
           variant="marketTicker"
           onClick={handleMarketSelect}
           tabIndex={isDuplicate ? -1 : undefined}
         >
-          <span>{market.label}</span>
+          <span>{market.market.question}</span>
           <span className="text-destructive">
             {Math.round(market.probability * 100)}¢
           </span>
@@ -37,12 +37,10 @@ function TickerItems({
 }
 
 export function HotMarketsTicker({
-  marketStrip,
+  hotMarkets,
 }: {
-  marketStrip?: MarketStrip;
+  hotMarkets: readonly FrontPageHotMarket[];
 }) {
-  const hotMarkets = marketStrip?.items ?? [];
-
   if (hotMarkets.length === 0) {
     return null;
   }

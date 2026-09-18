@@ -13,7 +13,12 @@ import type {
   PolymarketMarket,
   Story,
 } from "./types";
-import { getMarketProbability, toMarketBrief, withMarketPanel } from "./utils";
+import {
+  getMarketProbability,
+  toMarketBrief,
+  toMarketReference,
+  withMarketPanel,
+} from "./utils";
 
 const defaultFrontPageObjectKey = "editions/front-page/current.json";
 const frontPageMarketLimit = 6;
@@ -25,32 +30,21 @@ function createFrontPage(
   hotMarkets: PolymarketMarket[],
 ): FrontPage {
   const now = new Date();
+  const timestamp = now.toISOString();
   return {
     pageNumber: 1,
     edition: {
-      id: `front-page-${now.toISOString().slice(0, 10)}`,
-      date: now.toISOString(),
-      displayDate: new Intl.DateTimeFormat("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }).format(now),
-      editionLabel: "Daily Edition",
-      tagline: "The newspaper of what happens next",
+      id: `front-page-${timestamp}`,
+      now: timestamp,
     },
     leadStory,
     secondaryStories,
     briefs,
-    marketStrip: {
-      title: "Hot Markets",
-      items: hotMarkets.map((market) => ({
-        id: market.market_id,
-        label: market.question ?? "Untitled prediction market",
-        probability: getMarketProbability(market),
-        change24h: market.one_day_price_change ?? undefined,
-      })),
-    },
+    hotMarkets: hotMarkets.map((market) => ({
+      market: toMarketReference(market),
+      probability: getMarketProbability(market),
+      change24h: market.one_day_price_change ?? undefined,
+    })),
   };
 }
 
@@ -129,6 +123,7 @@ export class EditorialEngine {
       const [leadStory, ...secondaryGeneratedStories] = generatedStories;
       if (!leadStory)
         throw new Error("Unable to generate the selected lead story.");
+
       const secondaryStories = selection.secondaryMarkets.map(
         (market, index) => {
           const story = secondaryGeneratedStories[index];
