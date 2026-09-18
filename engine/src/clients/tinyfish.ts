@@ -26,7 +26,7 @@ export class TinyFishClient {
 
   async searchMarketNews(
     market: Pick<PolymarketMarket, "created_at" | "event_title" | "question">,
-  ): Promise<FetchResponse> {
+  ): Promise<FetchResponse["results"]> {
     if (!market.created_at) {
       throw new Error(
         "A market creation timestamp is required to search related news.",
@@ -34,23 +34,39 @@ export class TinyFishClient {
     }
 
     const { purpose, query } = generateMarketSearchString(market);
+    logger.info("TinyFish market news research started", {
+      marketCreatedAt: market.created_at,
+      maxSearchResults: this.maxSearchResults,
+    });
 
-    const searchRes = await this.search({
+    const searchResponse = await this.search({
       query,
       language: "en",
       purpose,
       after_date: market.created_at.slice(0, 10),
       domain_type: "news",
       page: 0,
-    }).then((res) => res.results.slice(0, this.maxSearchResults));
+    });
+    const selectedResults = searchResponse.results.slice(
+      0,
+      this.maxSearchResults,
+    );
+    logger.info("TinyFish market news sources selected", {
+      availableResultCount: searchResponse.results.length,
+      selectedResultCount: selectedResults.length,
+    });
 
-    const fetchRes = await this.fetch({
-      urls: searchRes.map((v) => v.url),
+    const fetchResponse = await this.fetch({
+      urls: selectedResults.map((result) => result.url),
       purpose,
       format: "markdown",
     });
+    logger.info("TinyFish market news research completed", {
+      fetchedResultCount: fetchResponse.results.length,
+      fetchErrorCount: fetchResponse.errors.length,
+    });
 
-    return fetchRes;
+    return fetchResponse.results;
   }
 
   async search(params: SearchQueryParams): Promise<SearchQueryResponse> {
