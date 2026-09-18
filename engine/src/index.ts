@@ -1,3 +1,4 @@
+export { TinyFishClient, type TinyFishClientOptions } from "./clients";
 export {
   defaultEditorialConfig,
   type EditorialConfig,

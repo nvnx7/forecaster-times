@@ -4,3 +4,4 @@ export {
   S3JsonStore,
   type S3JsonStoreOptions,
 } from "./s3";
+export { TinyFishClient, type TinyFishClientOptions } from "./tinyfish";
