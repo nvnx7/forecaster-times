@@ -11,7 +11,7 @@ export {
   EditorialEngine,
   type EditorialEngineOptions,
   ObjectNotFoundError,
-} from "./editorial-engine";
+} from "./engine";
 export { logger } from "./logger";
 export { frontPageSchema } from "./schema";
 export {
