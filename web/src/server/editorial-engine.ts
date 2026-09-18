@@ -14,6 +14,7 @@ import {
   s3Endpoint,
   s3Region,
   s3SecretAccessKey,
+  tinyFishApiKey,
 } from "@/config/env";
 
 export { logger };
@@ -34,5 +35,6 @@ export const editorialEngine = createEditorialEngine({
     region: s3Region,
     bucketName: s3BucketName,
   },
+  tinyFish: { apiKey: tinyFishApiKey },
   storyGenerator,
 });
