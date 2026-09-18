@@ -34,7 +34,7 @@ function createFrontPage(
   return {
     pageNumber: 1,
     edition: {
-      id: `front-page-${timestamp}`,
+      id: `front-${timestamp}`,
       now: timestamp,
     },
     leadStory,
