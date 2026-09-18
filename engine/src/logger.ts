@@ -1,15 +1,6 @@
-import log, { type LogLevelDesc } from "loglevel";
+import log from "loglevel";
 
-export type EditorialLogger = Pick<
-  log.Logger,
-  "debug" | "info" | "warn" | "error"
->;
+/** Shared logger for all engine infrastructure and editorial workflows. */
+export const logger = log.getLogger("probability-press");
 
-/** Creates a named logger so engine diagnostics remain consistent across hosts. */
-export function createEditorialLogger(
-  level: LogLevelDesc = "info",
-): EditorialLogger {
-  const logger = log.getLogger("probability-press");
-  logger.setLevel(level);
-  return logger;
-}
+logger.setLevel("info");

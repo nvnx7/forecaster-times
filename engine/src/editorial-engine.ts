@@ -1,6 +1,6 @@
 import { NansenClient, ObjectNotFoundError, S3JsonStore } from "./clients";
 import type { EditorialEngineOptions } from "./config";
-import { createEditorialLogger } from "./logger";
+import { logger } from "./logger";
 import { frontPageSchema } from "./schema";
 import { selectFrontPageStories } from "./select-front-page-stories";
 import type {
@@ -58,15 +58,13 @@ export class EditorialEngine {
   private readonly storyGenerator;
 
   constructor(options: EditorialEngineOptions) {
-    const logger = options.logger ?? createEditorialLogger();
     this.logger = logger;
     this.frontPageObjectKey =
       options.s3.frontPageObjectKey ?? defaultFrontPageObjectKey;
-    this.nansen = new NansenClient({ ...options.nansen, logger });
+    this.nansen = new NansenClient(options.nansen);
     this.store = new S3JsonStore({
       ...options.s3,
       forcePathStyle: options.s3.forcePathStyle ?? true,
-      logger,
     });
     this.storyGenerator = options.storyGenerator;
   }

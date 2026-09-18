@@ -1,15 +1,14 @@
 import {
   createEditorialEngine,
-  createEditorialLogger,
   defaultEditorialConfig,
   GeminiStoryGenerator,
+  logger,
 } from "@repo/engine";
 
 import {
   geminiApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
-  nodeEnv,
   s3AccessKeyId,
   s3BucketName,
   s3Endpoint,
@@ -17,15 +16,12 @@ import {
   s3SecretAccessKey,
 } from "@/config/env";
 
-export const logger = createEditorialLogger(
-  nodeEnv === "development" ? "debug" : "info",
-);
+export { logger };
 
 const storyGenerator = new GeminiStoryGenerator({
   apiKey: geminiApiKey,
   model: "gemini-3.8-flash",
   config: defaultEditorialConfig,
-  logger,
 });
 
 /** Web's server boundary for the editorial engine and its infrastructure config. */
@@ -39,5 +35,4 @@ export const editorialEngine = createEditorialEngine({
     bucketName: s3BucketName,
   },
   storyGenerator,
-  logger,
 });

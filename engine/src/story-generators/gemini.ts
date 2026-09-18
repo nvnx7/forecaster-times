@@ -3,7 +3,7 @@ import axiosRetry from "axios-retry";
 import { z } from "zod";
 
 import type { EditorialConfig } from "../config";
-import type { EditorialLogger } from "../logger";
+import { logger } from "../logger";
 import type { PolymarketMarket, Story } from "../types";
 import {
   isRetryableRequestError,
@@ -179,7 +179,6 @@ export type GeminiStoryGeneratorOptions = {
   apiKey: string;
   model: string;
   config: EditorialConfig;
-  logger: EditorialLogger;
 };
 
 /** Gemini-backed implementation of the editorial story-generator contract. */
@@ -209,7 +208,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
         ),
       shouldResetTimeout: false,
       onRetry: (retryCount, error) => {
-        options.logger.warn("Gemini story generation retry scheduled", {
+        logger.warn("Gemini story generation retry scheduled", {
           retryCount,
           status: error.response?.status,
           message: error.message,
@@ -219,7 +218,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
   }
 
   async generateStory(market: PolymarketMarket): Promise<Story> {
-    this.options.logger.info("Gemini story generation started", {
+    logger.info("Gemini story generation started", {
       model: this.options.model,
       marketId: market.market_id,
       timeoutMs: this.options.config.generationTimeoutMs,
@@ -242,7 +241,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
       );
       const text = extractText(data);
       const generated = this.storySchema.parse(JSON.parse(text) as unknown);
-      this.options.logger.info("Gemini story generation completed", {
+      logger.info("Gemini story generation completed", {
         marketId: market.market_id,
         interactionId: data.id,
         responseCharacters: text.length,
@@ -256,7 +255,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
         },
       };
     } catch (error) {
-      this.options.logger.error("Gemini story generation failed", {
+      logger.error("Gemini story generation failed", {
         marketId: market.market_id,
         status: axios.isAxiosError(error) ? error.response?.status : undefined,
         responseBody: axios.isAxiosError(error)

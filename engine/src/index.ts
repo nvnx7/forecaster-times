@@ -8,7 +8,7 @@ export {
   EditorialEngine,
   ObjectNotFoundError,
 } from "./editorial-engine";
-export { createEditorialLogger, type EditorialLogger } from "./logger";
+export { logger } from "./logger";
 export { frontPageSchema } from "./schema";
 export {
   type FrontPageStorySelection,

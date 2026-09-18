@@ -5,7 +5,7 @@ import {
   S3ServiceException,
 } from "@aws-sdk/client-s3";
 
-import type { EditorialLogger } from "../logger";
+import { logger } from "../logger";
 
 export class ObjectNotFoundError extends Error {
   constructor(key: string) {
@@ -21,7 +21,6 @@ export type S3JsonStoreOptions = {
   region: string;
   bucketName: string;
   forcePathStyle: boolean;
-  logger: EditorialLogger;
 };
 
 function getS3ErrorDetails(error: unknown) {
@@ -61,7 +60,7 @@ export class S3JsonStore {
   }
 
   async getJson<T>(key: string): Promise<T> {
-    this.options.logger.debug("S3 JSON read started", {
+    logger.debug("S3 JSON read started", {
       bucket: this.options.bucketName,
       endpoint: this.options.endpoint,
       forcePathStyle: this.options.forcePathStyle,
@@ -81,10 +80,10 @@ export class S3JsonStore {
       const document = JSON.parse(
         await response.Body.transformToString("utf-8"),
       ) as T;
-      this.options.logger.info("S3 JSON read completed", { key });
+      logger.info("S3 JSON read completed", { key });
       return document;
     } catch (error) {
-      this.options.logger.error("S3 JSON read failed", {
+      logger.error("S3 JSON read failed", {
         key,
         ...getS3ErrorDetails(error),
       });
@@ -101,7 +100,7 @@ export class S3JsonStore {
   }
 
   async putJson(key: string, value: unknown): Promise<void> {
-    this.options.logger.debug("S3 JSON write started", {
+    logger.debug("S3 JSON write started", {
       bucket: this.options.bucketName,
       endpoint: this.options.endpoint,
       forcePathStyle: this.options.forcePathStyle,
@@ -118,9 +117,9 @@ export class S3JsonStore {
           ContentType: "application/json; charset=utf-8",
         }),
       );
-      this.options.logger.info("S3 JSON write completed", { key });
+      logger.info("S3 JSON write completed", { key });
     } catch (error) {
-      this.options.logger.error("S3 JSON write failed", {
+      logger.error("S3 JSON write failed", {
         key,
         ...getS3ErrorDetails(error),
       });

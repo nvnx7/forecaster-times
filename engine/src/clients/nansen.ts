@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import { z } from "zod";
 
-import type { EditorialLogger } from "../logger";
+import { logger } from "../logger";
 import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
@@ -48,14 +48,13 @@ const listPolymarketMarketsResponseSchema = z.object({
 export type NansenClientOptions = {
   apiKey: string;
   baseUrl: string;
-  logger: EditorialLogger;
 };
 
 /** Server-only client for Nansen's Prediction Market API. */
 export class NansenClient {
   private readonly client: AxiosInstance;
 
-  constructor(private readonly options: NansenClientOptions) {
+  constructor(options: NansenClientOptions) {
     this.client = axios.create({
       baseURL: options.baseUrl,
       headers: { apikey: options.apiKey, "content-type": "application/json" },
@@ -66,7 +65,7 @@ export class NansenClient {
   async listPolymarketMarkets(
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
-    this.options.logger.debug("Nansen market screener request", {
+    logger.debug("Nansen market screener request", {
       status: params.status,
       orderBy: params.orderBy,
       tags: params.tags,
@@ -92,14 +91,14 @@ export class NansenClient {
         response.data,
       ) as ListPolymarketMarketsResponse;
 
-      this.options.logger.info("Nansen market screener response", {
+      logger.info("Nansen market screener response", {
         marketCount: markets.data.length,
         requestId: response.headers["x-request-id"],
       });
 
       return markets;
     } catch (error) {
-      this.options.logger.error("Nansen market screener failed", {
+      logger.error("Nansen market screener failed", {
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;

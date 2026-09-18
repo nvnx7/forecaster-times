@@ -1,4 +1,3 @@
-import type { EditorialLogger } from "./logger";
 import type { StoryGenerator } from "./story-generators/interface";
 
 export type EditorialConfig = {
@@ -37,7 +36,6 @@ export type EditorialEngineOptions = {
     frontPageObjectKey?: string;
   };
   storyGenerator: StoryGenerator;
-  logger?: EditorialLogger;
 };
 
 export const defaultEditorialConfig: EditorialConfig = {
