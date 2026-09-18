@@ -6,7 +6,7 @@ import type {
   Story,
 } from "../types";
 
-import { getMarketProbability } from "./probability";
+import { getMarketProbability } from "./market";
 
 export function toMarketReference(market: PolymarketMarket): MarketReference {
   return {
