@@ -1,4 +1,5 @@
 export { isRetryableRequestError, toLoggableResponse } from "./http";
+export { generateMarketSearchString } from "./market";
 export {
   toMarketBrief,
   toMarketPanel,

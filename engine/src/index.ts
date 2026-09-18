@@ -1,4 +1,7 @@
-export { TinyFishClient, type TinyFishClientOptions } from "./clients";
+export {
+  TinyFishClient,
+  type TinyFishClientOptions,
+} from "./clients";
 export {
   defaultEditorialConfig,
   type EditorialConfig,
@@ -37,6 +40,7 @@ export type {
   StorySection,
 } from "./types";
 export {
+  generateMarketSearchString,
   getMarketProbability,
   toMarketBrief,
   toMarketPanel,
