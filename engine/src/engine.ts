@@ -1,4 +1,10 @@
-import { NansenClient, ObjectNotFoundError, S3JsonStore } from "./clients";
+import {
+  NansenClient,
+  ObjectNotFoundError,
+  S3JsonStore,
+  TinyFishClient,
+  type TinyFishClientOptions,
+} from "./clients";
 import { logger } from "./logger";
 import { frontPageSchema } from "./schema";
 import { extractFrontPageStories } from "./select-front-page-stories";
@@ -57,6 +63,7 @@ export type EditorialEngineOptions = {
     forcePathStyle?: boolean;
     frontPageObjectKey?: string;
   };
+  tinyFish: TinyFishClientOptions;
   storyGenerator: StoryGenerator;
 };
 
@@ -66,6 +73,7 @@ export class EditorialEngine {
   private readonly nansen;
   private readonly store;
   private readonly storyGenerator;
+  private readonly tinyFish;
 
   constructor(options: EditorialEngineOptions) {
     this.logger = logger;
@@ -76,6 +84,7 @@ export class EditorialEngine {
       ...options.s3,
       forcePathStyle: options.s3.forcePathStyle ?? true,
     });
+    this.tinyFish = new TinyFishClient(options.tinyFish);
     this.storyGenerator = options.storyGenerator;
   }
 
@@ -93,13 +102,16 @@ export class EditorialEngine {
     this.logger.info("Front-page edition generation started", { operationId });
 
     try {
+      // Fetch list of top markets by 24H volume
       const { data: markets } = await this.nansen.listPolymarketMarkets({
         status: "active",
         orderBy: [{ field: "volume_24hr", direction: "DESC" }],
         pagination: { page: 1, perPage: frontPageMarketLimit },
       });
-      const selection = extractFrontPageStories(markets);
-      if (!selection.leadMarket) {
+
+      // Select and extract stories for front page
+      const frontPageStories = extractFrontPageStories(markets);
+      if (!frontPageStories.leadMarket) {
         throw new Error(
           "Nansen returned no active markets for the front page.",
         );
@@ -107,25 +119,39 @@ export class EditorialEngine {
 
       this.logger.info("Front-page markets selected", {
         operationId,
-        leadMarketId: selection.leadMarket.market_id,
-        secondaryMarketIds: selection.secondaryMarkets.map(
+        leadMarketId: frontPageStories.leadMarket.market_id,
+        secondaryMarketIds: frontPageStories.secondaryMarkets.map(
           (market) => market.market_id,
         ),
-        briefMarketIds: selection.briefMarkets.map(
+        briefMarketIds: frontPageStories.briefMarkets.map(
           (market) => market.market_id,
         ),
       });
 
+      // For selected stories fetch news around it using TinyFish
+      const selectedStoryMarkets = [
+        frontPageStories.leadMarket,
+        ...frontPageStories.secondaryMarkets,
+      ];
+      const marketNewsData = await Promise.all(
+        selectedStoryMarkets.map((market) =>
+          this.tinyFish.searchMarketNews(market),
+        ),
+      );
+
       const generatedStories = await Promise.all(
-        [selection.leadMarket, ...selection.secondaryMarkets].map((market) =>
-          this.storyGenerator.generateStory(market),
+        selectedStoryMarkets.map((market, index) =>
+          this.storyGenerator.generateStory(
+            market,
+            marketNewsData[index] ?? [],
+          ),
         ),
       );
       const [leadStory, ...secondaryGeneratedStories] = generatedStories;
       if (!leadStory)
         throw new Error("Unable to generate the selected lead story.");
 
-      const secondaryStories = selection.secondaryMarkets.map(
+      const secondaryStories = frontPageStories.secondaryMarkets.map(
         (market, index) => {
           const story = secondaryGeneratedStories[index];
           if (!story)
@@ -133,21 +159,24 @@ export class EditorialEngine {
           return withMarketPanel(story, market);
         },
       );
+
       const frontPage = frontPageSchema.parse(
         createFrontPage(
-          withMarketPanel(leadStory, selection.leadMarket),
+          withMarketPanel(leadStory, frontPageStories.leadMarket),
           secondaryStories,
-          selection.briefMarkets.map(toMarketBrief),
-          selection.hotMarkets,
+          frontPageStories.briefMarkets.map(toMarketBrief),
+          frontPageStories.hotMarkets,
         ),
       ) as FrontPage;
 
+      // Save front page data to storage
       await this.store.putJson(this.frontPageObjectKey, frontPage);
       this.logger.info("Front-page edition generation completed", {
         operationId,
         editionId: frontPage.edition.id,
         objectKey: this.frontPageObjectKey,
       });
+
       return frontPage;
     } catch (error) {
       this.logger.error("Front-page edition generation failed", {

@@ -7,7 +7,7 @@ import {
 } from "@tiny-fish/sdk";
 
 import { logger } from "../logger";
-import type { PolymarketMarket } from "../types";
+import type { PolymarketMarket, StorySource } from "../types";
 import { generateMarketSearchString } from "../utils";
 
 export type TinyFishClientOptions = {
@@ -26,7 +26,7 @@ export class TinyFishClient {
 
   async searchMarketNews(
     market: Pick<PolymarketMarket, "created_at" | "event_title" | "question">,
-  ): Promise<FetchResponse["results"]> {
+  ): Promise<StorySource[]> {
     if (!market.created_at) {
       throw new Error(
         "A market creation timestamp is required to search related news.",
@@ -66,7 +66,25 @@ export class TinyFishClient {
       fetchErrorCount: fetchResponse.errors.length,
     });
 
-    return fetchResponse.results;
+    return fetchResponse.results.flatMap((result) => {
+      if (result.format !== "markdown" || !result.text) {
+        return [];
+      }
+
+      return [
+        {
+          url: result.url,
+          final_url: result.final_url,
+          title: result.title,
+          description: result.description,
+          language: result.language,
+          format: result.format,
+          text: result.text,
+          author: result.author,
+          published_date: result.published_date,
+        } satisfies StorySource,
+      ];
+    });
   }
 
   async search(params: SearchQueryParams): Promise<SearchQueryResponse> {
