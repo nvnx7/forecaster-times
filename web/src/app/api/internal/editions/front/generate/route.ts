@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { internalEditionApiKey, nodeEnv } from "@/config/env";
-import { logger } from "@/lib/logger";
-import { generateFrontPageEdition } from "@/server/generate-front-page-edition";
-import { s3FrontPageObjectKey } from "@/server/s3";
+import { editorialEngine, logger } from "@/server/editorial-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +19,12 @@ export async function POST(request: Request) {
 
   try {
     logger.info("Front-page generation request accepted");
-    const frontPage = await generateFrontPageEdition();
+    const frontPage = await editorialEngine.publishFrontPage();
 
     return NextResponse.json(
       {
         editionId: frontPage.edition.id,
-        objectKey: s3FrontPageObjectKey,
+        objectKey: editorialEngine.frontPageKey,
       },
       { status: 201 },
     );

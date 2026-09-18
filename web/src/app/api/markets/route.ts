@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { nansen } from "@/server/nansen";
+import { editorialEngine } from "@/server/editorial-engine";
 
 const listPolymarketMarketsParamsSchema = z.object({
   orderBy: z
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const params = listPolymarketMarketsParamsSchema.parse(
       await request.json(),
     );
-    const markets = await nansen.listPolymarketMarkets(params);
+    const markets = await editorialEngine.listPolymarketMarkets(params);
 
     return NextResponse.json(markets, {
       headers: { "Cache-Control": "no-store" },

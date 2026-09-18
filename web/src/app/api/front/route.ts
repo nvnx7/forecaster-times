@@ -1,14 +1,14 @@
+import { ObjectNotFoundError } from "@repo/engine";
 import { NextResponse } from "next/server";
 
-import { getPublishedFrontPage } from "@/server/get-published-front-page";
-import { ObjectNotFoundError } from "@/server/s3";
+import { editorialEngine } from "@/server/editorial-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const frontPage = await getPublishedFrontPage();
+    const frontPage = await editorialEngine.getFrontPage();
 
     return NextResponse.json(frontPage, {
       headers: { "Cache-Control": "no-store" },
