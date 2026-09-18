@@ -15,8 +15,8 @@ export {
 export { logger } from "./logger";
 export { frontPageSchema } from "./schema";
 export {
+  extractFrontPageStories,
   type FrontPageStorySelection,
-  selectFrontPageStories,
 } from "./select-front-page-stories";
 export {
   GeminiStoryGenerator,

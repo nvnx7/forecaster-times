@@ -1,7 +1,7 @@
 import { NansenClient, ObjectNotFoundError, S3JsonStore } from "./clients";
 import { logger } from "./logger";
 import { frontPageSchema } from "./schema";
-import { selectFrontPageStories } from "./select-front-page-stories";
+import { extractFrontPageStories } from "./select-front-page-stories";
 import type { StoryGenerator } from "./story-generators";
 import type {
   Brief,
@@ -98,7 +98,7 @@ export class EditorialEngine {
         orderBy: [{ field: "volume_24hr", direction: "DESC" }],
         pagination: { page: 1, perPage: frontPageMarketLimit },
       });
-      const selection = selectFrontPageStories(markets);
+      const selection = extractFrontPageStories(markets);
       if (!selection.leadMarket) {
         throw new Error(
           "Nansen returned no active markets for the front page.",

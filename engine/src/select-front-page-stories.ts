@@ -11,7 +11,7 @@ export type FrontPageStorySelection = {
 };
 
 /** Current policy: rank front-page coverage by 24-hour market volume. */
-export function selectFrontPageStories(
+export function extractFrontPageStories(
   markets: PolymarketMarket[],
 ): FrontPageStorySelection {
   const hotMarkets = [...markets].sort(
