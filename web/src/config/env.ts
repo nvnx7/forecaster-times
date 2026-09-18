@@ -8,6 +8,7 @@ export const internalEditionApiKey = process.env
   .INTERNAL_EDITION_API_KEY as string;
 
 export const geminiApiKey = process.env.API_KEY_GEMINI as string;
+export const tinyFishApiKey = process.env.TINYFISH_API_KEY as string;
 export const nodeEnv = process.env.NODE_ENV as string;
 
 export const s3Endpoint = process.env.S3_ENDPOINT_URL as string;
