@@ -1,6 +1,4 @@
-import type { StoryGenerator } from "./story-generators/interface";
-
-export type EditorialConfig = {
+export type EditorialEngineConfig = {
   editionWindowSeconds: number;
   generationTimeoutMs: number;
   generationRetryCount: number;
@@ -24,21 +22,7 @@ export type EditorialConfig = {
   };
 };
 
-export type EditorialEngineOptions = {
-  nansen: { apiKey: string; baseUrl: string };
-  s3: {
-    endpoint: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-    region: string;
-    bucketName: string;
-    forcePathStyle?: boolean;
-    frontPageObjectKey?: string;
-  };
-  storyGenerator: StoryGenerator;
-};
-
-export const defaultEditorialConfig: EditorialConfig = {
+export const defaultEditorialEngineConfig: EditorialEngineConfig = {
   editionWindowSeconds: 24 * 60 * 60,
   generationTimeoutMs: 120_000,
   generationRetryCount: 2,

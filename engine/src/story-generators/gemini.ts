@@ -2,7 +2,7 @@ import axios, { type AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import { z } from "zod";
 
-import type { EditorialConfig } from "../config";
+import type { EditorialEngineConfig } from "../config";
 import { logger } from "../logger";
 import type { PolymarketMarket, Story } from "../types";
 import {
@@ -92,7 +92,7 @@ function boundedText(maxWords: number) {
     .refine((value) => wordCount(value) <= maxWords);
 }
 
-function createStorySchema(config: EditorialConfig) {
+function createStorySchema(config: EditorialEngineConfig) {
   return z.object({
     section: z.enum([
       "world",
@@ -140,7 +140,7 @@ function createStorySchema(config: EditorialConfig) {
 
 function createPrompt(
   market: PolymarketMarket,
-  config: EditorialConfig,
+  config: EditorialEngineConfig,
 ): string {
   return `You are the careful editor of Probability Press, a vintage-style newspaper covering prediction markets.
 
@@ -178,7 +178,7 @@ function extractText(response: GeminiInteractionResponse): string {
 export type GeminiStoryGeneratorOptions = {
   apiKey: string;
   model: string;
-  config: EditorialConfig;
+  config: EditorialEngineConfig;
 };
 
 /** Gemini-backed implementation of the editorial story-generator contract. */

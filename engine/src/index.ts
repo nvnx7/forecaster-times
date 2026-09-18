@@ -3,13 +3,13 @@ export {
   type TinyFishClientOptions,
 } from "./clients";
 export {
-  defaultEditorialConfig,
-  type EditorialConfig,
-  type EditorialEngineOptions,
+  defaultEditorialEngineConfig as defaultEditorialConfig,
+  type EditorialEngineConfig as EditorialConfig,
 } from "./config";
 export {
   createEditorialEngine,
   EditorialEngine,
+  type EditorialEngineOptions,
   ObjectNotFoundError,
 } from "./editorial-engine";
 export { logger } from "./logger";

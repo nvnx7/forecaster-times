@@ -1,8 +1,8 @@
 import { NansenClient, ObjectNotFoundError, S3JsonStore } from "./clients";
-import type { EditorialEngineOptions } from "./config";
 import { logger } from "./logger";
 import { frontPageSchema } from "./schema";
 import { selectFrontPageStories } from "./select-front-page-stories";
+import type { StoryGenerator } from "./story-generators";
 import type {
   Brief,
   FrontPage,
@@ -46,10 +46,20 @@ function createFrontPage(
   };
 }
 
-/**
- * The server-side entry point for reading and publishing complete editions.
- * It deliberately exposes page-level operations rather than infrastructure.
- */
+export type EditorialEngineOptions = {
+  nansen: { apiKey: string; baseUrl: string };
+  s3: {
+    endpoint: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    region: string;
+    bucketName: string;
+    forcePathStyle?: boolean;
+    frontPageObjectKey?: string;
+  };
+  storyGenerator: StoryGenerator;
+};
+
 export class EditorialEngine {
   private readonly logger;
   private readonly frontPageObjectKey;
