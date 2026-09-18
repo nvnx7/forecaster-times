@@ -48,6 +48,18 @@ export type Story = {
   meta?: { publishedAt?: string; updatedAt?: string; sourceLabel?: string };
 };
 
+export type StorySource = {
+  url: string;
+  final_url: string | null;
+  title: string | null;
+  description: string | null;
+  language: string | null;
+  format: "markdown";
+  text: string;
+  author?: string | null;
+  published_date?: string | null;
+};
+
 export type Brief = {
   id: string;
   section: StorySection;

@@ -21,6 +21,7 @@ export {
 export {
   GeminiStoryGenerator,
   type GeminiStoryGeneratorOptions,
+  MockStoryGenerator,
   type StoryGenerator,
 } from "./story-generators";
 export type {
@@ -38,6 +39,7 @@ export type {
   SidebarBlock,
   Story,
   StorySection,
+  StorySource,
 } from "./types";
 export {
   generateMarketSearchString,

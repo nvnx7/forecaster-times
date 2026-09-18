@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { EditorialEngineConfig } from "../config";
 import { logger } from "../logger";
-import type { PolymarketMarket, Story } from "../types";
+import type { PolymarketMarket, Story, StorySource } from "../types";
 import {
   isRetryableRequestError,
   toLoggableResponse,
@@ -140,16 +140,25 @@ function createStorySchema(config: EditorialEngineConfig) {
 
 function createPrompt(
   market: PolymarketMarket,
+  sources: readonly StorySource[],
   config: EditorialEngineConfig,
 ): string {
   return `You are the careful editor of Probability Press, a vintage-style newspaper covering prediction markets.
 
-Write a grounded editorial story from this Nansen market snapshot only:
+Write a grounded editorial story using the supplied news sources and Nansen market context.
+
+Nansen market context:
 ${JSON.stringify(market)}
 
+News sources:
+${JSON.stringify(sources)}
+
 Rules:
-- Treat every supplied value as market data, not proof of real-world events.
-- Never invent causes, sources, quotes, outcomes, people, or external facts.
+- Use only the supplied news-source titles, descriptions, and text for factual reporting. Do not search the web or rely on outside knowledge.
+- Summarize and synthesize the supplied source text; do not copy long passages verbatim.
+- Use the supplied source titles to determine the strongest editorial angle and headline.
+- Treat market values as prediction-market context, not proof of real-world events.
+- Never invent causes, sources, quotes, outcomes, people, or facts absent from the supplied sources.
 - Use cautious attribution such as "traders priced" or "the market implied".
 - Return the requested JSON only. Do not use Markdown.
 - Do not include market prices, market IDs, illustrations, bylines, metadata, or trade calls-to-action; the application owns those fields.
@@ -217,7 +226,14 @@ export class GeminiStoryGenerator implements StoryGenerator {
     });
   }
 
-  async generateStory(market: PolymarketMarket): Promise<Story> {
+  async generateStory(
+    market: PolymarketMarket,
+    sources: readonly StorySource[],
+  ): Promise<Story> {
+    if (sources.length === 0) {
+      throw new Error("Gemini story generation requires at least one source.");
+    }
+
     logger.info("Gemini story generation started", {
       model: this.options.model,
       marketId: market.market_id,
@@ -228,7 +244,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
         "/interactions",
         {
           model: this.options.model,
-          input: createPrompt(market, this.options.config),
+          input: createPrompt(market, sources, this.options.config),
           store: false,
           response_format: [
             {
