@@ -1,10 +1,8 @@
 import { NansenClient, ObjectNotFoundError, S3JsonStore } from "./clients";
 import type { EditorialEngineOptions } from "./config";
-import { defaultEditorialConfig } from "./config";
 import { createEditorialLogger } from "./logger";
 import { frontPageSchema } from "./schema";
 import { selectFrontPageStories } from "./select-front-page-stories";
-import { GeminiStoryGenerator } from "./story-generators";
 import type {
   Brief,
   FrontPage,
@@ -61,7 +59,6 @@ export class EditorialEngine {
 
   constructor(options: EditorialEngineOptions) {
     const logger = options.logger ?? createEditorialLogger();
-    const config = options.editorial ?? defaultEditorialConfig;
     this.logger = logger;
     this.frontPageObjectKey =
       options.s3.frontPageObjectKey ?? defaultFrontPageObjectKey;
@@ -71,11 +68,7 @@ export class EditorialEngine {
       forcePathStyle: options.s3.forcePathStyle ?? true,
       logger,
     });
-    this.storyGenerator = new GeminiStoryGenerator({
-      ...options.gemini,
-      config,
-      logger,
-    });
+    this.storyGenerator = options.storyGenerator;
   }
 
   get frontPageKey(): string {

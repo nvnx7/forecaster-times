@@ -1,4 +1,5 @@
 import type { EditorialLogger } from "./logger";
+import type { StoryGenerator } from "./story-generators/interface";
 
 export type EditorialConfig = {
   editionWindowSeconds: number;
@@ -35,8 +36,7 @@ export type EditorialEngineOptions = {
     forcePathStyle?: boolean;
     frontPageObjectKey?: string;
   };
-  gemini: { apiKey: string; model: string };
-  editorial?: EditorialConfig;
+  storyGenerator: StoryGenerator;
   logger?: EditorialLogger;
 };
 
