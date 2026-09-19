@@ -6,6 +6,7 @@
       "name": "probability-press",
       "devDependencies": {
         "@biomejs/biome": "^2.5.10",
+        "@repo/engine": "*",
         "turbo": "^2.10.11",
         "typescript": "5.9.3",
       },
