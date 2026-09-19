@@ -8,7 +8,6 @@
     "start": "turbo run start",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "generate:front-page": "bun --env-file=web/.env scripts/generate-front-page.ts",
     "format": "biome format --write .",
     "check": "biome check --write ."
   },
