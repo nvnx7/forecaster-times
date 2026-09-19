@@ -1,4 +1,13 @@
 export {
+  CloudflareWorkersAiClient,
+  type CloudflareWorkersAiClientOptions,
+  flux2Klein4bModel,
+  type GeneratedImage,
+  type GenerateFlux2Klein4bImageParams,
+  GroqAIClient,
+  type GroqAIClientOptions,
+  type GroqPromptOptions,
+  groqGptOss20bModel,
   TinyFishClient,
   type TinyFishClientOptions,
   TinyFishMarketNewsResearchError,
