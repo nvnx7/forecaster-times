@@ -7,4 +7,5 @@ export {
 export {
   TinyFishClient,
   type TinyFishClientOptions,
+  TinyFishMarketNewsResearchError,
 } from "./tinyfish";

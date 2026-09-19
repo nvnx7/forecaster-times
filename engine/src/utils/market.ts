@@ -30,13 +30,12 @@ export function generateMarketSearchString(market: MarketSearchInput): {
     .toLowerCase()
     .trim()
     .replace(/\?+$/g, "")
-    .replace(/^(will|would|can|could|is|are|does|do|did)\s+/i, "")
+    .replace(/^(will|which|who|would|can|could|is|are|does|do|did)\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
 
-  const query = [market.event_title?.trim(), question, "latest news"]
-    .filter(Boolean)
-    .join(" ");
+  // const query = [market.event_title?.trim(), question, "latest news"]
+  const query = [question, "latest news"].filter(Boolean).join(" ");
 
   return {
     query,

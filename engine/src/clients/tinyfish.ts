@@ -5,23 +5,45 @@ import {
   type SearchQueryResponse,
   TinyFish,
 } from "@tiny-fish/sdk";
-
 import { logger } from "../logger";
 import type { PolymarketMarket, StorySource } from "../types";
 import { generateMarketSearchString } from "../utils";
 
 export type TinyFishClientOptions = {
   apiKey: string;
-  maxSearchResults?: number;
+  minSearchResults?: number;
 };
+
+type MarketNewsResearch = {
+  fetchErrors: { url: string; error: string }[];
+  sources: StorySource[];
+};
+
+export class TinyFishMarketNewsResearchError extends Error {
+  constructor(
+    marketQuestion: string | null | undefined,
+    fetchErrors: ReadonlyArray<{ url: string; error: string }>,
+  ) {
+    const errorDetails = fetchErrors
+      .map(({ error, url }) => `${url}: ${error}`)
+      .join("; ");
+
+    super(
+      `TinyFish could not fetch usable news content for market "${marketQuestion ?? "unknown market"}"${
+        errorDetails ? `: ${errorDetails}` : "."
+      }`,
+    );
+    this.name = "TinyFishMarketNewsResearchError";
+  }
+}
 
 export class TinyFishClient {
   private readonly client: TinyFish;
-  private readonly maxSearchResults: number;
+  private readonly minSearchResults: number;
 
   constructor(options: TinyFishClientOptions) {
     this.client = new TinyFish({ apiKey: options.apiKey });
-    this.maxSearchResults = options.maxSearchResults || 2;
+    this.minSearchResults = options.minSearchResults || 2;
   }
 
   async searchMarketNews(
@@ -34,39 +56,91 @@ export class TinyFishClient {
     }
 
     const { purpose, query } = generateMarketSearchString(market);
-    logger.info("TinyFish market news research started", {
+    logger.debug("TinyFish market news research started", {
       marketCreatedAt: market.created_at,
-      maxSearchResults: this.maxSearchResults,
+      minSearchResults: this.minSearchResults,
     });
 
-    const searchResponse = await this.search({
+    const research = await this.findMarketNewsSources({
       query,
       language: "en",
       purpose,
       after_date: market.created_at.slice(0, 10),
       domain_type: "news",
-      page: 0,
-    });
-    const selectedResults = searchResponse.results.slice(
-      0,
-      this.maxSearchResults,
-    );
-    logger.info("TinyFish market news sources selected", {
-      availableResultCount: searchResponse.results.length,
-      selectedResultCount: selectedResults.length,
     });
 
-    const fetchResponse = await this.fetch({
-      urls: selectedResults.map((result) => result.url),
-      purpose,
-      format: "markdown",
-    });
-    logger.info("TinyFish market news research completed", {
-      fetchedResultCount: fetchResponse.results.length,
-      fetchErrorCount: fetchResponse.errors.length,
+    if (research.sources.length === 0) {
+      const error = new TinyFishMarketNewsResearchError(
+        market.question,
+        research.fetchErrors,
+      );
+      logger.error("TinyFish market news research failed", {
+        query,
+        marketQuestion: market.question,
+        fetchErrors: research.fetchErrors,
+        message: error.message,
+      });
+      throw error;
+    }
+
+    return research.sources;
+  }
+
+  private async findMarketNewsSources(
+    params: Omit<SearchQueryParams, "page">,
+  ): Promise<MarketNewsResearch> {
+    const sources: StorySource[] = [];
+    const fetchErrors: { url: string; error: string }[] = [];
+    let page = 0;
+
+    while (sources.length < this.minSearchResults) {
+      const searchResponse = await this.search({ ...params, page });
+      if (searchResponse.results.length === 0) {
+        break;
+      }
+
+      logger.debug("TinyFish market news sources selected", {
+        page: searchResponse.page,
+        availableResultCount: searchResponse.results.length,
+        usableSourceCount: sources.length,
+      });
+
+      const fetchResponse = await this.fetch({
+        urls: searchResponse.results.map((result) => result.url),
+        purpose: params.purpose,
+        format: "markdown",
+      });
+      fetchErrors.push(...fetchResponse.errors);
+      sources.push(...this.toStorySources(fetchResponse));
+
+      logger.debug("TinyFish market news research page completed", {
+        page: searchResponse.page,
+        fetchedResultCount: fetchResponse.results.length,
+        fetchErrorCount: fetchResponse.errors.length,
+        usableSourceCount: sources.length,
+      });
+
+      const lastResultPosition = Math.max(
+        ...searchResponse.results.map((result) => result.position),
+      );
+      if (lastResultPosition >= searchResponse.total_results) {
+        break;
+      }
+
+      page = searchResponse.page + 1;
+    }
+
+    logger.debug("TinyFish market news research completed", {
+      usableSourceCount: sources.length,
+      fetchErrorCount: fetchErrors.length,
+      minSearchResults: this.minSearchResults,
     });
 
-    return fetchResponse.results.flatMap((result) => {
+    return { sources, fetchErrors };
+  }
+
+  private toStorySources(response: FetchResponse): StorySource[] {
+    return response.results.flatMap((result) => {
       if (result.format !== "markdown" || !result.text) {
         return [];
       }
@@ -97,7 +171,7 @@ export class TinyFishClient {
 
     try {
       const response = await this.client.search.query(params);
-      logger.info("TinyFish search response", {
+      logger.debug("TinyFish search response", {
         query: response.query,
         resultCount: response.results.length,
       });
@@ -119,10 +193,11 @@ export class TinyFishClient {
 
     try {
       const response = await this.client.fetch.getContents(params);
-      logger.info("TinyFish content fetch response", {
+      logger.debug("TinyFish content fetch response", {
         requestedUrlCount: params.urls.length,
         resultCount: response.results.length,
         errorCount: response.errors.length,
+        errors: response.errors,
       });
       return response;
     } catch (error) {
