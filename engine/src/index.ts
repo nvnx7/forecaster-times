@@ -1,6 +1,7 @@
 export {
   TinyFishClient,
   type TinyFishClientOptions,
+  TinyFishMarketNewsResearchError,
 } from "./clients";
 export {
   defaultEditorialEngineConfig as defaultEditorialConfig,
@@ -15,8 +16,9 @@ export {
 export { logger } from "./logger";
 export { frontPageSchema } from "./schema";
 export {
-  extractFrontPageStories,
-  type FrontPageStorySelection,
+  frontPageSecondaryStoryCount,
+  rankFrontPageMarketCandidates,
+  selectFrontPageBriefMarkets,
 } from "./select-front-page-stories";
 export {
   GeminiStoryGenerator,

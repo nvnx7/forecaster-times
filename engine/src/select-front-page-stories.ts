@@ -1,31 +1,26 @@
 import type { PolymarketMarket } from "./types";
 
-const secondaryStoryCount = 2;
-const briefCount = 3;
+export const frontPageSecondaryStoryCount = 2;
+const frontPageBriefCount = 3;
 
-export type FrontPageStorySelection = {
-  leadMarket?: PolymarketMarket;
-  secondaryMarkets: PolymarketMarket[];
-  briefMarkets: PolymarketMarket[];
-  hotMarkets: PolymarketMarket[];
-};
-
-/** Current policy: rank front-page coverage by 24-hour market volume. */
-export function extractFrontPageStories(
+/** Current policy: rank front-page coverage candidates by 24-hour volume. */
+export function rankFrontPageMarketCandidates(
   markets: PolymarketMarket[],
-): FrontPageStorySelection {
-  const hotMarkets = [...markets].sort(
+): PolymarketMarket[] {
+  return [...markets].sort(
     (first, second) => (second.volume_24hr ?? 0) - (first.volume_24hr ?? 0),
   );
-  const [leadMarket, ...remainingMarkets] = hotMarkets;
+}
 
-  return {
-    leadMarket,
-    secondaryMarkets: remainingMarkets.slice(0, secondaryStoryCount),
-    briefMarkets: remainingMarkets.slice(
-      secondaryStoryCount,
-      secondaryStoryCount + briefCount,
-    ),
-    hotMarkets,
-  };
+export function selectFrontPageBriefMarkets(
+  candidates: PolymarketMarket[],
+  featuredMarkets: PolymarketMarket[],
+): PolymarketMarket[] {
+  const featuredMarketIds = new Set(
+    featuredMarkets.map((market) => market.market_id),
+  );
+
+  return candidates
+    .filter((market) => !featuredMarketIds.has(market.market_id))
+    .slice(0, frontPageBriefCount);
 }
