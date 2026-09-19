@@ -80,7 +80,7 @@ export class S3JsonStore {
       const document = JSON.parse(
         await response.Body.transformToString("utf-8"),
       ) as T;
-      logger.info("S3 JSON read completed", { key });
+      logger.debug("S3 JSON read completed", { key });
       return document;
     } catch (error) {
       logger.error("S3 JSON read failed", {
@@ -117,7 +117,7 @@ export class S3JsonStore {
           ContentType: "application/json; charset=utf-8",
         }),
       );
-      logger.info("S3 JSON write completed", { key });
+      logger.debug("S3 JSON write completed", { key });
     } catch (error) {
       logger.error("S3 JSON write failed", {
         key,

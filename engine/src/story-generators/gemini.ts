@@ -234,7 +234,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
       throw new Error("Gemini story generation requires at least one source.");
     }
 
-    logger.info("Gemini story generation started", {
+    logger.debug("Gemini story generation started", {
       model: this.options.model,
       marketId: market.market_id,
       timeoutMs: this.options.config.generationTimeoutMs,
@@ -257,7 +257,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
       );
       const text = extractText(data);
       const generated = this.storySchema.parse(JSON.parse(text) as unknown);
-      logger.info("Gemini story generation completed", {
+      logger.debug("Gemini story generation completed", {
         marketId: market.market_id,
         interactionId: data.id,
         responseCharacters: text.length,

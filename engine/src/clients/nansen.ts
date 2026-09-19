@@ -91,7 +91,7 @@ export class NansenClient {
         response.data,
       ) as ListPolymarketMarketsResponse;
 
-      logger.info("Nansen market screener response", {
+      logger.debug("Nansen market screener response", {
         marketCount: markets.data.length,
         requestId: response.headers["x-request-id"],
       });
