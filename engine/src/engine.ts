@@ -4,10 +4,15 @@ import {
   S3JsonStore,
   TinyFishClient,
   type TinyFishClientOptions,
+  TinyFishMarketNewsResearchError,
 } from "./clients";
 import { logger } from "./logger";
 import { frontPageSchema } from "./schema";
-import { extractFrontPageStories } from "./select-front-page-stories";
+import {
+  frontPageSecondaryStoryCount,
+  rankFrontPageMarketCandidates,
+  selectFrontPageBriefMarkets,
+} from "./select-front-page-stories";
 import type { StoryGenerator } from "./story-generators";
 import type {
   Brief,
@@ -16,6 +21,7 @@ import type {
   ListPolymarketMarketsResponse,
   PolymarketMarket,
   Story,
+  StorySource,
 } from "./types";
 import {
   getMarketProbability,
@@ -25,7 +31,12 @@ import {
 } from "./utils";
 
 const defaultFrontPageObjectKey = "editions/front-page/current.json";
-const frontPageMarketLimit = 6;
+const frontPageMarketLimit = 10;
+
+type ResearchedMarket = {
+  market: PolymarketMarket;
+  sources: StorySource[];
+};
 
 function createFrontPage(
   leadStory: Story,
@@ -68,7 +79,6 @@ export type EditorialEngineOptions = {
 };
 
 export class EditorialEngine {
-  private readonly logger;
   private readonly frontPageObjectKey;
   private readonly nansen;
   private readonly store;
@@ -76,7 +86,6 @@ export class EditorialEngine {
   private readonly tinyFish;
 
   constructor(options: EditorialEngineOptions) {
-    this.logger = logger;
     this.frontPageObjectKey =
       options.s3.frontPageObjectKey ?? defaultFrontPageObjectKey;
     this.nansen = new NansenClient(options.nansen);
@@ -99,7 +108,7 @@ export class EditorialEngine {
 
   async publishFrontPage(): Promise<FrontPage> {
     const operationId = crypto.randomUUID();
-    this.logger.info("Front-page edition generation started", { operationId });
+    logger.info("Front-page edition generation started", { operationId });
 
     try {
       // Fetch list of top markets by 24H volume
@@ -109,69 +118,55 @@ export class EditorialEngine {
         pagination: { page: 1, perPage: frontPageMarketLimit },
       });
 
-      // Select and extract stories for front page
-      const frontPageStories = extractFrontPageStories(markets);
-      if (!frontPageStories.leadMarket) {
+      const marketCandidates = rankFrontPageMarketCandidates(markets);
+      const selectedStoryMarkets = await this.selectFrontPageStoryMarkets(
+        marketCandidates,
+        operationId,
+      );
+      const [leadMarket, ...secondaryStoryMarkets] = selectedStoryMarkets;
+      if (!leadMarket) {
         throw new Error(
-          "Nansen returned no active markets for the front page.",
+          "Unable to find a front-page market with usable news sources.",
         );
       }
+      const briefMarkets = selectFrontPageBriefMarkets(
+        marketCandidates,
+        selectedStoryMarkets.map(({ market }) => market),
+      );
 
-      this.logger.info("Front-page markets selected", {
+      logger.info("Front-page markets selected", {
         operationId,
-        leadMarketId: frontPageStories.leadMarket.market_id,
-        secondaryMarketIds: frontPageStories.secondaryMarkets.map(
-          (market) => market.market_id,
+        leadMarketId: leadMarket.market.market_id,
+        secondaryMarketIds: secondaryStoryMarkets.map(
+          ({ market }) => market.market_id,
         ),
-        briefMarketIds: frontPageStories.briefMarkets.map(
-          (market) => market.market_id,
-        ),
+        briefMarketIds: briefMarkets.map((market) => market.market_id),
       });
 
-      // For selected stories fetch news around it using TinyFish
-      const selectedStoryMarkets = [
-        frontPageStories.leadMarket,
-        ...frontPageStories.secondaryMarkets,
-      ];
-      const marketNewsData = await Promise.all(
-        selectedStoryMarkets.map((market) =>
-          this.tinyFish.searchMarketNews(market),
-        ),
-      );
-
-      const generatedStories = await Promise.all(
-        selectedStoryMarkets.map((market, index) =>
-          this.storyGenerator.generateStory(
-            market,
-            marketNewsData[index] ?? [],
-          ),
-        ),
-      );
+      const generatedStories = await this.generateStories(selectedStoryMarkets);
       const [leadStory, ...secondaryGeneratedStories] = generatedStories;
       if (!leadStory)
         throw new Error("Unable to generate the selected lead story.");
 
-      const secondaryStories = frontPageStories.secondaryMarkets.map(
-        (market, index) => {
-          const story = secondaryGeneratedStories[index];
-          if (!story)
-            throw new Error("Unable to generate a selected secondary story.");
-          return withMarketPanel(story, market);
-        },
-      );
+      const secondaryStories = secondaryStoryMarkets.map((selection, index) => {
+        const story = secondaryGeneratedStories[index];
+        if (!story)
+          throw new Error("Unable to generate a selected secondary story.");
+        return withMarketPanel(story, selection.market);
+      });
 
       const frontPage = frontPageSchema.parse(
         createFrontPage(
-          withMarketPanel(leadStory, frontPageStories.leadMarket),
+          withMarketPanel(leadStory, leadMarket.market),
           secondaryStories,
-          frontPageStories.briefMarkets.map(toMarketBrief),
-          frontPageStories.hotMarkets,
+          briefMarkets.map(toMarketBrief),
+          marketCandidates,
         ),
       ) as FrontPage;
 
       // Save front page data to storage
       await this.store.putJson(this.frontPageObjectKey, frontPage);
-      this.logger.info("Front-page edition generation completed", {
+      logger.info("Front-page edition generation completed", {
         operationId,
         editionId: frontPage.edition.id,
         objectKey: this.frontPageObjectKey,
@@ -179,7 +174,7 @@ export class EditorialEngine {
 
       return frontPage;
     } catch (error) {
-      this.logger.error("Front-page edition generation failed", {
+      logger.error("Front-page edition generation failed", {
         operationId,
         message: error instanceof Error ? error.message : "Unknown error",
       });
@@ -191,6 +186,61 @@ export class EditorialEngine {
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
     return this.nansen.listPolymarketMarkets(params);
+  }
+
+  private async selectFrontPageStoryMarkets(
+    candidates: PolymarketMarket[],
+    operationId: string,
+  ): Promise<ResearchedMarket[]> {
+    const selections: ResearchedMarket[] = [];
+    const requiredStoryCount = frontPageSecondaryStoryCount + 1;
+
+    for (const market of candidates) {
+      if (selections.length === requiredStoryCount) {
+        break;
+      }
+
+      const sources = await this.tryGetMarketNews(market, operationId);
+      if (!sources) {
+        continue;
+      }
+
+      selections.push({ market, sources });
+    }
+
+    return selections;
+  }
+
+  private async tryGetMarketNews(
+    market: PolymarketMarket,
+    operationId: string,
+  ): Promise<StorySource[] | undefined> {
+    try {
+      return await this.tinyFish.searchMarketNews(market);
+    } catch (error) {
+      if (!(error instanceof TinyFishMarketNewsResearchError)) {
+        throw error;
+      }
+
+      logger.warn("Front-page market skipped after news research", {
+        operationId,
+        marketId: market.market_id,
+        message: error.message,
+      });
+      return undefined;
+    }
+  }
+
+  private async generateStories(
+    selections: ResearchedMarket[],
+  ): Promise<Story[]> {
+    const stories: Story[] = [];
+
+    for (const { market, sources } of selections) {
+      stories.push(await this.storyGenerator.generateStory(market, sources));
+    }
+
+    return stories;
   }
 }
 
