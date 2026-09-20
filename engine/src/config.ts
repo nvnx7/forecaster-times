@@ -4,6 +4,8 @@ export type EditorialEngineConfig = {
   generationRetryCount: number;
   generationRetryBaseDelayMs: number;
   story: {
+    maxInputCharacters: number;
+    maxCompletionTokens: number;
     kickerMaxWords: number;
     headline: {
       longMaxWords: number;
@@ -28,6 +30,8 @@ export const defaultEditorialEngineConfig: EditorialEngineConfig = {
   generationRetryCount: 2,
   generationRetryBaseDelayMs: 1_000,
   story: {
+    maxInputCharacters: 8_000,
+    maxCompletionTokens: 500,
     kickerMaxWords: 6,
     headline: { longMaxWords: 18, mediumMaxWords: 12, shortMaxWords: 7 },
     dekMaxWords: 32,

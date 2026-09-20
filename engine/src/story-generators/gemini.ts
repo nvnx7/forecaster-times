@@ -1,16 +1,12 @@
 import axios, { type AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
-import { z } from "zod";
 
 import type { EditorialEngineConfig } from "../config";
 import { logger } from "../logger";
 import type { PolymarketMarket, Story, StorySource } from "../types";
-import {
-  isRetryableRequestError,
-  toLoggableResponse,
-  wordCount,
-} from "../utils";
+import { isRetryableRequestError, toLoggableResponse } from "../utils";
 import type { StoryGenerator } from "./interface";
+import { createGeneratedStorySchema, createStoryPrompt } from "./story";
 
 type GeminiInteractionResponse = {
   id?: string;
@@ -84,94 +80,6 @@ const generatedStoryJsonSchema = {
   },
 } as const;
 
-function boundedText(maxWords: number) {
-  return z
-    .string()
-    .trim()
-    .min(1)
-    .refine((value) => wordCount(value) <= maxWords);
-}
-
-function createStorySchema(config: EditorialEngineConfig) {
-  return z.object({
-    section: z.enum([
-      "world",
-      "politics",
-      "money",
-      "technology",
-      "crypto",
-      "sports",
-      "culture",
-      "oddities",
-    ]),
-    kicker: boundedText(config.story.kickerMaxWords),
-    headline: z.object({
-      long: boundedText(config.story.headline.longMaxWords),
-      medium: boundedText(config.story.headline.mediumMaxWords),
-      short: boundedText(config.story.headline.shortMaxWords),
-    }),
-    dek: boundedText(config.story.dekMaxWords),
-    body: z
-      .array(
-        z.discriminatedUnion("type", [
-          z.object({
-            type: z.literal("paragraph"),
-            text: boundedText(config.story.body.paragraphMaxWords),
-          }),
-          z.object({
-            type: z.literal("pullquote"),
-            text: boundedText(config.story.body.pullquoteMaxWords),
-          }),
-          z.object({
-            type: z.literal("subheading"),
-            text: boundedText(config.story.body.subheadingMaxWords),
-          }),
-        ]),
-      )
-      .min(config.story.body.minBlocks)
-      .max(config.story.body.maxBlocks)
-      .refine(
-        (blocks) =>
-          blocks.reduce((total, block) => total + wordCount(block.text), 0) <=
-          config.story.body.maxWords,
-      ),
-  });
-}
-
-function createPrompt(
-  market: PolymarketMarket,
-  sources: readonly StorySource[],
-  config: EditorialEngineConfig,
-): string {
-  return `You are the careful editor of Probability Press, a vintage-style newspaper covering prediction markets.
-
-Write a grounded editorial story using the supplied news sources and Nansen market context.
-
-Nansen market context:
-${JSON.stringify(market)}
-
-News sources:
-${JSON.stringify(sources)}
-
-Rules:
-- Use only the supplied news-source titles, descriptions, and text for factual reporting. Do not search the web or rely on outside knowledge.
-- Summarize and synthesize the supplied source text; do not copy long passages verbatim.
-- Use the supplied source titles to determine the strongest editorial angle and headline.
-- Treat market values as prediction-market context, not proof of real-world events.
-- Never invent causes, sources, quotes, outcomes, people, or facts absent from the supplied sources.
-- Use cautious attribution such as "traders priced" or "the market implied".
-- Return the requested JSON only. Do not use Markdown.
-- Do not include market prices, market IDs, illustrations, bylines, metadata, or trade calls-to-action; the application owns those fields.
-
-Copy limits:
-- kicker: at most ${config.story.kickerMaxWords} words.
-- headline.long: at most ${config.story.headline.longMaxWords} words.
-- headline.medium: at most ${config.story.headline.mediumMaxWords} words.
-- headline.short: at most ${config.story.headline.shortMaxWords} words.
-- dek: at most ${config.story.dekMaxWords} words.
-- body: ${config.story.body.minBlocks} to ${config.story.body.maxBlocks} blocks and at most ${config.story.body.maxWords} words in total.`;
-}
-
 function extractText(response: GeminiInteractionResponse): string {
   const text = response.steps
     ?.filter((step) => step.type === "model_output")
@@ -193,10 +101,10 @@ export type GeminiStoryGeneratorOptions = {
 /** Gemini-backed implementation of the editorial story-generator contract. */
 export class GeminiStoryGenerator implements StoryGenerator {
   private readonly client: AxiosInstance;
-  private readonly storySchema: ReturnType<typeof createStorySchema>;
+  private readonly storySchema: ReturnType<typeof createGeneratedStorySchema>;
 
   constructor(private readonly options: GeminiStoryGeneratorOptions) {
-    this.storySchema = createStorySchema(options.config);
+    this.storySchema = createGeneratedStorySchema(options.config);
     this.client = axios.create({
       baseURL: "https://generativelanguage.googleapis.com/v1beta",
       headers: {
@@ -244,7 +152,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
         "/interactions",
         {
           model: this.options.model,
-          input: createPrompt(market, sources, this.options.config),
+          input: createStoryPrompt(market, sources, this.options.config),
           store: false,
           response_format: [
             {
