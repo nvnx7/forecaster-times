@@ -1,4 +1,6 @@
 import {
+  CloudflareStoryImageGenerator,
+  CloudflareWorkersAiClient,
   createEditorialEngine,
   defaultEditorialConfig,
   GeminiStoryGenerator,
@@ -6,6 +8,8 @@ import {
 } from "@repo/engine";
 
 import {
+  cloudflareAccountId,
+  cloudflareApiKey,
   geminiApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
@@ -25,6 +29,13 @@ const storyGenerator = new GeminiStoryGenerator({
   config: defaultEditorialConfig,
 });
 
+const storyImageGenerator = new CloudflareStoryImageGenerator({
+  client: new CloudflareWorkersAiClient({
+    accountId: cloudflareAccountId,
+    apiToken: cloudflareApiKey,
+  }),
+});
+
 /** Web's server boundary for the editorial engine and its infrastructure config. */
 export const editorialEngine = createEditorialEngine({
   nansen: { apiKey: nansenApiKey, baseUrl: nansenApiBaseUrl },
@@ -37,4 +48,5 @@ export const editorialEngine = createEditorialEngine({
   },
   tinyFish: { apiKey: tinyFishApiKey },
   storyGenerator,
+  storyImageGenerator,
 });

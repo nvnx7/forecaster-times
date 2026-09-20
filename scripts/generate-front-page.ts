@@ -1,4 +1,6 @@
 import {
+  CloudflareStoryImageGenerator,
+  CloudflareWorkersAiClient,
   createEditorialEngine,
   defaultEditorialConfig,
   GroqAIClient,
@@ -7,6 +9,8 @@ import {
 } from "@repo/engine";
 
 import {
+  cloudflareAccountId,
+  cloudflareApiKey,
   groqApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
@@ -23,6 +27,13 @@ const storyGenerator = new GroqStoryGenerator({
   config: defaultEditorialConfig,
 });
 
+const storyImageGenerator = new CloudflareStoryImageGenerator({
+  client: new CloudflareWorkersAiClient({
+    accountId: cloudflareAccountId,
+    apiToken: cloudflareApiKey,
+  }),
+});
+
 const editorialEngine = createEditorialEngine({
   nansen: { apiKey: nansenApiKey, baseUrl: nansenApiBaseUrl },
   s3: {
@@ -34,6 +45,7 @@ const editorialEngine = createEditorialEngine({
   },
   tinyFish: { apiKey: tinyFishApiKey },
   storyGenerator,
+  storyImageGenerator,
 });
 
 try {
