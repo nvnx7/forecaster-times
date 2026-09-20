@@ -6,6 +6,7 @@ import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
 } from "../types";
+import { getLoggableServiceError } from "../utils";
 
 const polymarketMarketSchema = z.object({
   market_id: z.string(),
@@ -99,6 +100,7 @@ export class NansenClient {
       return markets;
     } catch (error) {
       logger.error("Nansen market screener failed", {
+        responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;

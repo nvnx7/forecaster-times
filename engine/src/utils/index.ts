@@ -1,4 +1,9 @@
-export { isRetryableRequestError, toLoggableResponse } from "./http";
+export { delay } from "./delay";
+export {
+  getLoggableServiceError,
+  isRetryableRequestError,
+  toLoggableResponse,
+} from "./http";
 export {
   clampProbability,
   generateMarketSearchString,

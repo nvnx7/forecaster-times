@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 
 import { logger } from "../logger";
+import { getLoggableServiceError } from "../utils";
 
 const workersAiBaseUrl = "https://api.cloudflare.com/client/v4";
 export const flux2Klein4bModel =
@@ -96,6 +97,7 @@ export class CloudflareWorkersAiClient {
       logger.error("Cloudflare Workers AI image generation failed", {
         model: flux2Klein4bModel,
         status: axios.isAxiosError(error) ? error.response?.status : undefined,
+        responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;

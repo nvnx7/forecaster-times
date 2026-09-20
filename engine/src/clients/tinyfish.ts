@@ -7,7 +7,7 @@ import {
 } from "@tiny-fish/sdk";
 import { logger } from "../logger";
 import type { PolymarketMarket, StorySource } from "../types";
-import { generateMarketSearchString } from "../utils";
+import { generateMarketSearchString, getLoggableServiceError } from "../utils";
 
 export type TinyFishClientOptions = {
   apiKey: string;
@@ -179,6 +179,7 @@ export class TinyFishClient {
     } catch (error) {
       logger.error("TinyFish search failed", {
         query: params.query,
+        responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
@@ -203,6 +204,7 @@ export class TinyFishClient {
     } catch (error) {
       logger.error("TinyFish content fetch failed", {
         urlCount: params.urls.length,
+        responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
