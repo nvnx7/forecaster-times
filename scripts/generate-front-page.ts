@@ -1,10 +1,13 @@
 import {
   createEditorialEngine,
+  defaultEditorialConfig,
+  GroqAIClient,
+  GroqStoryGenerator,
   logger,
-  MockStoryGenerator,
 } from "@repo/engine";
 
 import {
+  groqApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
   s3AccessKeyId,
@@ -15,7 +18,10 @@ import {
   tinyFishApiKey,
 } from "./config";
 
-const storyGenerator = new MockStoryGenerator();
+const storyGenerator = new GroqStoryGenerator({
+  client: new GroqAIClient({ apiKey: groqApiKey }),
+  config: defaultEditorialConfig,
+});
 
 const editorialEngine = createEditorialEngine({
   nansen: { apiKey: nansenApiKey, baseUrl: nansenApiBaseUrl },
