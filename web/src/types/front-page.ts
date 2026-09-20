@@ -8,5 +8,5 @@ export type {
   ParagraphBlock,
   SidebarBlock,
   Story,
-  StorySection,
+  StoryCategory,
 } from "@repo/engine";

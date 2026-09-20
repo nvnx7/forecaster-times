@@ -2,15 +2,15 @@ import { Separator } from "@/components/ui/separator";
 
 export function InteriorPageHeader({
   pageNumber,
-  sectionName,
+  categoryName,
 }: {
   pageNumber: number;
-  sectionName: string;
+  categoryName: string;
 }) {
   return (
     <header className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between font-sans text-sm font-semibold tracking-[0.12em] uppercase">
-        <p>{sectionName}</p>
+        <p>{categoryName}</p>
         <p className="font-heading text-lg leading-none">{pageNumber}</p>
       </div>
       <Separator tone="ink" />

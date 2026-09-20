@@ -1,20 +1,18 @@
 import { Separator } from "@/components/ui/separator";
-import type { SectionBrief } from "@/types";
+import {
+  formatChangeInPoints,
+  formatProbabilityAsCents,
+} from "@/lib/market-format";
+import type { CategoryBrief } from "@/types";
 
-function formatProbability(probability: number) {
-  return `${Math.round(probability * 100)}¢`;
-}
-
-function formatChange(change: number) {
-  return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
-}
+// Compact editorial items supporting the category-page lower grid.
 
 function BriefColumn({
   title,
   briefs,
 }: {
   title: string;
-  briefs: SectionBrief[];
+  briefs: CategoryBrief[];
 }) {
   return (
     <section className="flex flex-col gap-3" aria-label={title}>
@@ -39,9 +37,9 @@ function BriefColumn({
             ) : null}
             {brief.probability !== undefined ? (
               <p className="font-sans text-sm font-semibold tracking-[0.04em] uppercase">
-                {formatProbability(brief.probability)}
+                {formatProbabilityAsCents(brief.probability)}
                 {brief.change24h !== undefined
-                  ? ` · ${formatChange(brief.change24h)}`
+                  ? ` · ${formatChangeInPoints(brief.change24h)}`
                   : ""}
               </p>
             ) : null}
@@ -52,7 +50,7 @@ function BriefColumn({
   );
 }
 
-export function SectionBriefs({ briefs }: { briefs: SectionBrief[] }) {
+export function CategoryBriefs({ briefs }: { briefs: CategoryBrief[] }) {
   const splitPoint = Math.ceil(briefs.length / 2);
   const firstBriefs = briefs.slice(0, splitPoint);
   const secondBriefs = briefs.slice(splitPoint);

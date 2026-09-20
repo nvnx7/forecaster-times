@@ -1,0 +1,43 @@
+import {
+  type CategoryPageId,
+  categoryPageConfigs,
+  ObjectNotFoundError,
+} from "@repo/engine";
+import { NextResponse } from "next/server";
+
+import { editorialEngine } from "@/server/editorial-engine";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ categoryId: string }> },
+) {
+  const { categoryId } = await params;
+  if (!Object.hasOwn(categoryPageConfigs, categoryId)) {
+    return NextResponse.json({ error: "Unknown category." }, { status: 404 });
+  }
+
+  try {
+    return NextResponse.json(
+      await editorialEngine.getCategoryPage(categoryId as CategoryPageId),
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  } catch (error) {
+    if (error instanceof ObjectNotFoundError) {
+      return NextResponse.json(
+        { error: "The current category edition has not been published." },
+        { status: 404 },
+      );
+    }
+
+    console.error("Unable to read category page", error);
+    return NextResponse.json(
+      { error: "Unable to load the category edition." },
+      { status: 500 },
+    );
+  }
+}

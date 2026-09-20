@@ -8,7 +8,7 @@ export const mockFrontPage = {
   },
   leadStory: {
     id: "fed-rate-cut",
-    section: "money",
+    category: "money",
     kicker: "Monetary Policy",
     headline: {
       long: "Markets Now Expect September Rate Cut",
@@ -66,7 +66,7 @@ export const mockFrontPage = {
   secondaryStories: [
     {
       id: "space-launch",
-      section: "technology",
+      category: "technology",
       kicker: "Space",
       headline: {
         long: "Launch Odds Rise After Successful Test",
@@ -103,7 +103,7 @@ export const mockFrontPage = {
     },
     {
       id: "championship",
-      section: "sports",
+      category: "sports",
       kicker: "Sport",
       headline: {
         long: "Championship Favorite Pulls Away From the Field",
@@ -122,7 +122,7 @@ export const mockFrontPage = {
   briefs: [
     {
       id: "brief-1",
-      section: "politics",
+      category: "politics",
       headline: "Election Market Tightens Overnight",
       summary: "The leading outcome fell four points.",
       probability: 0.51,

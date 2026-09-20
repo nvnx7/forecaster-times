@@ -1,4 +1,13 @@
 export type {
+  CategoryBrief,
+  CategoryLayoutVariant,
+  CategoryMarketBoard,
+  CategoryPage,
+  CategoryPageId,
+  CategorySidebar,
+  CategoryStory,
+} from "./category-page";
+export type {
   Brief,
   FrontPage,
   FrontPageHotMarket,
@@ -8,7 +17,7 @@ export type {
   ParagraphBlock,
   SidebarBlock,
   Story,
-  StorySection,
+  StoryCategory,
 } from "./front-page";
 export type { HotMarket } from "./hot-market";
 export type {
@@ -17,12 +26,3 @@ export type {
   PolymarketMarket,
   PolymarketMarketSortField,
 } from "./polymarket-market";
-export type {
-  MarketBoard,
-  SectionBrief,
-  SectionLayoutVariant,
-  SectionPage,
-  SectionPageId,
-  SectionSidebar,
-  SectionStory,
-} from "./section-page";

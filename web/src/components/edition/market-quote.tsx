@@ -9,24 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  formatChangeInPoints,
+  formatProbabilityAsCents,
+  formatUsdCompact,
+} from "@/lib/market-format";
 import type { MarketPanel } from "@/types";
-
-function formatCents(probability: number) {
-  return `${Math.round(probability * 100)}¢`;
-}
-
-function formatChange(change: number) {
-  return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
-}
-
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
 
 function handleTrade() {}
 
@@ -49,7 +37,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                   Yes
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
-                  {formatCents(market.yes)}
+                  {formatProbabilityAsCents(market.yes)}
                 </dd>
               </div>
               <div>
@@ -57,7 +45,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                   No
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
-                  {formatCents(market.no)}
+                  {formatProbabilityAsCents(market.no)}
                 </dd>
               </div>
             </div>
@@ -69,7 +57,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                     24h
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatChange(market.change24h)}
+                    {formatChangeInPoints(market.change24h)}
                   </dd>
                 </div>
               ) : null}
@@ -79,7 +67,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                     Volume
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsd(market.volume24hUsd)}
+                    {formatUsdCompact(market.volume24hUsd)}
                   </dd>
                 </div>
               ) : null}
@@ -89,7 +77,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                     Liquidity
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsd(market.liquidityUsd)}
+                    {formatUsdCompact(market.liquidityUsd)}
                   </dd>
                 </div>
               ) : null}

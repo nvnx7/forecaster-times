@@ -3,8 +3,8 @@ import { Fragment } from "react";
 import { Separator } from "@/components/ui/separator";
 import type { Brief } from "@/types";
 
-function formatSection(section: Brief["section"]): string {
-  return section.replaceAll("-", " ");
+function formatCategory(category: Brief["category"]): string {
+  return category.replaceAll("-", " ");
 }
 
 function formatProbability(probability: number): string {
@@ -23,7 +23,7 @@ function FrontPageBrief({ brief }: { brief: Brief }) {
       className="flex min-w-0 flex-col gap-1.5"
     >
       <p className="font-sans text-[0.625rem] font-semibold tracking-[0.14em] text-destructive uppercase">
-        {formatSection(brief.section)}
+        {formatCategory(brief.category)}
       </p>
       <h3
         id={`front-page-brief-${brief.id}`}

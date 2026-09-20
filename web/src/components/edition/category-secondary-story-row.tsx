@@ -1,14 +1,16 @@
 import { Separator } from "@/components/ui/separator";
-import type { SectionStory } from "@/types";
+import type { CategoryStory } from "@/types";
 
-function SectionSecondaryStory({ story }: { story: SectionStory }) {
+// Secondary reporting follows the lead as a paired editorial row.
+
+function CategorySecondaryStory({ story }: { story: CategoryStory }) {
   const openingParagraph = story.body.find(
     (block) => block.type === "paragraph",
   );
 
   return (
     <article
-      aria-labelledby={`section-secondary-${story.id}`}
+      aria-labelledby={`category-secondary-${story.id}`}
       className="flex flex-col gap-2"
     >
       {story.kicker ? (
@@ -17,7 +19,7 @@ function SectionSecondaryStory({ story }: { story: SectionStory }) {
         </p>
       ) : null}
       <h2
-        id={`section-secondary-${story.id}`}
+        id={`category-secondary-${story.id}`}
         className="font-heading text-3xl leading-[0.95] font-semibold tracking-[-0.02em] md:text-4xl"
       >
         {story.headline.medium}
@@ -39,10 +41,10 @@ function SectionSecondaryStory({ story }: { story: SectionStory }) {
   );
 }
 
-export function SectionSecondaryStoryRow({
+export function CategorySecondaryStoryRow({
   stories,
 }: {
-  stories: SectionStory[];
+  stories: CategoryStory[];
 }) {
   const [firstStory, secondStory] = stories;
 
@@ -54,11 +56,11 @@ export function SectionSecondaryStoryRow({
     <section aria-label="More stories" className="flex flex-col gap-4">
       <Separator tone="ink" />
       <div className="grid gap-5 lg:grid-cols-[1fr_auto_1fr]">
-        <SectionSecondaryStory story={firstStory} />
+        <CategorySecondaryStory story={firstStory} />
         {secondStory ? (
           <>
             <Separator className="hidden lg:block" orientation="vertical" />
-            <SectionSecondaryStory story={secondStory} />
+            <CategorySecondaryStory story={secondStory} />
           </>
         ) : null}
       </div>

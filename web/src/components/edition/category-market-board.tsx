@@ -1,24 +1,18 @@
 import { Separator } from "@/components/ui/separator";
-import type { MarketBoard } from "@/types";
+import {
+  formatChangeInPoints,
+  formatProbabilityAsCents,
+  formatUsdCompact,
+} from "@/lib/market-format";
+import type { CategoryMarketBoard as CategoryMarketBoardData } from "@/types";
 
-function formatProbability(probability: number) {
-  return `${Math.round(probability * 100)}¢`;
-}
+// A compact newspaper board, deliberately kept distinct from an app dashboard.
 
-function formatChange(change: number) {
-  return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
-}
-
-function formatVolume(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-export function SectionMarketBoard({ board }: { board: MarketBoard }) {
+export function CategoryMarketBoard({
+  board,
+}: {
+  board: CategoryMarketBoardData;
+}) {
   return (
     <section
       aria-labelledby="market-board-title"
@@ -46,16 +40,16 @@ export function SectionMarketBoard({ board }: { board: MarketBoard }) {
                 {item.label}
               </h3>
               <p className="font-heading text-2xl leading-none font-semibold">
-                {formatProbability(item.probability)}
+                {formatProbabilityAsCents(item.probability)}
               </p>
               <p className="font-sans text-sm text-muted-foreground">
                 {item.change24h !== undefined
-                  ? formatChange(item.change24h)
+                  ? formatChangeInPoints(item.change24h)
                   : ""}
               </p>
               <p className="font-sans text-sm text-muted-foreground">
                 {item.volume24hUsd !== undefined
-                  ? `Vol. ${formatVolume(item.volume24hUsd)}`
+                  ? `Vol. ${formatUsdCompact(item.volume24hUsd)}`
                   : ""}
               </p>
             </div>

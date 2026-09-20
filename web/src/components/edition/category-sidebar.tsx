@@ -1,15 +1,13 @@
 import type { ReactNode } from "react";
 
 import { Separator } from "@/components/ui/separator";
-import type { SectionSidebar as SectionSidebarData } from "@/types";
+import {
+  formatChangeInPoints,
+  formatProbabilityAsCents,
+} from "@/lib/market-format";
+import type { CategorySidebar as CategorySidebarData } from "@/types";
 
-function formatProbability(probability: number) {
-  return `${Math.round(probability * 100)}¢`;
-}
-
-function formatChange(change: number) {
-  return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
-}
+// Category-specific odds furniture for the right-hand newspaper rail.
 
 function SidebarFrame({
   title,
@@ -46,7 +44,7 @@ function SidebarItem({
   );
 }
 
-export function SectionSidebar({ sidebar }: { sidebar: SectionSidebarData }) {
+export function CategorySidebar({ sidebar }: { sidebar: CategorySidebarData }) {
   if (sidebar.type === "text") {
     return (
       <aside className="flex flex-col gap-3" aria-label={sidebar.title}>
@@ -64,8 +62,9 @@ export function SectionSidebar({ sidebar }: { sidebar: SectionSidebarData }) {
       <SidebarFrame title={sidebar.title}>
         {sidebar.items.map((item) => (
           <SidebarItem key={item.id} label={item.label}>
-            {formatProbability(item.previousProbability)} →{" "}
-            {formatProbability(item.probability)} · {formatChange(item.change)}
+            {formatProbabilityAsCents(item.previousProbability)} →{" "}
+            {formatProbabilityAsCents(item.probability)} ·{" "}
+            {formatChangeInPoints(item.change)}
           </SidebarItem>
         ))}
       </SidebarFrame>
@@ -77,8 +76,8 @@ export function SectionSidebar({ sidebar }: { sidebar: SectionSidebarData }) {
       <SidebarFrame title={sidebar.title}>
         {sidebar.items.map((item) => (
           <SidebarItem key={item.id} label={item.label}>
-            {formatProbability(item.probability)} ·{" "}
-            {formatChange(item.change24h)}
+            {formatProbabilityAsCents(item.probability)} ·{" "}
+            {formatChangeInPoints(item.change24h)}
           </SidebarItem>
         ))}
       </SidebarFrame>
@@ -89,7 +88,7 @@ export function SectionSidebar({ sidebar }: { sidebar: SectionSidebarData }) {
     <SidebarFrame title={sidebar.title}>
       {sidebar.items.map((item) => (
         <SidebarItem key={item.id} label={item.label}>
-          {formatProbability(item.probability)}
+          {formatProbabilityAsCents(item.probability)}
         </SidebarItem>
       ))}
     </SidebarFrame>
