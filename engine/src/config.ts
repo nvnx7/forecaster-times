@@ -4,7 +4,7 @@ export type ImagePreset = {
   aspectRatio: ImageAspectRatio;
 };
 
-export const IMAGE_PRESETS: Record<ImagePresetKey, ImagePreset> = {
+export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
   frontLeadWide: { aspectRatio: "3:2" },
   sectionLeadWide: { aspectRatio: "3:2" },
   sectionLeadPortrait: { aspectRatio: "4:5" },

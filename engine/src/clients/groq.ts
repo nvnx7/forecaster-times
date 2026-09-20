@@ -1,9 +1,7 @@
-import OpenAI from "openai";
-
+import Groq from "groq-sdk";
 import { logger } from "../logger";
 
-const groqBaseUrl = "https://api.groq.com/openai/v1";
-export const groqGptOss20bModel = "openai/gpt-oss-20b" as const;
+export const groqGptOss120bModel = "openai/gpt-oss-120b" as const;
 
 export type GroqAIClientOptions = {
   apiKey: string;
@@ -14,17 +12,22 @@ export type GroqPromptOptions = {
   systemPrompt?: string;
   temperature?: number;
   maxCompletionTokens?: number;
+  jsonMode?: boolean;
 };
 
 /** Text-generation client for Groq's OpenAI-compatible API. */
 export class GroqAIClient {
-  private readonly client: OpenAI;
+  // private readonly client: OpenAI;
+  private readonly client: Groq;
 
   constructor(options: GroqAIClientOptions) {
-    this.client = new OpenAI({
+    // this.client = new OpenAI({
+    //   apiKey: options.apiKey,
+    //   baseURL: groqBaseUrl,
+    //   timeout: options.timeoutMs ?? 120_000,
+    // });
+    this.client = new Groq({
       apiKey: options.apiKey,
-      baseURL: groqBaseUrl,
-      timeout: options.timeoutMs ?? 120_000,
     });
   }
 
@@ -44,22 +47,26 @@ export class GroqAIClient {
     }
 
     logger.debug("Groq text generation started", {
-      model: groqGptOss20bModel,
+      model: groqGptOss120bModel,
       maxCompletionTokens: options.maxCompletionTokens,
     });
 
     try {
+      // console.log("INPUT", input);
       const response = await this.client.chat.completions.create({
-        model: groqGptOss20bModel,
+        model: groqGptOss120bModel,
         messages: [
-          ...(options.systemPrompt
-            ? [{ role: "system" as const, content: options.systemPrompt }]
-            : []),
           { role: "user", content: input },
+          // ...(options.systemPrompt
+          //   ? [{ role: "system" as const, content: options.systemPrompt }]
+          //   : []),
         ],
+        // response_format: { type: "json_object" },
         temperature: options.temperature,
-        max_completion_tokens: options.maxCompletionTokens,
+        // max_completion_tokens: options.maxCompletionTokens,
+        // response_format: options.jsonMode ? { type: "json_object" } : undefined,
       });
+      // logger.info("RESPONSE", "\n", response);
       const text = response.choices[0]?.message.content;
       if (!text) {
         throw new Error("Groq returned a completion without text content.");
@@ -73,11 +80,13 @@ export class GroqAIClient {
 
       return text;
     } catch (error) {
-      logger.error("Groq text generation failed", {
-        model: groqGptOss20bModel,
-        status: error instanceof OpenAI.APIError ? error.status : undefined,
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
+      logger.error("Groq text generation failed:", error);
+      // logger.error("Groq text generation failed", {
+      //   model: groqGptOss20bModel,
+      //   status: error instanceof OpenAI.APIError ? error.status : undefined,
+      //   responseBody: getLoggableServiceError(error),
+      //   message: error instanceof Error ? error.message : "Unknown error",
+      // });
       throw error;
     }
   }

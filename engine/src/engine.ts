@@ -10,7 +10,7 @@ import {
 import {
   defaultEditorialEngineConfig,
   type EditorialEngineConfig,
-  IMAGE_PRESETS,
+  imagePresets,
 } from "./config";
 import type { StoryImageGenerator } from "./image-generators";
 import { getImagePreset } from "./image-generators";
@@ -408,7 +408,7 @@ export class EditorialEngine {
           src: `/api/front/illustrations/${encodeURIComponent(story.id)}`,
           alt: image.alt,
           placement: getIllustrationPlacement(role),
-          aspectRatio: IMAGE_PRESETS[preset].aspectRatio,
+          aspectRatio: imagePresets[preset].aspectRatio,
           asset: {
             objectKey,
             contentType: image.contentType,

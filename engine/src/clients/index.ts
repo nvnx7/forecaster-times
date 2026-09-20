@@ -9,7 +9,7 @@ export {
   GroqAIClient,
   type GroqAIClientOptions,
   type GroqPromptOptions,
-  groqGptOss20bModel,
+  groqGptOss120bModel as groqGptOss20bModel,
 } from "./groq";
 export { NansenClient, type NansenClientOptions } from "./nansen";
 export {

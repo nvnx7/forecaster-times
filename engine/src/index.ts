@@ -15,9 +15,9 @@ export {
 export {
   defaultEditorialEngineConfig as defaultEditorialConfig,
   type EditorialEngineConfig as EditorialConfig,
-  IMAGE_PRESETS,
   type ImagePreset,
   imageGenerationConfig,
+  imagePresets as IMAGE_PRESETS,
 } from "./config";
 export {
   createEditorialEngine,

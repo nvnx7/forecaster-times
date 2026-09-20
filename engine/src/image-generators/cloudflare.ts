@@ -1,5 +1,5 @@
 import type { CloudflareWorkersAiClient, GeneratedImage } from "../clients";
-import { IMAGE_PRESETS, imageGenerationConfig } from "../config";
+import { imageGenerationConfig, imagePresets } from "../config";
 import { logger } from "../logger";
 import type { Story } from "../types";
 import type {
@@ -31,7 +31,7 @@ export class CloudflareStoryImageGenerator implements StoryImageGenerator {
   async generateStoryImage(
     request: StoryImageGenerationRequest,
   ): Promise<GeneratedStoryImage> {
-    const preset = IMAGE_PRESETS[request.preset];
+    const preset = imagePresets[request.preset];
     const dimensions =
       imageGenerationConfig.dimensionsByAspectRatio[preset.aspectRatio];
 
