@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { EditorialEngineConfig } from "../config";
+import { storyCategorySchema } from "../schema/front-page";
 import type { PolymarketMarket, StorySource } from "../types";
 import { wordCount } from "../utils";
 
@@ -14,16 +15,7 @@ function boundedText(maxWords: number) {
 
 export function createGeneratedStorySchema(config: EditorialEngineConfig) {
   return z.object({
-    section: z.enum([
-      "world",
-      "politics",
-      "money",
-      "technology",
-      "crypto",
-      "sports",
-      "culture",
-      "oddities",
-    ]),
+    category: storyCategorySchema,
     kicker: boundedText(config.story.kickerMaxWords),
     headline: z.object({
       long: boundedText(config.story.headline.longMaxWords),
@@ -106,7 +98,7 @@ MARKET:${JSON.stringify(market)}
 SOURCES:${JSON.stringify(sources)}
 Rules: summarize sources; do not browse, invent facts, or treat market values as proof. Use cautious attribution for market context. Return JSON only—no Markdown, prices, IDs, byline, metadata, illustration, or trade prompt.
 Limits: kicker ${config.story.kickerMaxWords} words; headlines ${config.story.headline.longMaxWords}/${config.story.headline.mediumMaxWords}/${config.story.headline.shortMaxWords} words; dek ${config.story.dekMaxWords} words; body ${config.story.body.minBlocks}-${config.story.body.maxBlocks} blocks, ${config.story.body.maxWords} words total.
-JSON:{"section":"world","kicker":"...","headline":{"long":"...","medium":"...","short":"..."},"dek":"...","body":[{"type":"paragraph","text":"..."}]}`;
+JSON:{"category":"world","kicker":"...","headline":{"long":"...","medium":"...","short":"..."},"dek":"...","body":[{"type":"paragraph","text":"..."}]}`;
 }
 
 function packSources(

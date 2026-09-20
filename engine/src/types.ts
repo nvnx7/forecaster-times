@@ -1,4 +1,4 @@
-export type StorySection =
+export type StoryCategory =
   | "world"
   | "politics"
   | "money"
@@ -12,16 +12,16 @@ export type ImageAspectRatio = "3:2" | "4:5" | "1:1";
 
 export type ImagePresetKey =
   | "frontLeadWide"
-  | "sectionLeadWide"
-  | "sectionLeadPortrait"
+  | "categoryLeadWide"
+  | "categoryLeadPortrait"
   | "secondaryWide"
   | "secondarySquare";
 
 export type StoryRole =
   | "front-lead"
   | "front-secondary"
-  | "section-lead"
-  | "section-secondary"
+  | "category-lead"
+  | "category-secondary"
   | "brief";
 
 export type ParagraphBlock =
@@ -59,7 +59,7 @@ export type Illustration = {
 
 export type Story = {
   id: string;
-  section: StorySection;
+  category: StoryCategory;
   kicker?: string;
   headline: { long: string; medium: string; short: string };
   dek?: string;
@@ -84,7 +84,7 @@ export type StorySource = {
 
 export type Brief = {
   id: string;
-  section: StorySection;
+  category: StoryCategory;
   headline: string;
   summary?: string;
   probability?: number;
@@ -161,6 +161,107 @@ export type FrontPageDraft = {
   marketCandidates: PolymarketMarket[];
   briefMarkets: PolymarketMarket[];
   stories: FrontPageDraftStory[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CategoryPageId =
+  | "world-politics"
+  | "money-markets"
+  | "technology-culture"
+  | "sports"
+  | "odds-oddities";
+
+export type CategoryLayoutVariant =
+  | "category-lead"
+  | "dense"
+  | "visual-lead"
+  | "market-heavy";
+
+export type CategoryStory = Story & {
+  continuation?: { label: string; pageNumber: number };
+};
+
+export type CategoryBrief = {
+  id: string;
+  category: StoryCategory;
+  kicker?: string;
+  headline: string;
+  summary?: string;
+  probability?: number;
+  change24h?: number;
+  market?: MarketReference;
+};
+
+export type CategorySidebar =
+  | {
+      type: "changes";
+      title: string;
+      items: {
+        id: string;
+        label: string;
+        previousProbability: number;
+        probability: number;
+        change: number;
+      }[];
+    }
+  | {
+      type: "movers";
+      title: string;
+      items: {
+        id: string;
+        label: string;
+        probability: number;
+        change24h: number;
+      }[];
+    }
+  | {
+      type: "odds";
+      title: string;
+      items: { id: string; label: string; probability: number }[];
+    }
+  | { type: "text"; title: string; body: string };
+
+export type CategoryMarketBoard = {
+  title: string;
+  subtitle?: string;
+  items: {
+    id: string;
+    label: string;
+    probability: number;
+    change24h?: number;
+    volume24hUsd?: number;
+    market: MarketReference;
+  }[];
+};
+
+export type CategoryPage = {
+  pageNumber: number;
+  category: {
+    id: CategoryPageId;
+    label: string;
+    shortLabel?: string;
+    description?: string;
+  };
+  edition: { id: string; now: string };
+  layoutVariant: CategoryLayoutVariant;
+  leadStory: CategoryStory;
+  secondaryStories: CategoryStory[];
+  briefs: CategoryBrief[];
+  sidebar?: CategorySidebar;
+  marketBoard?: CategoryMarketBoard;
+  footerStories?: CategoryBrief[];
+};
+
+export type CategoryPageDraftStory = FrontPageDraftStory;
+
+export type CategoryPageDraft = {
+  version: 1;
+  categoryId: CategoryPageId;
+  edition: CategoryPage["edition"];
+  marketCandidates: PolymarketMarket[];
+  briefMarkets: PolymarketMarket[];
+  stories: CategoryPageDraftStory[];
   createdAt: string;
   updatedAt: string;
 };

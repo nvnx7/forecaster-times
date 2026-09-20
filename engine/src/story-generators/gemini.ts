@@ -16,9 +16,9 @@ type GeminiInteractionResponse = {
 const generatedStoryJsonSchema = {
   type: "OBJECT",
   additionalProperties: false,
-  required: ["section", "kicker", "headline", "dek", "body"],
+  required: ["category", "kicker", "headline", "dek", "body"],
   properties: {
-    section: {
+    category: {
       type: "STRING",
       enum: [
         "world",

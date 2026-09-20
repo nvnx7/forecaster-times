@@ -17,7 +17,7 @@ export class MockStoryGenerator implements StoryGenerator {
 
     return {
       id: `story-${market.market_id}`,
-      section: "world",
+      category: "world",
       kicker: market.event_title ?? "Latest News",
       headline: {
         long: headline,

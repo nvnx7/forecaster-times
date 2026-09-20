@@ -1,5 +1,6 @@
 import {
   S3Client as AwsS3Client,
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -201,6 +202,29 @@ export class S3JsonStore {
 
   async deleteJson(key: string): Promise<void> {
     await this.deleteObject(key);
+  }
+
+  /** S3 promotion primitive: copies a completed draft before its source is removed. */
+  async copyObject(sourceKey: string, destinationKey: string): Promise<void> {
+    logger.debug("S3 object copy started", { sourceKey, destinationKey });
+
+    try {
+      await this.client.send(
+        new CopyObjectCommand({
+          Bucket: this.options.bucketName,
+          CopySource: `${this.options.bucketName}/${encodeURIComponent(sourceKey).replaceAll("%2F", "/")}`,
+          Key: destinationKey,
+        }),
+      );
+      logger.debug("S3 object copy completed", { sourceKey, destinationKey });
+    } catch (error) {
+      logger.error("S3 object copy failed", {
+        sourceKey,
+        destinationKey,
+        ...getS3ErrorDetails(error),
+      });
+      throw error;
+    }
   }
 
   async deleteObject(key: string): Promise<void> {

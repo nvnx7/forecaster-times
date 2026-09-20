@@ -55,7 +55,7 @@ export function toMarketBrief(market: PolymarketMarket): Brief {
 
   return {
     id: `brief-${market.market_id}`,
-    section: "money",
+    category: "money",
     headline: market.question ?? "Untitled prediction market",
     summary: `Traders price this outcome at ${Math.round(probability * 100)}¢${changeText}.`,
     probability,

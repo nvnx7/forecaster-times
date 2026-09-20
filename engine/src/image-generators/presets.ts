@@ -1,9 +1,9 @@
-import type { ImagePresetKey, StoryRole, StorySection } from "../types";
+import type { ImagePresetKey, StoryCategory, StoryRole } from "../types";
 
 /** Selects an illustration shape only where it supports the editorial layout. */
 export function getImagePreset(
   role: StoryRole,
-  section: StorySection,
+  category: StoryCategory,
 ): ImagePresetKey | null {
   if (role === "front-lead") {
     return "frontLeadWide";
@@ -13,20 +13,20 @@ export function getImagePreset(
     return null;
   }
 
-  if (role === "section-lead") {
-    if (section === "politics" || section === "world") {
-      return "sectionLeadPortrait";
+  if (role === "category-lead") {
+    if (category === "politics" || category === "world") {
+      return "categoryLeadPortrait";
     }
 
-    return "sectionLeadWide";
+    return "categoryLeadWide";
   }
 
-  if (role === "section-secondary") {
-    if (section === "culture" || section === "oddities") {
+  if (role === "category-secondary") {
+    if (category === "culture" || category === "oddities") {
       return "secondarySquare";
     }
 
-    if (section === "sports" || section === "technology") {
+    if (category === "sports" || category === "technology") {
       return "secondaryWide";
     }
   }

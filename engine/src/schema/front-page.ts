@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-const storySectionSchema = z.enum([
+import { editionSchema } from "./edition";
+import { marketReferenceSchema } from "./market";
+
+export const storyCategorySchema = z.enum([
   "world",
   "politics",
   "money",
@@ -15,19 +18,6 @@ const paragraphBlockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("pullquote"), text: z.string() }),
   z.object({ type: z.literal("subheading"), text: z.string() }),
 ]);
-const marketReferenceSchema = z.object({
-  marketId: z.string(),
-  question: z.string(),
-  slug: z.string().optional(),
-  eventId: z.string().optional(),
-  eventTitle: z.string().optional(),
-  active: z.boolean().optional(),
-  closed: z.boolean().optional(),
-  endDate: z.string().optional(),
-  negRisk: z.boolean().optional(),
-  tags: z.array(z.string()),
-  createdAt: z.string().optional(),
-});
 const marketPanelSchema = z.object({
   marketId: z.string(),
   question: z.string(),
@@ -43,7 +33,7 @@ const marketPanelSchema = z.object({
 });
 export const storySchema = z.object({
   id: z.string(),
-  section: storySectionSchema,
+  category: storyCategorySchema,
   kicker: z.string().optional(),
   headline: z.object({
     long: z.string(),
@@ -68,8 +58,8 @@ export const storySchema = z.object({
           contentType: z.string(),
           preset: z.enum([
             "frontLeadWide",
-            "sectionLeadWide",
-            "sectionLeadPortrait",
+            "categoryLeadWide",
+            "categoryLeadPortrait",
             "secondaryWide",
             "secondarySquare",
           ]),
@@ -88,16 +78,13 @@ export const storySchema = z.object({
 
 export const frontPageSchema = z.object({
   pageNumber: z.number().int().positive(),
-  edition: z.object({
-    id: z.string(),
-    now: z.string().datetime(),
-  }),
+  edition: editionSchema,
   leadStory: storySchema,
   secondaryStories: z.array(storySchema),
   briefs: z.array(
     z.object({
       id: z.string(),
-      section: storySectionSchema,
+      category: storyCategorySchema,
       headline: z.string(),
       summary: z.string().optional(),
       probability: z.number().optional(),

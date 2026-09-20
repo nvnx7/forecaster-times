@@ -1,10 +1,13 @@
 import { z } from "zod";
+
+import { categoryPageIdSchema } from "./category";
 import { editionSchema } from "./edition";
 import { storySchema } from "./front-page";
 import { polymarketMarketSchema, storySourceSchema } from "./market";
 
-export const frontPageDraftSchema = z.object({
+export const categoryPageDraftSchema = z.object({
   version: z.literal(1),
+  categoryId: categoryPageIdSchema,
   edition: editionSchema,
   marketCandidates: z.array(polymarketMarketSchema),
   briefMarkets: z.array(polymarketMarketSchema),

@@ -13,12 +13,14 @@ export {
   TinyFishMarketNewsResearchError,
 } from "./clients";
 export {
+  categoryPageConfigs,
   defaultEditorialEngineConfig as defaultEditorialConfig,
   type EditorialEngineConfig as EditorialConfig,
   type ImagePreset,
   imageGenerationConfig,
   imagePresets as IMAGE_PRESETS,
 } from "./config";
+export { CategoryPagePipeline } from "./core";
 export {
   createEditorialEngine,
   EditorialEngine,
@@ -32,7 +34,12 @@ export {
   type StoryImageGenerator,
 } from "./image-generators";
 export { logger } from "./logger";
-export { frontPageDraftSchema, frontPageSchema } from "./schema";
+export {
+  categoryPageDraftSchema,
+  categoryPageSchema,
+  frontPageDraftSchema,
+  frontPageSchema,
+} from "./schema";
 export {
   frontPageSecondaryStoryCount,
   rankFrontPageMarketCandidates,
@@ -48,6 +55,15 @@ export {
 } from "./story-generators";
 export type {
   Brief,
+  CategoryBrief,
+  CategoryLayoutVariant,
+  CategoryMarketBoard,
+  CategoryPage,
+  CategoryPageDraft,
+  CategoryPageDraftStory,
+  CategoryPageId,
+  CategorySidebar,
+  CategoryStory,
   FrontPage,
   FrontPageDraft,
   FrontPageDraftStory,
@@ -64,8 +80,8 @@ export type {
   PolymarketMarketSortField,
   SidebarBlock,
   Story,
+  StoryCategory,
   StoryRole,
-  StorySection,
   StorySource,
 } from "./types";
 export {

@@ -2,38 +2,12 @@ import axios, { type AxiosInstance } from "axios";
 import { z } from "zod";
 
 import { logger } from "../logger";
+import { polymarketMarketSchema } from "../schema/market";
 import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
 } from "../types";
 import { getLoggableServiceError } from "../utils";
-
-const polymarketMarketSchema = z.object({
-  market_id: z.string(),
-  question: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  event_id: z.string().nullable().optional(),
-  event_title: z.string().nullable().optional(),
-  active: z.boolean().nullable().optional(),
-  closed: z.boolean().nullable().optional(),
-  end_date: z.string().nullable().optional(),
-  neg_risk: z.boolean().nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  volume: z.number().nullable().optional(),
-  volume_24hr: z.number().nullable().optional(),
-  volume_1wk: z.number().nullable().optional(),
-  volume_1mo: z.number().nullable().optional(),
-  liquidity: z.number().nullable().optional(),
-  volume_change_pct: z.number().nullable().optional(),
-  open_interest: z.number().nullable().optional(),
-  best_bid: z.number().nullable().optional(),
-  best_ask: z.number().nullable().optional(),
-  last_trade_price: z.number().nullable().optional(),
-  one_day_price_change: z.number().nullable().optional(),
-  unique_traders_24h: z.number().int().nullable().optional(),
-  created_at: z.string().nullable().optional(),
-  age_hours: z.number().nullable().optional(),
-});
 
 const listPolymarketMarketsResponseSchema = z.object({
   pagination: z

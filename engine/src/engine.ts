@@ -12,6 +12,7 @@ import {
   type EditorialEngineConfig,
   imagePresets,
 } from "./config";
+import { CategoryPagePipeline } from "./core";
 import type { StoryImageGenerator } from "./image-generators";
 import { getImagePreset } from "./image-generators";
 import { logger } from "./logger";
@@ -24,6 +25,8 @@ import {
 import type { StoryGenerator } from "./story-generators";
 import type {
   Brief,
+  CategoryPage,
+  CategoryPageId,
   FrontPage,
   FrontPageDraft,
   ListPolymarketMarketsParams,
@@ -35,6 +38,7 @@ import type {
 } from "./types";
 import {
   delay,
+  getImageExtension,
   getMarketProbability,
   toMarketBrief,
   toMarketReference,
@@ -51,22 +55,7 @@ function getFrontPageStoryRole(index: number): StoryRole {
 }
 
 function getIllustrationPlacement(role: StoryRole): "wide" | "float-right" {
-  return role === "section-lead" ? "float-right" : "wide";
-}
-
-function getImageExtension(contentType: string): string {
-  switch (contentType.split(";", 1)[0]?.toLowerCase()) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    default:
-      throw new Error(
-        `Unsupported generated image content type: ${contentType}`,
-      );
-  }
+  return role === "category-lead" ? "float-right" : "wide";
 }
 
 function getFrontPageIllustrationObjectKey(
@@ -123,6 +112,7 @@ export type EditorialEngineOptions = {
 };
 
 export class EditorialEngine {
+  private readonly categoryPages;
   private readonly config;
   private readonly frontPageDraftObjectKey;
   private readonly frontPageObjectKey;
@@ -146,6 +136,14 @@ export class EditorialEngine {
     this.tinyFish = new TinyFishClient(options.tinyFish);
     this.storyImageGenerator = options.storyImageGenerator;
     this.storyGenerator = options.storyGenerator;
+    this.categoryPages = new CategoryPagePipeline({
+      nansen: this.nansen,
+      store: this.store,
+      tinyFish: this.tinyFish,
+      storyGenerator: this.storyGenerator,
+      storyImageGenerator: this.storyImageGenerator,
+      config: this.config,
+    });
   }
 
   get frontPageKey(): string {
@@ -168,6 +166,21 @@ export class EditorialEngine {
     }
 
     return this.store.getObject(asset.objectKey);
+  }
+
+  async getCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
+    return this.categoryPages.get(categoryId);
+  }
+
+  async publishCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
+    return this.categoryPages.publish(categoryId);
+  }
+
+  async getCategoryPageIllustration(
+    categoryId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    return this.categoryPages.getIllustration(categoryId, storyId);
   }
 
   async publishFrontPage(): Promise<FrontPage> {
@@ -385,7 +398,7 @@ export class EditorialEngine {
     }
 
     const role = getFrontPageStoryRole(index);
-    const preset = getImagePreset(role, story.section);
+    const preset = getImagePreset(role, story.category);
     if (!preset || story.illustration) {
       return;
     }

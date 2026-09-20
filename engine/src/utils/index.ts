@@ -4,6 +4,7 @@ export {
   isRetryableRequestError,
   toLoggableResponse,
 } from "./http";
+export { getImageExtension } from "./image";
 export {
   clampProbability,
   generateMarketSearchString,

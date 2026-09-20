@@ -1,4 +1,10 @@
-import type { ImageAspectRatio, ImagePresetKey } from "./types";
+import type {
+  CategoryLayoutVariant,
+  CategoryPageId,
+  ImageAspectRatio,
+  ImagePresetKey,
+  StoryCategory,
+} from "./types";
 
 export type ImagePreset = {
   aspectRatio: ImageAspectRatio;
@@ -6,8 +12,8 @@ export type ImagePreset = {
 
 export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
   frontLeadWide: { aspectRatio: "3:2" },
-  sectionLeadWide: { aspectRatio: "3:2" },
-  sectionLeadPortrait: { aspectRatio: "4:5" },
+  categoryLeadWide: { aspectRatio: "3:2" },
+  categoryLeadPortrait: { aspectRatio: "4:5" },
   secondaryWide: { aspectRatio: "3:2" },
   secondarySquare: { aspectRatio: "1:1" },
 };
@@ -21,6 +27,70 @@ export const imageGenerationConfig = {
   stylePrompt:
     "Vintage newspaper editorial illustration, black ink engraving, 19th-century woodcut and cross-hatching style, monochrome, high contrast, off-white paper, no text, no typography, clear editorial composition, historically printed newspaper aesthetic.",
 } as const;
+
+export type CategoryPageConfig = {
+  pageNumber: number;
+  label: string;
+  shortLabel: string;
+  description: string;
+  layoutVariant: CategoryLayoutVariant;
+  storyCategory: StoryCategory;
+  nansenTags: string[];
+  sidebar: { type: "changes" | "movers" | "odds"; title: string };
+};
+
+export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
+  "world-politics": {
+    pageNumber: 2,
+    label: "World & Politics",
+    shortLabel: "World",
+    description: "Elections, diplomacy, government and affairs of consequence.",
+    layoutVariant: "category-lead",
+    storyCategory: "world",
+    nansenTags: ["World", "Politics", "Elections", "Geopolitics"],
+    sidebar: { type: "changes", title: "What Changed Since Yesterday" },
+  },
+  "money-markets": {
+    pageNumber: 3,
+    label: "Money & Markets",
+    shortLabel: "Money",
+    description: "Economy, rates, markets and the wagers moving them.",
+    layoutVariant: "market-heavy",
+    storyCategory: "money",
+    nansenTags: ["Finance", "Economy"],
+    sidebar: { type: "movers", title: "Market Movers" },
+  },
+  "technology-culture": {
+    pageNumber: 4,
+    label: "Technology & Culture",
+    shortLabel: "Technology",
+    description: "The machine age, culture, and the stories gathering force.",
+    layoutVariant: "visual-lead",
+    storyCategory: "technology",
+    nansenTags: ["Technology", "Entertainment"],
+    sidebar: { type: "odds", title: "At a Glance" },
+  },
+  sports: {
+    pageNumber: 5,
+    label: "Sports",
+    shortLabel: "Sports",
+    description: "Fixtures, championships, and the odds behind the contest.",
+    layoutVariant: "visual-lead",
+    storyCategory: "sports",
+    nansenTags: ["Sports"],
+    sidebar: { type: "movers", title: "Market Movers" },
+  },
+  "odds-oddities": {
+    pageNumber: 6,
+    label: "Odds & Oddities",
+    shortLabel: "Oddities",
+    description: "The unusual bets and improbable outcomes of the day.",
+    layoutVariant: "dense",
+    storyCategory: "oddities",
+    nansenTags: ["Crypto", "Entertainment"],
+    sidebar: { type: "odds", title: "The Long Odds" },
+  },
+};
 
 export type EditorialEngineConfig = {
   editionWindowSeconds: number;
