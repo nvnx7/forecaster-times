@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 
 import { logger } from "../logger";
-import { getLoggableServiceError } from "../utils";
+import { getLoggableServiceError, toLoggableResponse } from "../utils";
 
 const workersAiBaseUrl = "https://api.cloudflare.com/client/v4";
 export const flux2Klein4bModel =
@@ -27,6 +27,29 @@ export type GeneratedImage = {
   bytes: Uint8Array;
   contentType: string;
 };
+
+type CloudflareImageResponse = {
+  success?: boolean;
+  errors?: unknown;
+  messages?: unknown;
+  result?: { image?: string };
+};
+
+function isJsonContentType(contentType: string | undefined): boolean {
+  return contentType?.toLowerCase().includes("application/json") ?? false;
+}
+
+function decodeBase64Image(image: string): GeneratedImage {
+  const dataUriMatch = image.match(
+    /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/,
+  );
+  const contentType = dataUriMatch?.[1] ?? "image/png";
+  const encodedImage = dataUriMatch?.[2] ?? image;
+  const binary = atob(encodedImage);
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+
+  return { bytes, contentType };
+}
 
 /** Client for image generation through Cloudflare Workers AI. */
 export class CloudflareWorkersAiClient {
@@ -79,20 +102,57 @@ export class CloudflareWorkersAiClient {
         form,
         { responseType: "arraybuffer" },
       );
+      const bytes = new Uint8Array(response.data);
       const responseContentType = response.headers["content-type"];
       const contentType =
         typeof responseContentType === "string"
           ? responseContentType
-          : "image/png";
-      const bytes = new Uint8Array(response.data);
+          : undefined;
+
+      if (isJsonContentType(contentType)) {
+        const responseText = new TextDecoder().decode(bytes);
+        let payload: CloudflareImageResponse;
+        try {
+          payload = JSON.parse(responseText) as CloudflareImageResponse;
+        } catch {
+          throw new Error(
+            `Cloudflare Workers AI returned invalid JSON: ${toLoggableResponse(responseText)}`,
+          );
+        }
+
+        logger.info("Cloudflare Workers AI image response received", {
+          model: flux2Klein4bModel,
+          contentType,
+          responseBody: toLoggableResponse(payload),
+        });
+
+        const encodedImage = payload.result?.image;
+        if (!payload.success || !encodedImage) {
+          throw new Error(
+            `Cloudflare Workers AI returned an unsuccessful image response: ${toLoggableResponse(payload)}`,
+          );
+        }
+
+        const image = decodeBase64Image(encodedImage);
+        logger.debug("Cloudflare Workers AI image generation completed", {
+          model: flux2Klein4bModel,
+          contentType: image.contentType,
+          byteLength: image.bytes.byteLength,
+          responseFormat: "json-base64",
+        });
+        return image;
+      }
+
+      const image = { bytes, contentType: contentType ?? "image/png" };
 
       logger.debug("Cloudflare Workers AI image generation completed", {
         model: flux2Klein4bModel,
-        contentType,
+        contentType: image.contentType,
         byteLength: bytes.byteLength,
+        responseFormat: "binary",
       });
 
-      return { bytes, contentType };
+      return image;
     } catch (error) {
       logger.error("Cloudflare Workers AI image generation failed", {
         model: flux2Klein4bModel,

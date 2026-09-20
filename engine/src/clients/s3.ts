@@ -24,6 +24,11 @@ export type S3JsonStoreOptions = {
   forcePathStyle: boolean;
 };
 
+export type StoredObject = {
+  bytes: Uint8Array;
+  contentType: string;
+};
+
 function getS3ErrorDetails(error: unknown) {
   if (error instanceof S3ServiceException) {
     return {
@@ -128,16 +133,86 @@ export class S3JsonStore {
     }
   }
 
+  async getObject(key: string): Promise<StoredObject> {
+    logger.debug("S3 object read started", { key });
+
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({ Bucket: this.options.bucketName, Key: key }),
+      );
+      if (!response.Body) {
+        throw new Error(`Object has no body: ${key}`);
+      }
+
+      const bytes = await response.Body.transformToByteArray();
+      const contentType = response.ContentType ?? "application/octet-stream";
+      logger.debug("S3 object read completed", {
+        key,
+        contentType,
+        byteLength: bytes.byteLength,
+      });
+      return { bytes, contentType };
+    } catch (error) {
+      if (
+        error instanceof S3ServiceException &&
+        ["NoSuchKey", "NotFound", "NoSuchBucket"].includes(error.name)
+      ) {
+        logger.debug("S3 object not found", { key });
+        throw new ObjectNotFoundError(key);
+      }
+
+      logger.error("S3 object read failed", {
+        key,
+        ...getS3ErrorDetails(error),
+      });
+      throw error;
+    }
+  }
+
+  async putObject(
+    key: string,
+    body: Uint8Array,
+    contentType: string,
+  ): Promise<void> {
+    logger.debug("S3 object write started", {
+      key,
+      contentType,
+      byteLength: body.byteLength,
+    });
+
+    try {
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: this.options.bucketName,
+          Key: key,
+          Body: body,
+          ContentType: contentType,
+        }),
+      );
+      logger.debug("S3 object write completed", { key });
+    } catch (error) {
+      logger.error("S3 object write failed", {
+        key,
+        ...getS3ErrorDetails(error),
+      });
+      throw error;
+    }
+  }
+
   async deleteJson(key: string): Promise<void> {
-    logger.debug("S3 JSON delete started", { key });
+    await this.deleteObject(key);
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    logger.debug("S3 object delete started", { key });
 
     try {
       await this.client.send(
         new DeleteObjectCommand({ Bucket: this.options.bucketName, Key: key }),
       );
-      logger.debug("S3 JSON delete completed", { key });
+      logger.debug("S3 object delete completed", { key });
     } catch (error) {
-      logger.error("S3 JSON delete failed", {
+      logger.error("S3 object delete failed", {
         key,
         ...getS3ErrorDetails(error),
       });

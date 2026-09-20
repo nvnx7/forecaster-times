@@ -16,6 +16,7 @@ export {
   ObjectNotFoundError,
   S3JsonStore,
   type S3JsonStoreOptions,
+  type StoredObject,
 } from "./s3";
 export {
   TinyFishClient,

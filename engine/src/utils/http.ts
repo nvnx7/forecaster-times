@@ -13,6 +13,21 @@ export function toLoggableResponse(value: unknown): string | undefined {
   if (value === undefined) return undefined;
 
   try {
+    if (value instanceof ArrayBuffer) {
+      return new TextDecoder().decode(value).slice(0, 2_000);
+    }
+
+    if (ArrayBuffer.isView(value)) {
+      return new TextDecoder()
+        .decode(
+          value.buffer.slice(
+            value.byteOffset,
+            value.byteOffset + value.byteLength,
+          ),
+        )
+        .slice(0, 2_000);
+    }
+
     const serialized =
       typeof value === "string" ? value : JSON.stringify(value);
     return serialized?.slice(0, 2_000);
