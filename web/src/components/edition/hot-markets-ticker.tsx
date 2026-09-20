@@ -55,7 +55,7 @@ export function HotMarketsTicker({
         <span className="shrink-0 font-mono text-xs font-semibold tracking-[0.08em] text-destructive uppercase">
           Hot Markets
         </span>
-        <div className="min-w-0 overflow-hidden">
+        <div className="flex min-w-0 flex-1 justify-center overflow-hidden">
           <div className="hot-markets-track">
             <TickerItems markets={hotMarkets} />
             <TickerItems markets={hotMarkets} isDuplicate />

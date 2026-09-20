@@ -18,27 +18,31 @@ export function MarketCategoryNavigation() {
     <nav aria-label="Market categories" className="flex flex-col gap-2">
       <Separator />
       <div className="overflow-x-auto">
-        <div className="flex min-w-max items-center gap-x-5 px-0.5 py-1">
-          <span className="font-mono text-xs font-semibold tracking-[0.08em] text-destructive uppercase">
+        <div className="flex min-w-max items-center py-1 md:min-w-full">
+          <span className="mr-5 shrink-0 font-mono text-xs font-semibold tracking-[0.08em] text-destructive uppercase">
             Markets
           </span>
-          {navigationCategories.map((category) => (
-            <Button
-              key={category.id}
-              type="button"
-              variant={
-                category.id === activeMarketCategoryId
-                  ? "newspaperActive"
-                  : "newspaper"
-              }
-              onClick={handleCategorySelect}
-              aria-current={
-                category.id === activeMarketCategoryId ? "page" : undefined
-              }
-            >
-              {category.label}
-            </Button>
-          ))}
+          <div className="flex min-w-0 flex-1 justify-center">
+            <div className="flex shrink-0 items-center gap-x-12 px-0.5">
+              {navigationCategories.map((category) => (
+                <Button
+                  key={category.id}
+                  type="button"
+                  variant={
+                    category.id === activeMarketCategoryId
+                      ? "newspaperActive"
+                      : "newspaper"
+                  }
+                  onClick={handleCategorySelect}
+                  aria-current={
+                    category.id === activeMarketCategoryId ? "page" : undefined
+                  }
+                >
+                  {category.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       <Separator />
