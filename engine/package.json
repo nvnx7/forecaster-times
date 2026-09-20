@@ -16,6 +16,7 @@
     "axios": "^1.20.0",
     "axios-retry": "^4.5.0",
     "cloudflare": "^7.1.0",
+    "groq-sdk": "^1.6.0",
     "loglevel": "^1.9.2",
     "openai": "^7.19.0",
     "zod": "^4.6.5"
