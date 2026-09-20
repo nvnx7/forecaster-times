@@ -1,4 +1,4 @@
-import type { PolymarketMarket } from "./types";
+import type { PolymarketMarket } from "../types";
 
 export const frontPageSecondaryStoryCount = 2;
 const frontPageBriefCount = 3;

@@ -20,13 +20,16 @@ export {
   imageGenerationConfig,
   imagePresets as IMAGE_PRESETS,
 } from "./config";
-export { CategoryPagePipeline } from "./core";
 export {
+  CategoryPagePipeline,
   createEditorialEngine,
   EditorialEngine,
   type EditorialEngineOptions,
+  frontPageSecondaryStoryCount,
   ObjectNotFoundError,
-} from "./engine";
+  rankFrontPageMarketCandidates,
+  selectFrontPageBriefMarkets,
+} from "./core";
 export {
   CloudflareStoryImageGenerator,
   type CloudflareStoryImageGeneratorOptions,
@@ -40,11 +43,6 @@ export {
   frontPageDraftSchema,
   frontPageSchema,
 } from "./schema";
-export {
-  frontPageSecondaryStoryCount,
-  rankFrontPageMarketCandidates,
-  selectFrontPageBriefMarkets,
-} from "./select-front-page-stories";
 export {
   GeminiStoryGenerator,
   type GeminiStoryGeneratorOptions,
