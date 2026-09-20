@@ -123,6 +123,24 @@ export type FrontPage = {
   footerStories?: Story[];
 };
 
+export type FrontPageDraftStory = {
+  market: PolymarketMarket;
+  sources: StorySource[];
+  story?: Story;
+  attemptCount: number;
+  lastError?: string;
+};
+
+export type FrontPageDraft = {
+  version: 1;
+  edition: FrontPage["edition"];
+  marketCandidates: PolymarketMarket[];
+  briefMarkets: PolymarketMarket[];
+  stories: FrontPageDraftStory[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PolymarketMarketSortField =
   | "volume_24hr"
   | "volume"

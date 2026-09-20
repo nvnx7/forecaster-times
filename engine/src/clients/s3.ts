@@ -1,5 +1,6 @@
 import {
   S3Client as AwsS3Client,
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3ServiceException,
@@ -83,18 +84,18 @@ export class S3JsonStore {
       logger.debug("S3 JSON read completed", { key });
       return document;
     } catch (error) {
-      logger.error("S3 JSON read failed", {
-        key,
-        ...getS3ErrorDetails(error),
-      });
-
       if (
         error instanceof S3ServiceException &&
         ["NoSuchKey", "NotFound", "NoSuchBucket"].includes(error.name)
       ) {
+        logger.debug("S3 JSON object not found", { key });
         throw new ObjectNotFoundError(key);
       }
 
+      logger.error("S3 JSON read failed", {
+        key,
+        ...getS3ErrorDetails(error),
+      });
       throw error;
     }
   }
@@ -120,6 +121,23 @@ export class S3JsonStore {
       logger.debug("S3 JSON write completed", { key });
     } catch (error) {
       logger.error("S3 JSON write failed", {
+        key,
+        ...getS3ErrorDetails(error),
+      });
+      throw error;
+    }
+  }
+
+  async deleteJson(key: string): Promise<void> {
+    logger.debug("S3 JSON delete started", { key });
+
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({ Bucket: this.options.bucketName, Key: key }),
+      );
+      logger.debug("S3 JSON delete completed", { key });
+    } catch (error) {
+      logger.error("S3 JSON delete failed", {
         key,
         ...getS3ErrorDetails(error),
       });

@@ -41,7 +41,7 @@ const marketPanelSchema = z.object({
   tradeUrl: z.string().optional(),
   placement: z.enum(["float-left", "float-right", "full-width"]).optional(),
 });
-const storySchema = z.object({
+export const storySchema = z.object({
   id: z.string(),
   section: storySectionSchema,
   kicker: z.string().optional(),

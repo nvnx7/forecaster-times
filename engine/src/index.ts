@@ -23,7 +23,7 @@ export {
   ObjectNotFoundError,
 } from "./engine";
 export { logger } from "./logger";
-export { frontPageSchema } from "./schema";
+export { frontPageDraftSchema, frontPageSchema } from "./schema";
 export {
   frontPageSecondaryStoryCount,
   rankFrontPageMarketCandidates,
@@ -32,12 +32,16 @@ export {
 export {
   GeminiStoryGenerator,
   type GeminiStoryGeneratorOptions,
+  GroqStoryGenerator,
+  type GroqStoryGeneratorOptions,
   MockStoryGenerator,
   type StoryGenerator,
 } from "./story-generators";
 export type {
   Brief,
   FrontPage,
+  FrontPageDraft,
+  FrontPageDraftStory,
   FrontPageHotMarket,
   Illustration,
   ListPolymarketMarketsParams,
