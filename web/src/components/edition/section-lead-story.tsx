@@ -24,7 +24,7 @@ export function SectionLeadStory({ story }: { story: SectionStory }) {
           {story.headline.long}
         </h1>
         {story.dek ? (
-          <p className="max-w-4xl font-sans text-xl leading-7 font-semibold italic text-muted-foreground md:text-2xl md:leading-8">
+          <p className="max-w-6xl font-sans text-xl leading-7 font-semibold italic text-muted-foreground md:text-2xl md:leading-8">
             {story.dek}
           </p>
         ) : null}

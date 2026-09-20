@@ -24,7 +24,7 @@ export function LeadStory({ story }: { story: Story }) {
           {story.headline.long}
         </h2>
         {story.dek ? (
-          <p className="col-span-12 max-w-4xl font-sans text-xl leading-7 font-semibold italic text-muted-foreground md:text-2xl md:leading-8">
+          <p className="col-span-12 font-sans text-xl leading-7 font-semibold italic text-muted-foreground md:text-2xl md:leading-8">
             {story.dek}
           </p>
         ) : null}
