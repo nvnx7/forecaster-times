@@ -6,6 +6,7 @@ import { useGetFrontPage } from "@/api/getFrontPage";
 import { EditionFooter } from "@/components/edition/edition-footer";
 import { EditionMetadata } from "@/components/edition/edition-metadata";
 import { EditionPaper, EditionShell } from "@/components/edition/edition-shell";
+import { FrontPageBriefs } from "@/components/edition/front-page-briefs";
 import { HotMarketsTicker } from "@/components/edition/hot-markets-ticker";
 import { LeadStory } from "@/components/edition/lead-story";
 import { MarketCategoryNavigation } from "@/components/edition/market-category-navigation";
@@ -56,6 +57,7 @@ export function FrontPage({ embedded = false }: { embedded?: boolean }) {
         <MarketCategoryNavigation />
         <LeadStory story={frontPage.leadStory} />
         <SecondaryStoryRow stories={frontPage.secondaryStories.slice(0, 2)} />
+        <FrontPageBriefs briefs={frontPage.briefs} />
         <EditionFooter pageNumber={frontPage.pageNumber} />
       </>
     );
