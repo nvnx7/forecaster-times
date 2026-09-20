@@ -1,52 +1,8 @@
-import {
-  CloudflareStoryImageGenerator,
-  CloudflareWorkersAiClient,
-  createEditorialEngine,
-  defaultEditorialConfig,
-  GroqAIClient,
-  GroqStoryGenerator,
-  logger,
-} from "@repo/engine";
+import { logger } from "@repo/engine";
 
-import {
-  cloudflareAccountId,
-  cloudflareApiKey,
-  groqApiKey,
-  nansenApiBaseUrl,
-  nansenApiKey,
-  s3AccessKeyId,
-  s3BucketName,
-  s3Endpoint,
-  s3Region,
-  s3SecretAccessKey,
-  tinyFishApiKey,
-} from "./config";
+import { createScriptEditorialEngine } from "./editorial-engine";
 
-const storyGenerator = new GroqStoryGenerator({
-  client: new GroqAIClient({ apiKey: groqApiKey }),
-  config: defaultEditorialConfig,
-});
-
-const storyImageGenerator = new CloudflareStoryImageGenerator({
-  client: new CloudflareWorkersAiClient({
-    accountId: cloudflareAccountId,
-    apiToken: cloudflareApiKey,
-  }),
-});
-
-const editorialEngine = createEditorialEngine({
-  nansen: { apiKey: nansenApiKey, baseUrl: nansenApiBaseUrl },
-  s3: {
-    endpoint: s3Endpoint,
-    accessKeyId: s3AccessKeyId,
-    secretAccessKey: s3SecretAccessKey,
-    region: s3Region,
-    bucketName: s3BucketName,
-  },
-  tinyFish: { apiKey: tinyFishApiKey },
-  storyGenerator,
-  storyImageGenerator,
-});
+const editorialEngine = createScriptEditorialEngine();
 
 try {
   logger.info("Front-page generation script started");
