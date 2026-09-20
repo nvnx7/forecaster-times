@@ -2,6 +2,7 @@ import {
   NansenClient,
   ObjectNotFoundError,
   S3JsonStore,
+  type StoredObject,
   TinyFishClient,
   type TinyFishClientOptions,
   TinyFishMarketNewsResearchError,
@@ -9,7 +10,10 @@ import {
 import {
   defaultEditorialEngineConfig,
   type EditorialEngineConfig,
+  IMAGE_PRESETS,
 } from "./config";
+import type { StoryImageGenerator } from "./image-generators";
+import { getImagePreset } from "./image-generators";
 import { logger } from "./logger";
 import { frontPageDraftSchema, frontPageSchema } from "./schema";
 import {
@@ -26,6 +30,7 @@ import type {
   ListPolymarketMarketsResponse,
   PolymarketMarket,
   Story,
+  StoryRole,
   StorySource,
 } from "./types";
 import {
@@ -40,6 +45,38 @@ const defaultFrontPageObjectKey = "editions/front-page/current.json";
 const defaultFrontPageDraftObjectKey = "editions/front-page/draft.json";
 const frontPageMarketLimit = 10;
 const maxSourcesPerStory = 2;
+
+function getFrontPageStoryRole(index: number): StoryRole {
+  return index === 0 ? "front-lead" : "front-secondary";
+}
+
+function getIllustrationPlacement(role: StoryRole): "wide" | "float-right" {
+  return role === "section-lead" ? "float-right" : "wide";
+}
+
+function getImageExtension(contentType: string): string {
+  switch (contentType.split(";", 1)[0]?.toLowerCase()) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    default:
+      throw new Error(
+        `Unsupported generated image content type: ${contentType}`,
+      );
+  }
+}
+
+function getFrontPageIllustrationObjectKey(
+  editionId: string,
+  storyId: string,
+  contentType: string,
+): string {
+  const extension = getImageExtension(contentType);
+  return `editions/front-page/${encodeURIComponent(editionId)}/illustrations/${encodeURIComponent(storyId)}.${extension}`;
+}
 
 type ResearchedMarket = {
   market: PolymarketMarket;
@@ -81,6 +118,7 @@ export type EditorialEngineOptions = {
   };
   tinyFish: TinyFishClientOptions;
   storyGenerator: StoryGenerator;
+  storyImageGenerator?: StoryImageGenerator;
   config?: EditorialEngineConfig;
 };
 
@@ -90,6 +128,7 @@ export class EditorialEngine {
   private readonly frontPageObjectKey;
   private readonly nansen;
   private readonly store;
+  private readonly storyImageGenerator;
   private readonly storyGenerator;
   private readonly tinyFish;
 
@@ -105,6 +144,7 @@ export class EditorialEngine {
       forcePathStyle: options.s3.forcePathStyle ?? true,
     });
     this.tinyFish = new TinyFishClient(options.tinyFish);
+    this.storyImageGenerator = options.storyImageGenerator;
     this.storyGenerator = options.storyGenerator;
   }
 
@@ -115,6 +155,19 @@ export class EditorialEngine {
   async getFrontPage(): Promise<FrontPage> {
     const document = await this.store.getJson<unknown>(this.frontPageObjectKey);
     return frontPageSchema.parse(document) as FrontPage;
+  }
+
+  async getFrontPageIllustration(storyId: string): Promise<StoredObject> {
+    const frontPage = await this.getFrontPage();
+    const story = [frontPage.leadStory, ...frontPage.secondaryStories].find(
+      (candidate) => candidate.id === storyId,
+    );
+    const asset = story?.illustration?.asset;
+    if (!asset) {
+      throw new ObjectNotFoundError(`front-page illustration: ${storyId}`);
+    }
+
+    return this.store.getObject(asset.objectKey);
   }
 
   async publishFrontPage(): Promise<FrontPage> {
@@ -159,6 +212,7 @@ export class EditorialEngine {
         operationId,
         editionId: draft.edition.id,
       });
+      await this.deleteDraftIllustrations(draft, operationId);
       await this.store.deleteJson(this.frontPageDraftObjectKey);
     }
 
@@ -238,11 +292,11 @@ export class EditorialEngine {
     operationId: string,
   ): Promise<void> {
     for (const [index, draftStory] of draft.stories.entries()) {
-      if (draftStory.story) {
-        continue;
+      if (!draftStory.story) {
+        await this.generateDraftStory(draft, index, operationId);
       }
 
-      await this.generateDraftStory(draft, index, operationId);
+      await this.generateDraftIllustration(draft, index, operationId);
     }
   }
 
@@ -294,6 +348,99 @@ export class EditorialEngine {
     draft.updatedAt = new Date().toISOString();
     const document = frontPageDraftSchema.parse(draft) as FrontPageDraft;
     await this.store.putJson(this.frontPageDraftObjectKey, document);
+  }
+
+  private async deleteDraftIllustrations(
+    draft: FrontPageDraft,
+    operationId: string,
+  ): Promise<void> {
+    for (const draftStory of draft.stories) {
+      const asset = draftStory.story?.illustration?.asset;
+      if (!asset) {
+        continue;
+      }
+
+      try {
+        await this.store.deleteObject(asset.objectKey);
+      } catch (error) {
+        logger.warn("Expired front-page illustration cleanup failed", {
+          operationId,
+          editionId: draft.edition.id,
+          objectKey: asset.objectKey,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+  }
+
+  private async generateDraftIllustration(
+    draft: FrontPageDraft,
+    index: number,
+    operationId: string,
+  ): Promise<void> {
+    const draftStory = draft.stories[index];
+    const story = draftStory?.story;
+    if (!draftStory || !story || !this.storyImageGenerator) {
+      return;
+    }
+
+    const role = getFrontPageStoryRole(index);
+    const preset = getImagePreset(role, story.section);
+    if (!preset || story.illustration) {
+      return;
+    }
+
+    const maximumAttempts = this.config.generationRetryCount + 1;
+    for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+      try {
+        const image = await this.storyImageGenerator.generateStoryImage({
+          story,
+          role,
+          preset,
+        });
+        const objectKey = getFrontPageIllustrationObjectKey(
+          draft.edition.id,
+          story.id,
+          image.contentType,
+        );
+        await this.store.putObject(objectKey, image.bytes, image.contentType);
+        story.illustration = {
+          src: `/api/front/illustrations/${encodeURIComponent(story.id)}`,
+          alt: image.alt,
+          placement: getIllustrationPlacement(role),
+          aspectRatio: IMAGE_PRESETS[preset].aspectRatio,
+          asset: {
+            objectKey,
+            contentType: image.contentType,
+            preset,
+          },
+        };
+        draftStory.illustrationAttemptCount =
+          (draftStory.illustrationAttemptCount ?? 0) + 1;
+        delete draftStory.illustrationLastError;
+        await this.saveFrontPageDraft(draft);
+        return;
+      } catch (error) {
+        draftStory.illustrationAttemptCount =
+          (draftStory.illustrationAttemptCount ?? 0) + 1;
+        draftStory.illustrationLastError =
+          error instanceof Error ? error.message : "Unknown error";
+        await this.saveFrontPageDraft(draft);
+
+        if (attempt === maximumAttempts) {
+          throw error;
+        }
+
+        logger.warn("Front-page illustration generation retry scheduled", {
+          operationId,
+          marketId: draftStory.market.market_id,
+          attempt,
+          maximumAttempts,
+          message: draftStory.illustrationLastError,
+        });
+        await delay(this.config.generationRetryBaseDelayMs * attempt);
+      }
+    }
   }
 
   private async promoteFrontPageDraft(

@@ -56,6 +56,8 @@ export const frontPageDraftSchema = z.object({
       story: storySchema.optional(),
       attemptCount: z.number().int().nonnegative(),
       lastError: z.string().optional(),
+      illustrationAttemptCount: z.number().int().nonnegative().optional(),
+      illustrationLastError: z.string().optional(),
     }),
   ),
   createdAt: z.string().datetime(),

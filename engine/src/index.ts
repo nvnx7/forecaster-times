@@ -15,6 +15,9 @@ export {
 export {
   defaultEditorialEngineConfig as defaultEditorialConfig,
   type EditorialEngineConfig as EditorialConfig,
+  IMAGE_PRESETS,
+  type ImagePreset,
+  imageGenerationConfig,
 } from "./config";
 export {
   createEditorialEngine,
@@ -22,6 +25,12 @@ export {
   type EditorialEngineOptions,
   ObjectNotFoundError,
 } from "./engine";
+export {
+  CloudflareStoryImageGenerator,
+  type CloudflareStoryImageGeneratorOptions,
+  getImagePreset,
+  type StoryImageGenerator,
+} from "./image-generators";
 export { logger } from "./logger";
 export { frontPageDraftSchema, frontPageSchema } from "./schema";
 export {
@@ -44,6 +53,8 @@ export type {
   FrontPageDraftStory,
   FrontPageHotMarket,
   Illustration,
+  ImageAspectRatio,
+  ImagePresetKey,
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
   MarketPanel,
@@ -53,6 +64,7 @@ export type {
   PolymarketMarketSortField,
   SidebarBlock,
   Story,
+  StoryRole,
   StorySection,
   StorySource,
 } from "./types";

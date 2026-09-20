@@ -8,6 +8,22 @@ export type StorySection =
   | "culture"
   | "oddities";
 
+export type ImageAspectRatio = "3:2" | "4:5" | "1:1";
+
+export type ImagePresetKey =
+  | "frontLeadWide"
+  | "sectionLeadWide"
+  | "sectionLeadPortrait"
+  | "secondaryWide"
+  | "secondarySquare";
+
+export type StoryRole =
+  | "front-lead"
+  | "front-secondary"
+  | "section-lead"
+  | "section-secondary"
+  | "brief";
+
 export type ParagraphBlock =
   | { type: "paragraph"; text: string }
   | { type: "pullquote"; text: string }
@@ -33,6 +49,12 @@ export type Illustration = {
   caption?: string;
   credit?: string;
   placement?: "wide" | "float-left" | "float-right";
+  aspectRatio?: ImageAspectRatio;
+  asset?: {
+    objectKey: string;
+    contentType: string;
+    preset: ImagePresetKey;
+  };
 };
 
 export type Story = {
@@ -129,6 +151,8 @@ export type FrontPageDraftStory = {
   story?: Story;
   attemptCount: number;
   lastError?: string;
+  illustrationAttemptCount?: number;
+  illustrationLastError?: string;
 };
 
 export type FrontPageDraft = {
