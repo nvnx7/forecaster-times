@@ -38,8 +38,10 @@ export { logger } from "./logger";
 export {
   categoryPageDraftSchema,
   categoryPageSchema,
+  draftStateSchema,
   frontPageDraftSchema,
   frontPageSchema,
+  latestEditionSchema,
   pageDraftSchema,
 } from "./schema";
 export {
@@ -61,6 +63,7 @@ export type {
   CategoryPageId,
   CategorySidebar,
   CategoryStory,
+  DraftState,
   FrontPage,
   FrontPageDraft,
   FrontPageDraftStory,
@@ -68,6 +71,7 @@ export type {
   Illustration,
   ImageAspectRatio,
   ImagePresetKey,
+  LatestEdition,
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
   MarketPanel,

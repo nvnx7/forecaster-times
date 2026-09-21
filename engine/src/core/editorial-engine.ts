@@ -19,16 +19,28 @@ import { getImagePreset, type StoryImageGenerator } from "../image-generators";
 import { logger } from "../logger";
 import {
   categoryPageSchema,
+  draftStateSchema,
   frontPageSchema,
+  latestEditionSchema,
   pageDraftSchema,
 } from "../schema";
+import {
+  draftIllustrationKey,
+  draftPageKey,
+  draftStateKey,
+  editionIllustrationKey,
+  editionPageKey,
+  latestEditionKey,
+} from "../storage-keys";
 import type { StoryGenerator } from "../story-generators";
 import type {
   CategoryBrief,
   CategoryPage,
   CategoryPageId,
   CategorySidebar,
+  DraftState,
   FrontPage,
+  LatestEdition,
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
   PageDraft,
@@ -39,7 +51,6 @@ import type {
 } from "../types";
 import {
   delay,
-  getImageExtension,
   getMarketProbability,
   toMarketBrief,
   toMarketPanel,
@@ -48,9 +59,9 @@ import {
 } from "../utils";
 
 const maxSourcesPerStory = 2;
+const pageIds = Object.keys(pageConfigs) as CategoryPageId[];
 
 type Page = FrontPage | CategoryPage;
-type PageKeys = { current: string; draft: string };
 type ResearchedMarket = { market: PolymarketMarket; sources: StorySource[] };
 
 function toCategoryBrief(
@@ -86,7 +97,6 @@ function createSidebar(
       change,
     };
   });
-
   if (config.sidebar.type === "changes") {
     return {
       type: "changes",
@@ -128,19 +138,6 @@ function getStoryRole(config: PageConfig, index: number): StoryRole {
   return index === 0 ? "category-lead" : "category-secondary";
 }
 
-function getIllustrationObjectKey(
-  pageId: CategoryPageId,
-  editionId: string,
-  storyId: string,
-  contentType: string,
-): string {
-  const root =
-    pageId === "front"
-      ? "editions/front-page"
-      : `editions/categories/${pageId}`;
-  return `${root}/${encodeURIComponent(editionId)}/illustrations/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
-}
-
 function getIllustrationSource(
   pageId: CategoryPageId,
   storyId: string,
@@ -160,8 +157,6 @@ export type EditorialEngineOptions = {
     region: string;
     bucketName: string;
     forcePathStyle?: boolean;
-    frontPageObjectKey?: string;
-    frontPageDraftObjectKey?: string;
   };
   tinyFish: TinyFishClientOptions;
   storyGenerator: StoryGenerator;
@@ -169,11 +164,9 @@ export type EditorialEngineOptions = {
   config?: EditorialEngineConfig;
 };
 
-/** Generates and serves every editorial page through one resumable pipeline. */
+/** Generates and serves complete, immutable editorial editions. */
 export class EditorialEngine {
   private readonly config;
-  private readonly frontPageDraftObjectKey;
-  private readonly frontPageObjectKey;
   private readonly nansen;
   private readonly store;
   private readonly storyImageGenerator;
@@ -182,10 +175,6 @@ export class EditorialEngine {
 
   constructor(options: EditorialEngineOptions) {
     this.config = options.config ?? defaultEditorialEngineConfig;
-    this.frontPageDraftObjectKey =
-      options.s3.frontPageDraftObjectKey ?? "editions/front-page/draft.json";
-    this.frontPageObjectKey =
-      options.s3.frontPageObjectKey ?? "editions/front-page/current.json";
     this.nansen = new NansenClient(options.nansen);
     this.store = new S3JsonStore({
       ...options.s3,
@@ -197,12 +186,13 @@ export class EditorialEngine {
   }
 
   get frontPageKey(): string {
-    return this.getPageKeys("front").current;
+    return latestEditionKey;
   }
 
   async getPage(pageId: CategoryPageId): Promise<Page> {
+    const latest = await this.getLatestEdition();
     const document = await this.store.getJson<unknown>(
-      this.getPageKeys(pageId).current,
+      editionPageKey(latest.editionId, pageId),
     );
     return pageId === "front"
       ? (frontPageSchema.parse(document) as FrontPage)
@@ -223,9 +213,7 @@ export class EditorialEngine {
     const story = [page.leadStory, ...page.secondaryStories].find(
       (candidate) => candidate.id === storyId,
     );
-    if (!story) {
-      throw new ObjectNotFoundError(`${pageId} story: ${storyId}`);
-    }
+    if (!story) throw new ObjectNotFoundError(`${pageId} story: ${storyId}`);
     return story;
   }
 
@@ -252,21 +240,40 @@ export class EditorialEngine {
     return this.getIllustration(categoryId, storyId);
   }
 
-  async publishPage(pageId: CategoryPageId): Promise<Page> {
+  async publishEdition(): Promise<Map<CategoryPageId, Page>> {
     const operationId = crypto.randomUUID();
-    logger.info("Editorial page generation started", { operationId, pageId });
+    logger.info("Edition generation started", { operationId });
     try {
-      const draft = await this.getOrCreateDraft(pageId, operationId);
-      await this.generateDraftStories(pageId, draft, operationId);
-      return await this.promoteDraft(pageId, draft, operationId);
-    } catch (error) {
-      logger.error("Editorial page generation failed", {
+      const state = await this.getOrCreateDraftState(operationId);
+      const drafts = new Map<CategoryPageId, PageDraft>();
+      for (const pageId of pageIds) {
+        const draft = await this.getOrCreatePageDraft(
+          pageId,
+          state,
+          operationId,
+        );
+        await this.generateDraftStories(pageId, draft, operationId);
+        drafts.set(pageId, draft);
+      }
+      const pages = await this.publishDraft(state, drafts, operationId);
+      logger.info("Edition generation completed", {
         operationId,
-        pageId,
+        editionId: state.editionId,
+      });
+      return pages;
+    } catch (error) {
+      logger.error("Edition generation failed", {
+        operationId,
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
+  }
+
+  async publishPage(pageId: CategoryPageId): Promise<Page> {
+    const page = (await this.publishEdition()).get(pageId);
+    if (!page) throw new Error(`Edition is missing ${pageId}.`);
+    return page;
   }
 
   async publishFrontPage(): Promise<FrontPage> {
@@ -296,64 +303,71 @@ export class EditorialEngine {
     return config;
   }
 
-  private getPageKeys(pageId: CategoryPageId): PageKeys {
-    if (pageId === "front") {
-      return {
-        current: this.frontPageObjectKey,
-        draft: this.frontPageDraftObjectKey,
-      };
-    }
-    const root = `editions/categories/${pageId}`;
-    return { current: `${root}/current.json`, draft: `${root}/draft.json` };
+  private async getLatestEdition(): Promise<LatestEdition> {
+    const document = await this.store.getJson<unknown>(latestEditionKey);
+    return latestEditionSchema.parse(document) as LatestEdition;
   }
 
-  private async getOrCreateDraft(
-    pageId: CategoryPageId,
+  private async getOrCreateDraftState(
     operationId: string,
-  ): Promise<PageDraft> {
-    const draft = await this.getDraft(pageId);
-    if (draft && !this.isDraftExpired(draft)) {
-      logger.info("Editorial page draft resumed", {
+  ): Promise<DraftState> {
+    const state = await this.getDraftState();
+    if (state && !this.isDraftExpired(state)) {
+      logger.info("Edition draft resumed", {
         operationId,
-        pageId,
-        editionId: draft.edition.id,
-        completedStoryCount: draft.stories.filter(({ story }) => story).length,
-        storyCount: draft.stories.length,
+        editionId: state.editionId,
+        startedAt: state.startedAt,
       });
-      return draft;
+      return state;
     }
-    if (draft) {
-      await this.deleteDraftIllustrations(pageId, draft, operationId);
-      await this.store.deleteJson(this.getPageKeys(pageId).draft);
-    }
-    return this.createDraft(pageId, operationId);
+    if (state) await this.discardDraft(state, operationId);
+
+    const now = new Date().toISOString();
+    const nextEditionId = await this.getNextEditionId();
+    const draftState: DraftState = {
+      version: 1,
+      editionId: nextEditionId,
+      startedAt: now,
+      updatedAt: now,
+    };
+    await this.store.putJson(draftStateKey, draftState);
+    return draftState;
   }
 
-  private async getDraft(
-    pageId: CategoryPageId,
-  ): Promise<PageDraft | undefined> {
+  private async getDraftState(): Promise<DraftState | undefined> {
     try {
-      const document = await this.store.getJson<unknown>(
-        this.getPageKeys(pageId).draft,
-      );
-      return pageDraftSchema.parse(document) as PageDraft;
+      const document = await this.store.getJson<unknown>(draftStateKey);
+      return draftStateSchema.parse(document) as DraftState;
     } catch (error) {
       if (error instanceof ObjectNotFoundError) return undefined;
       throw error;
     }
   }
 
-  private isDraftExpired(draft: PageDraft): boolean {
+  private isDraftExpired(state: DraftState): boolean {
     return (
-      Date.now() - new Date(draft.createdAt).getTime() >
-      this.config.editionWindowSeconds * 1_000
+      Date.now() - new Date(state.startedAt).getTime() >
+      this.config.draftExpirySeconds * 1_000
     );
   }
 
-  private async createDraft(
+  private async getNextEditionId(): Promise<number> {
+    try {
+      return (await this.getLatestEdition()).editionId + 1;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return 1;
+      throw error;
+    }
+  }
+
+  private async getOrCreatePageDraft(
     pageId: CategoryPageId,
+    state: DraftState,
     operationId: string,
   ): Promise<PageDraft> {
+    const existingDraft = await this.getPageDraft(pageId);
+    if (existingDraft) return existingDraft;
+
     const config = this.getPageConfig(pageId);
     const { data } = await this.nansen.listPolymarketMarkets({
       status: "active",
@@ -361,28 +375,26 @@ export class EditorialEngine {
       orderBy: [{ field: "volume_24hr", direction: "DESC" }],
       pagination: { page: 1, perPage: config.candidateLimit },
     });
-    const marketCandidates = [...data].sort(
+    const candidates = [...data].sort(
       (first, second) => (second.volume_24hr ?? 0) - (first.volume_24hr ?? 0),
     );
     const selections = await this.selectStoryMarkets(
       pageId,
-      marketCandidates,
+      candidates,
       config.storyCount,
       operationId,
     );
     if (selections.length === 0) {
       throw new Error(`No researched markets available for ${pageId}.`);
     }
-
-    const now = new Date().toISOString();
     const selectedIds = new Set(
       selections.map(({ market }) => market.market_id),
     );
     const draft: PageDraft = {
       version: 1,
-      edition: { id: `${pageId}-${now}`, now },
-      marketCandidates,
-      briefMarkets: marketCandidates
+      edition: { id: state.editionId, now: state.startedAt },
+      marketCandidates: candidates,
+      briefMarkets: candidates
         .filter((market) => !selectedIds.has(market.market_id))
         .slice(0, config.briefCount),
       stories: selections.map(({ market, sources }) => ({
@@ -390,20 +402,24 @@ export class EditorialEngine {
         sources,
         attemptCount: 0,
       })),
-      createdAt: now,
-      updatedAt: now,
+      createdAt: state.startedAt,
+      updatedAt: state.updatedAt,
     };
-    await this.saveDraft(pageId, draft);
-    logger.info("Editorial page draft created", {
-      operationId,
-      pageId,
-      editionId: draft.edition.id,
-      leadMarketId: draft.stories[0]?.market.market_id,
-      secondaryMarketIds: draft.stories
-        .slice(1)
-        .map(({ market }) => market.market_id),
-    });
+    await this.savePageDraft(pageId, draft, state);
     return draft;
+  }
+
+  private async getPageDraft(
+    pageId: CategoryPageId,
+  ): Promise<PageDraft | undefined> {
+    try {
+      return pageDraftSchema.parse(
+        await this.store.getJson<unknown>(draftPageKey(pageId)),
+      ) as PageDraft;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
   }
 
   private async selectStoryMarkets(
@@ -425,7 +441,7 @@ export class EditorialEngine {
         }
       } catch (error) {
         if (!(error instanceof TinyFishMarketNewsResearchError)) throw error;
-        logger.warn("Editorial page market skipped after news research", {
+        logger.warn("Edition market skipped after news research", {
           operationId,
           pageId,
           marketId: market.market_id,
@@ -474,15 +490,15 @@ export class EditorialEngine {
             : generated;
         slot.attemptCount += 1;
         delete slot.lastError;
-        await this.saveDraft(pageId, draft);
+        await this.savePageDraft(pageId, draft);
         return;
       } catch (error) {
         slot.attemptCount += 1;
         slot.lastError =
           error instanceof Error ? error.message : "Unknown error";
-        await this.saveDraft(pageId, draft);
+        await this.savePageDraft(pageId, draft);
         if (attempt === maximumAttempts) throw error;
-        logger.warn("Editorial page story generation retry scheduled", {
+        logger.warn("Edition story generation retry scheduled", {
           operationId,
           pageId,
           marketId: slot.market.market_id,
@@ -509,7 +525,6 @@ export class EditorialEngine {
     const role = getStoryRole(config, index);
     const preset = getImagePreset(role, story.category);
     if (!preset) return;
-
     const maximumAttempts = this.config.generationRetryCount + 1;
     for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
       try {
@@ -518,13 +533,18 @@ export class EditorialEngine {
           role,
           preset,
         });
-        const objectKey = getIllustrationObjectKey(
+        const draftKey = draftIllustrationKey(
           pageId,
-          draft.edition.id,
           story.id,
           image.contentType,
         );
-        await this.store.putObject(objectKey, image.bytes, image.contentType);
+        const editionKey = editionIllustrationKey(
+          draft.edition.id,
+          pageId,
+          story.id,
+          image.contentType,
+        );
+        await this.store.putObject(draftKey, image.bytes, image.contentType);
         story.illustration = {
           src: getIllustrationSource(pageId, story.id),
           alt: image.alt,
@@ -534,13 +554,17 @@ export class EditorialEngine {
               ? "float-left"
               : "wide",
           aspectRatio: imagePresets[preset].aspectRatio,
-          asset: { objectKey, contentType: image.contentType, preset },
+          asset: {
+            objectKey: editionKey,
+            contentType: image.contentType,
+            preset,
+          },
         };
         slot.illustrationAttemptCount =
           (slot.illustrationAttemptCount ?? 0) + 1;
         delete slot.illustrationLastError;
-        await this.saveDraft(pageId, draft);
-        logger.info("Editorial page illustration generated", {
+        await this.savePageDraft(pageId, draft);
+        logger.info("Draft illustration generated", {
           operationId,
           pageId,
           storyId: story.id,
@@ -551,9 +575,9 @@ export class EditorialEngine {
           (slot.illustrationAttemptCount ?? 0) + 1;
         slot.illustrationLastError =
           error instanceof Error ? error.message : "Unknown error";
-        await this.saveDraft(pageId, draft);
+        await this.savePageDraft(pageId, draft);
         if (attempt === maximumAttempts) throw error;
-        logger.warn("Editorial page illustration generation retry scheduled", {
+        logger.warn("Draft illustration generation retry scheduled", {
           operationId,
           pageId,
           marketId: slot.market.market_id,
@@ -566,113 +590,88 @@ export class EditorialEngine {
     }
   }
 
-  private async saveDraft(
+  private async savePageDraft(
     pageId: CategoryPageId,
     draft: PageDraft,
+    state?: DraftState,
   ): Promise<void> {
     draft.updatedAt = new Date().toISOString();
     await this.store.putJson(
-      this.getPageKeys(pageId).draft,
+      draftPageKey(pageId),
       pageDraftSchema.parse(draft),
     );
+    const draftState = state ?? (await this.getDraftState());
+    if (draftState) {
+      draftState.updatedAt = draft.updatedAt;
+      await this.store.putJson(
+        draftStateKey,
+        draftStateSchema.parse(draftState),
+      );
+    }
   }
 
-  private async deleteDraftIllustrations(
+  private async publishDraft(
+    state: DraftState,
+    drafts: Map<CategoryPageId, PageDraft>,
+    operationId: string,
+  ): Promise<Map<CategoryPageId, Page>> {
+    const publishedAt = new Date().toISOString();
+    const pages = new Map<CategoryPageId, Page>();
+    for (const pageId of pageIds) {
+      const draft = drafts.get(pageId);
+      if (!draft) throw new Error(`Draft is missing ${pageId}.`);
+      draft.edition = { id: state.editionId, now: publishedAt };
+      await this.moveDraftIllustrations(pageId, draft);
+      const page = this.createPage(pageId, draft);
+      await this.store.putJson(editionPageKey(state.editionId, pageId), page);
+      pages.set(pageId, page);
+    }
+    await this.store.putJson(latestEditionKey, {
+      editionId: state.editionId,
+      publishedAt,
+    } satisfies LatestEdition);
+    await this.clearDraft(state, operationId);
+    return pages;
+  }
+
+  private async moveDraftIllustrations(
     pageId: CategoryPageId,
     draft: PageDraft,
-    operationId: string,
   ): Promise<void> {
     for (const slot of draft.stories) {
-      const objectKey = slot.story?.illustration?.asset?.objectKey;
-      if (!objectKey) continue;
-      try {
-        await this.store.deleteObject(objectKey);
-      } catch (error) {
-        logger.warn("Expired editorial page illustration cleanup failed", {
-          operationId,
-          pageId,
-          editionId: draft.edition.id,
-          objectKey,
-          message: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
+      const story = slot.story;
+      const asset = story?.illustration?.asset;
+      if (!story || !asset) continue;
+      await this.store.moveObject(
+        draftIllustrationKey(pageId, story.id, asset.contentType),
+        asset.objectKey,
+      );
     }
   }
 
-  private async promoteDraft(
-    pageId: CategoryPageId,
-    draft: PageDraft,
-    operationId: string,
-  ): Promise<Page> {
+  private createPage(pageId: CategoryPageId, draft: PageDraft): Page {
     const [lead, ...secondary] = draft.stories;
     if (!lead?.story || secondary.some((slot) => !slot.story)) {
-      throw new Error("Editorial page draft has unfinished stories.");
+      throw new Error("Draft has unfinished stories.");
     }
     const config = this.getPageConfig(pageId);
-    const page =
-      config.kind === "front"
-        ? this.createFrontPage(draft, lead, secondary)
-        : this.createCategoryPage(pageId, config, draft, lead, secondary);
-    await this.store.putJson(this.getPageKeys(pageId).current, page);
-    try {
-      await this.store.deleteJson(this.getPageKeys(pageId).draft);
-    } catch (error) {
-      logger.warn("Editorial page draft cleanup failed", {
-        operationId,
-        pageId,
-        editionId: page.edition.id,
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
+    if (config.kind === "front") {
+      return frontPageSchema.parse({
+        pageNumber: 1,
+        edition: draft.edition,
+        leadStory: withMarketPanel(lead.story, lead.market),
+        secondaryStories: secondary.map((slot) =>
+          withMarketPanel(slot.story as Story, slot.market),
+        ),
+        briefs: draft.briefMarkets.map(toMarketBrief),
+        hotMarkets: draft.marketCandidates.map((market) => ({
+          market: toMarketReference(market),
+          probability: getMarketProbability(market),
+          change24h: market.one_day_price_change ?? undefined,
+        })),
+      }) as FrontPage;
     }
-    logger.info("Editorial page generation completed", {
-      operationId,
-      pageId,
-      editionId: page.edition.id,
-      objectKey: this.getPageKeys(pageId).current,
-    });
-    return page;
-  }
-
-  private createFrontPage(
-    draft: PageDraft,
-    lead: PageDraft["stories"][number],
-    secondary: PageDraft["stories"],
-  ): FrontPage {
-    if (!lead.story)
-      throw new Error("Front-page draft is missing its lead story.");
-    const secondaryStories = secondary.map((slot) => {
-      if (!slot.story)
-        throw new Error("Front-page draft has an unfinished secondary story.");
-      return withMarketPanel(slot.story, slot.market);
-    });
-    return frontPageSchema.parse({
-      pageNumber: 1,
-      edition: draft.edition,
-      leadStory: withMarketPanel(lead.story, lead.market),
-      secondaryStories,
-      briefs: draft.briefMarkets.map(toMarketBrief),
-      hotMarkets: draft.marketCandidates.map((market) => ({
-        market: toMarketReference(market),
-        probability: getMarketProbability(market),
-        change24h: market.one_day_price_change ?? undefined,
-      })),
-    }) as FrontPage;
-  }
-
-  private createCategoryPage(
-    pageId: CategoryPageId,
-    config: CategoryPageConfig,
-    draft: PageDraft,
-    lead: PageDraft["stories"][number],
-    secondary: PageDraft["stories"],
-  ): CategoryPage {
-    if (
-      pageId === "front" ||
-      !lead.story ||
-      secondary.some((slot) => !slot.story)
-    ) {
-      throw new Error("Category-page draft has unfinished stories.");
-    }
+    if (pageId === "front") throw new Error("Invalid category page ID.");
     return categoryPageSchema.parse({
       pageNumber: config.pageNumber,
       category: {
@@ -703,6 +702,44 @@ export class EditorialEngine {
           })),
       },
     }) as CategoryPage;
+  }
+
+  private async discardDraft(
+    state: DraftState,
+    operationId: string,
+  ): Promise<void> {
+    for (const pageId of pageIds) {
+      const draft = await this.getPageDraft(pageId);
+      if (!draft) continue;
+      for (const slot of draft.stories) {
+        const story = slot.story;
+        const asset = story?.illustration?.asset;
+        if (!story || !asset) continue;
+        await this.store.deleteObject(
+          draftIllustrationKey(pageId, story.id, asset.contentType),
+        );
+      }
+      await this.store.deleteJson(draftPageKey(pageId));
+    }
+    await this.store.deleteJson(draftStateKey);
+    logger.info("Expired draft discarded", {
+      operationId,
+      editionId: state.editionId,
+    });
+  }
+
+  private async clearDraft(
+    state: DraftState,
+    operationId: string,
+  ): Promise<void> {
+    for (const pageId of pageIds) {
+      await this.store.deleteJson(draftPageKey(pageId));
+    }
+    await this.store.deleteJson(draftStateKey);
+    logger.info("Published draft cleared", {
+      operationId,
+      editionId: state.editionId,
+    });
   }
 }
 

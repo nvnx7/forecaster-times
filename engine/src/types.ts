@@ -134,7 +134,7 @@ export type SidebarBlock =
 export type FrontPage = {
   pageNumber: number;
   edition: {
-    id: string;
+    id: number;
     now: string;
   };
   leadStory: Story;
@@ -247,7 +247,7 @@ export type CategoryPage = {
     shortLabel?: string;
     description?: string;
   };
-  edition: { id: string; now: string };
+  edition: { id: number; now: string };
   layoutVariant: CategoryLayoutVariant;
   leadStory: CategoryStory;
   secondaryStories: CategoryStory[];
@@ -261,6 +261,18 @@ export type CategoryPageDraftStory = PageDraftStory;
 
 /** Category and front-page drafts share the same resumable lifecycle shape. */
 export type CategoryPageDraft = PageDraft;
+
+export type DraftState = {
+  version: 1;
+  editionId: number;
+  startedAt: string;
+  updatedAt: string;
+};
+
+export type LatestEdition = {
+  editionId: number;
+  publishedAt: string;
+};
 
 export type PolymarketMarketSortField =
   | "volume_24hr"

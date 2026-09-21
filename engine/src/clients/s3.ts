@@ -227,6 +227,12 @@ export class S3JsonStore {
     }
   }
 
+  /** S3 has no rename primitive, so a move is implemented as copy then delete. */
+  async moveObject(sourceKey: string, destinationKey: string): Promise<void> {
+    await this.copyObject(sourceKey, destinationKey);
+    await this.deleteObject(sourceKey);
+  }
+
   async deleteObject(key: string): Promise<void> {
     logger.debug("S3 object delete started", { key });
 

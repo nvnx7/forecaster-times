@@ -144,7 +144,7 @@ export const categoryPageConfigs = Object.fromEntries(
 ) as Record<Exclude<CategoryPageId, "front">, CategoryPageConfig>;
 
 export type EditorialEngineConfig = {
-  editionWindowSeconds: number;
+  draftExpirySeconds: number;
   generationTimeoutMs: number;
   generationRetryCount: number;
   generationRetryBaseDelayMs: number;
@@ -170,7 +170,7 @@ export type EditorialEngineConfig = {
 };
 
 export const defaultEditorialEngineConfig: EditorialEngineConfig = {
-  editionWindowSeconds: 24 * 60 * 60,
+  draftExpirySeconds: 12 * 60 * 60,
   generationTimeoutMs: 120_000,
   generationRetryCount: 2,
   generationRetryBaseDelayMs: 1_000,

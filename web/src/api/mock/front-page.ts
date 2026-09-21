@@ -3,7 +3,7 @@ import type { FrontPage } from "@/types";
 export const mockFrontPage = {
   pageNumber: 1,
   edition: {
-    id: "front-2026-09-17T08:30:00.000Z",
+    id: 1,
     now: "2026-09-17T08:30:00.000Z",
   },
   leadStory: {
