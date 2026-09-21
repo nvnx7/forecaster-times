@@ -145,7 +145,7 @@ export type FrontPage = {
   footerStories?: Story[];
 };
 
-export type FrontPageDraftStory = {
+export type PageDraftStory = {
   market: PolymarketMarket;
   sources: StorySource[];
   story?: Story;
@@ -155,17 +155,21 @@ export type FrontPageDraftStory = {
   illustrationLastError?: string;
 };
 
-export type FrontPageDraft = {
+export type PageDraft = {
   version: 1;
   edition: FrontPage["edition"];
   marketCandidates: PolymarketMarket[];
   briefMarkets: PolymarketMarket[];
-  stories: FrontPageDraftStory[];
+  stories: PageDraftStory[];
   createdAt: string;
   updatedAt: string;
 };
 
+export type FrontPageDraftStory = PageDraftStory;
+export type FrontPageDraft = PageDraft;
+
 export type CategoryPageId =
+  | "front"
   | "world-politics"
   | "money-markets"
   | "technology-culture"
@@ -238,7 +242,7 @@ export type CategoryMarketBoard = {
 export type CategoryPage = {
   pageNumber: number;
   category: {
-    id: CategoryPageId;
+    id: Exclude<CategoryPageId, "front">;
     label: string;
     shortLabel?: string;
     description?: string;
@@ -253,18 +257,10 @@ export type CategoryPage = {
   footerStories?: CategoryBrief[];
 };
 
-export type CategoryPageDraftStory = FrontPageDraftStory;
+export type CategoryPageDraftStory = PageDraftStory;
 
-export type CategoryPageDraft = {
-  version: 1;
-  categoryId: CategoryPageId;
-  edition: CategoryPage["edition"];
-  marketCandidates: PolymarketMarket[];
-  briefMarkets: PolymarketMarket[];
-  stories: CategoryPageDraftStory[];
-  createdAt: string;
-  updatedAt: string;
-};
+/** Category and front-page drafts share the same resumable lifecycle shape. */
+export type CategoryPageDraft = PageDraft;
 
 export type PolymarketMarketSortField =
   | "volume_24hr"

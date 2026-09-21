@@ -13,22 +13,20 @@ export {
   TinyFishMarketNewsResearchError,
 } from "./clients";
 export {
+  type CategoryPageConfig,
   categoryPageConfigs,
   defaultEditorialEngineConfig as defaultEditorialConfig,
   type EditorialEngineConfig as EditorialConfig,
   type ImagePreset,
   imageGenerationConfig,
   imagePresets as IMAGE_PRESETS,
+  pageConfigs,
 } from "./config";
 export {
-  CategoryPagePipeline,
   createEditorialEngine,
   EditorialEngine,
   type EditorialEngineOptions,
-  frontPageSecondaryStoryCount,
   ObjectNotFoundError,
-  rankFrontPageMarketCandidates,
-  selectFrontPageBriefMarkets,
 } from "./core";
 export {
   CloudflareStoryImageGenerator,
@@ -42,6 +40,7 @@ export {
   categoryPageSchema,
   frontPageDraftSchema,
   frontPageSchema,
+  pageDraftSchema,
 } from "./schema";
 export {
   GeminiStoryGenerator,
@@ -73,6 +72,8 @@ export type {
   ListPolymarketMarketsResponse,
   MarketPanel,
   MarketReference,
+  PageDraft,
+  PageDraftStory,
   ParagraphBlock,
   PolymarketMarket,
   PolymarketMarketSortField,

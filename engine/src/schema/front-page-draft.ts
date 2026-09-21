@@ -3,7 +3,7 @@ import { editionSchema } from "./edition";
 import { storySchema } from "./front-page";
 import { polymarketMarketSchema, storySourceSchema } from "./market";
 
-export const frontPageDraftSchema = z.object({
+export const pageDraftSchema = z.object({
   version: z.literal(1),
   edition: editionSchema,
   marketCandidates: z.array(polymarketMarketSchema),
@@ -22,3 +22,5 @@ export const frontPageDraftSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
+
+export const frontPageDraftSchema = pageDraftSchema;

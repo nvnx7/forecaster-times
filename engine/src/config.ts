@@ -29,6 +29,7 @@ export const imageGenerationConfig = {
 } as const;
 
 export type CategoryPageConfig = {
+  kind: "category";
   pageNumber: number;
   label: string;
   shortLabel: string;
@@ -37,10 +38,32 @@ export type CategoryPageConfig = {
   storyCategory: StoryCategory;
   nansenTags: string[];
   sidebar: { type: "changes" | "movers" | "odds"; title: string };
+  candidateLimit: number;
+  storyCount: number;
+  briefCount: number;
+  marketBoardCount: number;
 };
 
-export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
+export type FrontPageConfig = {
+  kind: "front";
+  pageNumber: 1;
+  candidateLimit: number;
+  storyCount: number;
+  briefCount: number;
+};
+
+export type PageConfig = CategoryPageConfig | FrontPageConfig;
+
+export const pageConfigs: Record<CategoryPageId, PageConfig> = {
+  front: {
+    kind: "front",
+    pageNumber: 1,
+    candidateLimit: 10,
+    storyCount: 3,
+    briefCount: 3,
+  },
   "world-politics": {
+    kind: "category",
     pageNumber: 2,
     label: "World & Politics",
     shortLabel: "World",
@@ -49,8 +72,13 @@ export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
     storyCategory: "world",
     nansenTags: ["World", "Politics", "Elections", "Geopolitics"],
     sidebar: { type: "changes", title: "What Changed Since Yesterday" },
+    candidateLimit: 16,
+    storyCount: 3,
+    briefCount: 4,
+    marketBoardCount: 6,
   },
   "money-markets": {
+    kind: "category",
     pageNumber: 3,
     label: "Money & Markets",
     shortLabel: "Money",
@@ -59,8 +87,13 @@ export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
     storyCategory: "money",
     nansenTags: ["Finance", "Economy"],
     sidebar: { type: "movers", title: "Market Movers" },
+    candidateLimit: 16,
+    storyCount: 3,
+    briefCount: 4,
+    marketBoardCount: 6,
   },
   "technology-culture": {
+    kind: "category",
     pageNumber: 4,
     label: "Technology & Culture",
     shortLabel: "Technology",
@@ -69,8 +102,13 @@ export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
     storyCategory: "technology",
     nansenTags: ["Technology", "Entertainment"],
     sidebar: { type: "odds", title: "At a Glance" },
+    candidateLimit: 16,
+    storyCount: 3,
+    briefCount: 4,
+    marketBoardCount: 6,
   },
   sports: {
+    kind: "category",
     pageNumber: 5,
     label: "Sports",
     shortLabel: "Sports",
@@ -79,8 +117,13 @@ export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
     storyCategory: "sports",
     nansenTags: ["Sports"],
     sidebar: { type: "movers", title: "Market Movers" },
+    candidateLimit: 16,
+    storyCount: 3,
+    briefCount: 4,
+    marketBoardCount: 6,
   },
   "odds-oddities": {
+    kind: "category",
     pageNumber: 6,
     label: "Odds & Oddities",
     shortLabel: "Oddities",
@@ -89,8 +132,16 @@ export const categoryPageConfigs: Record<CategoryPageId, CategoryPageConfig> = {
     storyCategory: "oddities",
     nansenTags: ["Crypto", "Entertainment"],
     sidebar: { type: "odds", title: "The Long Odds" },
+    candidateLimit: 16,
+    storyCount: 3,
+    briefCount: 4,
+    marketBoardCount: 6,
   },
 };
+
+export const categoryPageConfigs = Object.fromEntries(
+  Object.entries(pageConfigs).filter(([pageId]) => pageId !== "front"),
+) as Record<Exclude<CategoryPageId, "front">, CategoryPageConfig>;
 
 export type EditorialEngineConfig = {
   editionWindowSeconds: number;
