@@ -472,6 +472,10 @@ export class EditorialEngine {
   ): Promise<void> {
     const slot = draft.stories[index];
     if (!slot) throw new Error(`Draft story ${index} does not exist.`);
+    await this.invalidateDraftIllustration(pageId, slot.story);
+    slot.story = undefined;
+    await this.savePageDraft(pageId, draft);
+
     const maximumAttempts = this.config.generationRetryCount + 1;
     for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
       try {
@@ -509,6 +513,20 @@ export class EditorialEngine {
         await delay(this.config.generationRetryBaseDelayMs * attempt);
       }
     }
+  }
+
+  private async invalidateDraftIllustration(
+    pageId: CategoryPageId,
+    story: Story | undefined,
+  ): Promise<void> {
+    const asset = story?.illustration?.asset;
+    if (!story?.illustration) return;
+
+    delete story.illustration;
+    if (!asset) return;
+    await this.store.deleteObject(
+      draftIllustrationKey(pageId, story.id, asset.contentType),
+    );
   }
 
   private async generateDraftIllustration(

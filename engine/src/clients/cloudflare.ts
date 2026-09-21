@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 
 import { logger } from "../logger";
-import { getLoggableServiceError, toLoggableResponse } from "../utils";
+import { toLoggableResponse } from "../utils";
 
 const workersAiBaseUrl = "https://api.cloudflare.com/client/v4";
 export const flux2Klein4bModel =
@@ -120,16 +120,18 @@ export class CloudflareWorkersAiClient {
           );
         }
 
-        logger.info("Cloudflare Workers AI image response received", {
+        const encodedImage = payload.result?.image;
+        logger.debug("Cloudflare Workers AI image response received", {
           model: flux2Klein4bModel,
           contentType,
-          responseBody: toLoggableResponse(payload),
+          success: payload.success ?? false,
+          hasImage: Boolean(encodedImage),
+          hasErrors: Boolean(payload.errors),
         });
 
-        const encodedImage = payload.result?.image;
         if (!payload.success || !encodedImage) {
           throw new Error(
-            `Cloudflare Workers AI returned an unsuccessful image response: ${toLoggableResponse(payload)}`,
+            "Cloudflare Workers AI returned an unsuccessful image response.",
           );
         }
 
@@ -157,7 +159,6 @@ export class CloudflareWorkersAiClient {
       logger.error("Cloudflare Workers AI image generation failed", {
         model: flux2Klein4bModel,
         status: axios.isAxiosError(error) ? error.response?.status : undefined,
-        responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
