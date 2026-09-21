@@ -8,8 +8,11 @@
     "start": "turbo run start",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
+    "check-scripts": "tsc --project scripts/tsconfig.json",
     "format": "biome format --write .",
-    "check": "biome check --write ."
+    "check": "biome check --write .",
+    "generate:front": "bun scripts/generate-front-page.ts",
+    "generate:category": "bun scripts/generate-category-page.ts"
   },
   "workspaces": [
     "web",
@@ -17,6 +20,7 @@
     "engine"
   ],
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@biomejs/biome": "^2.5.10",
     "@repo/engine": "*",
     "turbo": "^2.10.11",

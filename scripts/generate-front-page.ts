@@ -5,14 +5,14 @@ import { createScriptEditorialEngine } from "./editorial-engine";
 const editorialEngine = createScriptEditorialEngine();
 
 try {
-  logger.info("Front-page generation script started");
+  logger.info("Edition generation requested by front-page script");
   const frontPage = await editorialEngine.publishFrontPage();
-  logger.info("Front-page generation script completed", {
+  logger.info("Edition generation completed", {
     editionId: frontPage.edition.id,
     objectKey: editorialEngine.frontPageKey,
   });
 } catch (error) {
-  logger.error("Front-page generation script failed", {
+  logger.error("Edition generation failed", {
     message: error instanceof Error ? error.message : "Unknown error",
   });
   process.exitCode = 1;
