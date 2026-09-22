@@ -1,6 +1,7 @@
 export {
   CloudflareWorkersAiClient,
   type CloudflareWorkersAiClientOptions,
+  CloudflareWorkersAiError,
   flux2Klein4bModel,
   type GeneratedImage,
   type GenerateFlux2Klein4bImageParams,
@@ -8,6 +9,13 @@ export {
   type GroqAIClientOptions,
   type GroqPromptOptions,
   groqGptOss20bModel,
+  OpenRouterAIClient,
+  type OpenRouterAIClientOptions,
+  OpenRouterAIError,
+  type OpenRouterGeneratedImage,
+  type OpenRouterImageOptions,
+  type OpenRouterPromptOptions,
+  openRouterGptOss20bModel,
   TinyFishClient,
   type TinyFishClientOptions,
   TinyFishMarketNewsResearchError,
@@ -20,6 +28,8 @@ export {
   type ImagePreset,
   imageGenerationConfig,
   imagePresets as IMAGE_PRESETS,
+  openRouterImageGenerationCandidates,
+  openRouterStoryGenerationCandidates,
   pageConfigs,
 } from "./config";
 export {
@@ -29,9 +39,18 @@ export {
   ObjectNotFoundError,
 } from "./core";
 export {
+  GenerationError,
+  type GenerationFailureKind,
+  isSafetyBlockedError,
+} from "./generation";
+export {
   CloudflareStoryImageGenerator,
   type CloudflareStoryImageGeneratorOptions,
+  FallbackStoryImageGenerator,
+  type FallbackStoryImageGeneratorOptions,
   getImagePreset,
+  OpenRouterStoryImageGenerator,
+  type OpenRouterStoryImageGeneratorOptions,
   type StoryImageGenerator,
 } from "./image-generators";
 export { logger } from "./logger";
@@ -45,11 +64,15 @@ export {
   pageDraftSchema,
 } from "./schema";
 export {
+  FallbackStoryGenerator,
+  type FallbackStoryGeneratorOptions,
   GeminiStoryGenerator,
   type GeminiStoryGeneratorOptions,
   GroqStoryGenerator,
   type GroqStoryGeneratorOptions,
   MockStoryGenerator,
+  OpenRouterStoryGenerator,
+  type OpenRouterStoryGeneratorOptions,
   type StoryGenerator,
 } from "./story-generators";
 export type {
@@ -68,6 +91,7 @@ export type {
   FrontPageDraft,
   FrontPageDraftStory,
   FrontPageHotMarket,
+  GeneratedBy,
   Illustration,
   ImageAspectRatio,
   ImagePresetKey,

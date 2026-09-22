@@ -1,8 +1,18 @@
-import type { PolymarketMarket, Story, StorySource } from "../types";
+import type {
+  GeneratedBy,
+  PolymarketMarket,
+  Story,
+  StorySource,
+} from "../types";
 import type { StoryGenerator } from "./interface";
 
 /** Deterministic generator for exercising the researched-story pipeline. */
 export class MockStoryGenerator implements StoryGenerator {
+  readonly generatedBy: GeneratedBy = {
+    provider: "mock",
+    model: "deterministic",
+  };
+
   async generateStory(
     market: PolymarketMarket,
     sources: readonly StorySource[],
@@ -27,6 +37,7 @@ export class MockStoryGenerator implements StoryGenerator {
       dek: source.description ?? undefined,
       body: [{ type: "paragraph", text: source.text }],
       byline: source.author ?? undefined,
+      generatedBy: this.generatedBy,
       meta: {
         publishedAt: source.published_date ?? undefined,
         sourceLabel: source.title ?? source.final_url ?? source.url,

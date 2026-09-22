@@ -3,50 +3,25 @@ import { z } from "zod";
 import type { EditorialEngineConfig } from "../config";
 import { storyCategorySchema } from "../schema/front-page";
 import type { PolymarketMarket, StorySource } from "../types";
-import { wordCount } from "../utils";
 
-function boundedText(maxWords: number) {
-  return z
-    .string()
-    .trim()
-    .min(1)
-    .refine((value) => wordCount(value) <= maxWords);
-}
-
-export function createGeneratedStorySchema(config: EditorialEngineConfig) {
+/** Validates generated-story structure without imposing editorial length limits. */
+export function createGeneratedStorySchema() {
   return z.object({
     category: storyCategorySchema,
-    kicker: boundedText(config.story.kickerMaxWords),
+    kicker: z.string(),
     headline: z.object({
-      long: boundedText(config.story.headline.longMaxWords),
-      medium: boundedText(config.story.headline.mediumMaxWords),
-      short: boundedText(config.story.headline.shortMaxWords),
+      long: z.string(),
+      medium: z.string(),
+      short: z.string(),
     }),
-    dek: boundedText(config.story.dekMaxWords),
-    body: z
-      .array(
-        z.discriminatedUnion("type", [
-          z.object({
-            type: z.literal("paragraph"),
-            text: boundedText(config.story.body.paragraphMaxWords),
-          }),
-          z.object({
-            type: z.literal("pullquote"),
-            text: boundedText(config.story.body.pullquoteMaxWords),
-          }),
-          z.object({
-            type: z.literal("subheading"),
-            text: boundedText(config.story.body.subheadingMaxWords),
-          }),
-        ]),
-      )
-      .min(config.story.body.minBlocks)
-      .max(config.story.body.maxBlocks)
-      .refine(
-        (blocks) =>
-          blocks.reduce((total, block) => total + wordCount(block.text), 0) <=
-          config.story.body.maxWords,
-      ),
+    dek: z.string(),
+    body: z.array(
+      z.discriminatedUnion("type", [
+        z.object({ type: z.literal("paragraph"), text: z.string() }),
+        z.object({ type: z.literal("pullquote"), text: z.string() }),
+        z.object({ type: z.literal("subheading"), text: z.string() }),
+      ]),
+    ),
   });
 }
 

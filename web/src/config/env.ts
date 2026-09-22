@@ -7,8 +7,7 @@ export const nansenApiBaseUrl =
 export const internalEditionApiKey = process.env
   .INTERNAL_EDITION_API_KEY as string;
 
-export const geminiApiKey = process.env.API_KEY_GEMINI as string;
-export const groqApiKey = process.env.API_KEY_GROQ as string;
+export const openRouterApiKey = process.env.API_KEY_OPENROUTER as string;
 export const tinyFishApiKey = process.env.API_KEY_TINY_FISH as string;
 export const cloudflareApiKey = process.env.API_KEY_CLOUDFLARE as string;
 export const cloudflareAccountId = process.env.ACCOUNT_ID_CLOUDFLARE as string;

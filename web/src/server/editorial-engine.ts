@@ -3,16 +3,22 @@ import {
   CloudflareWorkersAiClient,
   createEditorialEngine,
   defaultEditorialConfig,
-  GeminiStoryGenerator,
+  FallbackStoryGenerator,
+  FallbackStoryImageGenerator,
   logger,
+  OpenRouterAIClient,
+  OpenRouterStoryGenerator,
+  OpenRouterStoryImageGenerator,
+  openRouterImageGenerationCandidates,
+  openRouterStoryGenerationCandidates,
 } from "@repo/engine";
 
 import {
   cloudflareAccountId,
   cloudflareApiKey,
-  geminiApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
+  openRouterApiKey,
   s3AccessKeyId,
   s3BucketName,
   s3Endpoint,
@@ -23,17 +29,43 @@ import {
 
 export { logger };
 
-const storyGenerator = new GeminiStoryGenerator({
-  apiKey: geminiApiKey,
-  model: "gemini-3.8-flash",
-  config: defaultEditorialConfig,
+const cloudflareClient = new CloudflareWorkersAiClient({
+  accountId: cloudflareAccountId,
+  apiToken: cloudflareApiKey,
 });
 
-const storyImageGenerator = new CloudflareStoryImageGenerator({
-  client: new CloudflareWorkersAiClient({
-    accountId: cloudflareAccountId,
-    apiToken: cloudflareApiKey,
-  }),
+const storyGenerator = new FallbackStoryGenerator({
+  generators: openRouterStoryGenerationCandidates.map(
+    ({ model, reasoningEffort }) =>
+      new OpenRouterStoryGenerator({
+        client: new OpenRouterAIClient({
+          apiKey: openRouterApiKey,
+          model,
+          appName: "Probability Press",
+        }),
+        config: defaultEditorialConfig,
+        reasoningEffort,
+      }),
+  ),
+});
+
+const storyImageGenerator = new FallbackStoryImageGenerator({
+  generators: [
+    new CloudflareStoryImageGenerator({
+      client: cloudflareClient,
+    }),
+    ...openRouterImageGenerationCandidates.map(
+      ({ model, ...imageOptions }) =>
+        new OpenRouterStoryImageGenerator({
+          client: new OpenRouterAIClient({
+            apiKey: openRouterApiKey,
+            model,
+            appName: "Probability Press",
+          }),
+          imageOptions,
+        }),
+    ),
+  ],
 });
 
 /** Web's server boundary for the editorial engine and its infrastructure config. */

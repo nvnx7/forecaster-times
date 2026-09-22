@@ -28,30 +28,61 @@ export type GeneratedImage = {
   contentType: string;
 };
 
+export class CloudflareWorkersAiError extends Error {
+  readonly status: number | undefined;
+  readonly code: number | undefined;
+  readonly responseBody: string | undefined;
+
+  constructor(
+    message: string,
+    details: {
+      status?: number;
+      code?: number;
+      responseBody?: string;
+    },
+  ) {
+    super(message);
+    this.name = "CloudflareWorkersAiError";
+    this.status = details.status;
+    this.code = details.code;
+    this.responseBody = details.responseBody;
+  }
+}
+
 type CloudflareImageResponse = {
   success?: boolean;
   errors?: unknown;
-  messages?: unknown;
   result?: { image?: string };
 };
 
-function isJsonContentType(contentType: string | undefined): boolean {
-  return contentType?.toLowerCase().includes("application/json") ?? false;
+function getCloudflareErrorCode(
+  responseBody: string | undefined,
+): number | undefined {
+  if (!responseBody) return undefined;
+
+  try {
+    const payload = JSON.parse(responseBody) as {
+      errors?: { code?: unknown }[];
+    };
+    const code = payload.errors?.[0]?.code;
+    return typeof code === "number" ? code : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function decodeBase64Image(image: string): GeneratedImage {
   const dataUriMatch = image.match(
     /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/,
   );
-  const contentType = dataUriMatch?.[1] ?? "image/png";
-  const encodedImage = dataUriMatch?.[2] ?? image;
-  const binary = atob(encodedImage);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-
-  return { bytes, contentType };
+  const binary = atob(dataUriMatch?.[2] ?? image);
+  return {
+    bytes: Uint8Array.from(binary, (character) => character.charCodeAt(0)),
+    contentType: dataUriMatch?.[1] ?? "image/png",
+  };
 }
 
-/** Client for image generation through Cloudflare Workers AI. */
+/** Client for FLUX.2 [klein] 4B image generation through Cloudflare Workers AI. */
 export class CloudflareWorkersAiClient {
   private readonly accountId: string;
   private readonly client: AxiosInstance;
@@ -65,24 +96,6 @@ export class CloudflareWorkersAiClient {
     });
   }
 
-  /**
-   * Generates an image with FLUX.2 [klein] 4B.
-   *
-   * Workers AI requires multipart form data for this model, including
-   * prompt-only requests. The model supports up to four reference images.
-   *
-   * @example
-   * const client = new CloudflareWorkersAiClient({
-   *   accountId: "your-account-id",
-   *   apiToken: "your-api-token",
-   * });
-   * const image = await client.generateFlux2Klein4bImage({
-   *   prompt: "A monochrome nineteenth-century newspaper engraving of a city",
-   *   width: 1024,
-   *   height: 768,
-   * });
-   * await Bun.write("illustration.png", image.bytes);
-   */
   async generateFlux2Klein4bImage(
     params: GenerateFlux2Klein4bImageParams,
   ): Promise<GeneratedImage> {
@@ -109,7 +122,7 @@ export class CloudflareWorkersAiClient {
           ? responseContentType
           : undefined;
 
-      if (isJsonContentType(contentType)) {
+      if (contentType?.toLowerCase().includes("application/json")) {
         const responseText = new TextDecoder().decode(bytes);
         let payload: CloudflareImageResponse;
         try {
@@ -121,17 +134,13 @@ export class CloudflareWorkersAiClient {
         }
 
         const encodedImage = payload.result?.image;
-        logger.debug("Cloudflare Workers AI image response received", {
-          model: flux2Klein4bModel,
-          contentType,
-          success: payload.success ?? false,
-          hasImage: Boolean(encodedImage),
-          hasErrors: Boolean(payload.errors),
-        });
-
         if (!payload.success || !encodedImage) {
-          throw new Error(
+          throw new CloudflareWorkersAiError(
             "Cloudflare Workers AI returned an unsuccessful image response.",
+            {
+              code: getCloudflareErrorCode(responseText),
+              responseBody: responseText,
+            },
           );
         }
 
@@ -146,21 +155,45 @@ export class CloudflareWorkersAiClient {
       }
 
       const image = { bytes, contentType: contentType ?? "image/png" };
-
       logger.debug("Cloudflare Workers AI image generation completed", {
         model: flux2Klein4bModel,
         contentType: image.contentType,
         byteLength: bytes.byteLength,
         responseFormat: "binary",
       });
-
       return image;
     } catch (error) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : error instanceof CloudflareWorkersAiError
+          ? error.status
+          : undefined;
+      const responseBody = axios.isAxiosError(error)
+        ? toLoggableResponse(error.response?.data)
+        : error instanceof CloudflareWorkersAiError
+          ? error.responseBody
+          : undefined;
+      const code =
+        error instanceof CloudflareWorkersAiError
+          ? error.code
+          : getCloudflareErrorCode(responseBody);
+
       logger.error("Cloudflare Workers AI image generation failed", {
         model: flux2Klein4bModel,
-        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+        status,
+        code,
+        responseBody,
         message: error instanceof Error ? error.message : "Unknown error",
       });
+
+      if (axios.isAxiosError(error)) {
+        throw new CloudflareWorkersAiError(error.message, {
+          status,
+          code,
+          responseBody,
+        });
+      }
+
       throw error;
     }
   }
@@ -170,7 +203,6 @@ export class CloudflareWorkersAiClient {
   ): FormData {
     const form = new FormData();
     form.append("prompt", params.prompt);
-
     this.appendNumber(form, "width", params.width);
     this.appendNumber(form, "height", params.height);
     this.appendNumber(form, "guidance", params.guidance);
@@ -178,7 +210,6 @@ export class CloudflareWorkersAiClient {
     params.referenceImages?.forEach((image, index) => {
       form.append(`input_image_${index}`, image);
     });
-
     return form;
   }
 
@@ -187,22 +218,18 @@ export class CloudflareWorkersAiClient {
     name: string,
     value: number | undefined,
   ) {
-    if (value !== undefined) {
-      form.append(name, String(value));
-    }
+    if (value !== undefined) form.append(name, String(value));
   }
 
   private validateImageParams(params: GenerateFlux2Klein4bImageParams): void {
     if (!params.prompt.trim()) {
       throw new Error("A prompt is required to generate an image.");
     }
-
     if ((params.referenceImages?.length ?? 0) > 4) {
       throw new Error(
         "FLUX.2 [klein] 4B supports at most four reference images.",
       );
     }
-
     for (const dimension of [params.width, params.height]) {
       if (dimension !== undefined && (dimension < 256 || dimension > 1920)) {
         throw new Error("Image width and height must be between 256 and 1920.");

@@ -1,7 +1,12 @@
 import type { GroqAIClient } from "../clients";
 import type { EditorialEngineConfig } from "../config";
 import { logger } from "../logger";
-import type { PolymarketMarket, Story, StorySource } from "../types";
+import type {
+  GeneratedBy,
+  PolymarketMarket,
+  Story,
+  StorySource,
+} from "../types";
 import type { StoryGenerator } from "./interface";
 import { createGeneratedStorySchema, createStoryPrompt } from "./story";
 
@@ -18,8 +23,13 @@ export class GroqStoryGenerator implements StoryGenerator {
   private readonly storySchema: ReturnType<typeof createGeneratedStorySchema>;
 
   constructor(private readonly options: GroqStoryGeneratorOptions) {
-    this.storySchema = createGeneratedStorySchema(options.config);
+    this.storySchema = createGeneratedStorySchema();
   }
+
+  readonly generatedBy: GeneratedBy = {
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+  };
 
   async generateStory(
     market: PolymarketMarket,
@@ -54,6 +64,7 @@ export class GroqStoryGenerator implements StoryGenerator {
       return {
         id: `story-${market.market_id}`,
         ...generated,
+        generatedBy: this.generatedBy,
         meta: {
           publishedAt: new Date().toISOString(),
           sourceLabel: "Nansen Prediction Market",

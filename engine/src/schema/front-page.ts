@@ -31,6 +31,10 @@ const marketPanelSchema = z.object({
   tradeUrl: z.string().optional(),
   placement: z.enum(["float-left", "float-right", "full-width"]).optional(),
 });
+const generatedBySchema = z.object({
+  provider: z.string(),
+  model: z.string(),
+});
 export const storySchema = z.object({
   id: z.string(),
   category: storyCategorySchema,
@@ -63,10 +67,12 @@ export const storySchema = z.object({
             "secondaryWide",
             "secondarySquare",
           ]),
+          generatedBy: generatedBySchema.optional(),
         })
         .optional(),
     })
     .optional(),
+  generatedBy: generatedBySchema.optional(),
   meta: z
     .object({
       publishedAt: z.string().optional(),

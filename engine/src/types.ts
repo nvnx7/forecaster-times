@@ -24,6 +24,11 @@ export type StoryRole =
   | "category-secondary"
   | "brief";
 
+export type GeneratedBy = {
+  provider: string;
+  model: string;
+};
+
 export type ParagraphBlock =
   | { type: "paragraph"; text: string }
   | { type: "pullquote"; text: string }
@@ -54,6 +59,7 @@ export type Illustration = {
     objectKey: string;
     contentType: string;
     preset: ImagePresetKey;
+    generatedBy?: GeneratedBy;
   };
 };
 
@@ -67,6 +73,7 @@ export type Story = {
   byline?: string;
   market?: MarketPanel;
   illustration?: Illustration;
+  generatedBy?: GeneratedBy;
   meta?: { publishedAt?: string; updatedAt?: string; sourceLabel?: string };
 };
 

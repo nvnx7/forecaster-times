@@ -3,7 +3,12 @@ import axiosRetry from "axios-retry";
 
 import type { EditorialEngineConfig } from "../config";
 import { logger } from "../logger";
-import type { PolymarketMarket, Story, StorySource } from "../types";
+import type {
+  GeneratedBy,
+  PolymarketMarket,
+  Story,
+  StorySource,
+} from "../types";
 import { isRetryableRequestError, toLoggableResponse } from "../utils";
 import type { StoryGenerator } from "./interface";
 import { createGeneratedStorySchema, createStoryPrompt } from "./story";
@@ -104,7 +109,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
   private readonly storySchema: ReturnType<typeof createGeneratedStorySchema>;
 
   constructor(private readonly options: GeminiStoryGeneratorOptions) {
-    this.storySchema = createGeneratedStorySchema(options.config);
+    this.storySchema = createGeneratedStorySchema();
     this.client = axios.create({
       baseURL: "https://generativelanguage.googleapis.com/v1beta",
       headers: {
@@ -132,6 +137,10 @@ export class GeminiStoryGenerator implements StoryGenerator {
         });
       },
     });
+  }
+
+  get generatedBy(): GeneratedBy {
+    return { provider: "gemini", model: this.options.model };
   }
 
   async generateStory(
@@ -173,6 +182,7 @@ export class GeminiStoryGenerator implements StoryGenerator {
       return {
         id: `story-${market.market_id}`,
         ...generated,
+        generatedBy: this.generatedBy,
         meta: {
           publishedAt: new Date().toISOString(),
           sourceLabel: "Nansen Prediction Market",

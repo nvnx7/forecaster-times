@@ -12,7 +12,7 @@ export const nansenApiKey = requiredEnv("API_KEY_NANSEN");
 export const nansenApiBaseUrl =
   process.env.NANSEN_API_BASE_URL ?? "https://api.nansen.ai";
 
-export const groqApiKey = requiredEnv("API_KEY_GROQ");
+export const openRouterApiKey = requiredEnv("API_KEY_OPENROUTER");
 export const tinyFishApiKey = requiredEnv("API_KEY_TINY_FISH");
 export const cloudflareApiKey = requiredEnv("API_KEY_CLOUDFLARE");
 export const cloudflareAccountId = requiredEnv("ACCOUNT_ID_CLOUDFLARE");

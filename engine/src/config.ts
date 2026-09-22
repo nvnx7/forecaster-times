@@ -20,13 +20,36 @@ export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
 
 export const imageGenerationConfig = {
   dimensionsByAspectRatio: {
-    "3:2": { width: 768, height: 512 },
-    "4:5": { width: 512, height: 640 },
+    "3:2": { width: 512, height: 341 },
+    "4:5": { width: 410, height: 512 },
     "1:1": { width: 512, height: 512 },
   } satisfies Record<ImageAspectRatio, { width: number; height: number }>,
   stylePrompt:
     "Vintage newspaper editorial illustration, black ink engraving, 19th-century woodcut and cross-hatching style, monochrome, high contrast, off-white paper, no text, no typography, clear editorial composition, historically printed newspaper aesthetic.",
 } as const;
+
+export const openRouterStoryGenerationCandidates = [
+  { model: "openai/gpt-oss-120b", reasoningEffort: "minimal" },
+  { model: "openai/gpt-oss-20b", reasoningEffort: "minimal" },
+  { model: "qwen/qwen3.7-flash", reasoningEffort: "minimal" },
+] as const;
+
+export const openRouterImageGenerationCandidates = [
+  {
+    model: "meta/muse-image",
+    resolution: "512",
+  },
+  {
+    model: "black-forest-labs/flux.2-klein-4b",
+    outputFormat: "png",
+    resolution: "512",
+  },
+  {
+    model: "qwen/qwen-image-3",
+    outputFormat: "png",
+    resolution: "512",
+  },
+] as const;
 
 export type CategoryPageConfig = {
   kind: "category";
@@ -176,7 +199,7 @@ export const defaultEditorialEngineConfig: EditorialEngineConfig = {
   generationRetryBaseDelayMs: 1_000,
   story: {
     maxInputCharacters: 8_000,
-    maxCompletionTokens: 500,
+    maxCompletionTokens: 1_500,
     kickerMaxWords: 6,
     headline: { longMaxWords: 18, mediumMaxWords: 12, shortMaxWords: 7 },
     dekMaxWords: 32,
