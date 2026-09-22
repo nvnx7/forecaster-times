@@ -372,13 +372,19 @@ export class EditorialEngine {
     return { data };
   }
 
-  async getPolymarketMarket(marketId: string): Promise<PolymarketMarket> {
+  async getPolymarketMarket(
+    marketId: string,
+    searchQuery: string,
+  ): Promise<PolymarketMarket> {
     if (!marketId.trim()) {
       throw new Error("A market ID is required.");
     }
+    if (!searchQuery.trim()) {
+      throw new Error("A market search query is required.");
+    }
 
     const { data } = await this.nansen.listPolymarketMarkets({
-      query: marketId,
+      query: searchQuery.slice(0, 200),
       pagination: { page: 1, perPage: 100 },
     });
     const market = data.find((candidate) => candidate.market_id === marketId);

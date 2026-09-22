@@ -7,13 +7,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ marketId: string }> },
 ) {
   const { marketId } = await params;
+  const query = new URL(request.url).searchParams.get("query")?.trim();
+  if (!query) {
+    return NextResponse.json(
+      { error: "A market search query is required." },
+      { status: 400 },
+    );
+  }
 
   try {
-    const market = await editorialEngine.getPolymarketMarket(marketId);
+    const market = await editorialEngine.getPolymarketMarket(marketId, query);
     return NextResponse.json(toMarketPanel(market), {
       headers: { "Cache-Control": "no-store" },
     });
