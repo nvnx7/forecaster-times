@@ -51,6 +51,7 @@ import type {
 } from "../types";
 import {
   getMarketProbability,
+  sortMarkets,
   toMarketBrief,
   toMarketPanel,
   toMarketReference,
@@ -340,7 +341,35 @@ export class EditorialEngine {
   async listPolymarketMarkets(
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
-    return this.nansen.listPolymarketMarkets(params);
+    const tags = params.tags ? [...new Set(params.tags)] : [];
+    if (tags.length <= 1) {
+      return this.nansen.listPolymarketMarkets(
+        params.tags ? { ...params, tags } : params,
+      );
+    }
+
+    logger.debug("Nansen market screener OR-tag query started", {
+      tags,
+      requestCount: tags.length,
+    });
+    const responses = await Promise.all(
+      tags.map((tag) =>
+        this.nansen.listPolymarketMarkets({ ...params, tags: [tag] }),
+      ),
+    );
+    const uniqueMarkets = new Map<string, PolymarketMarket>();
+    for (const response of responses) {
+      for (const market of response.data) {
+        uniqueMarkets.set(market.market_id, market);
+      }
+    }
+    const data = sortMarkets([...uniqueMarkets.values()], params.orderBy);
+
+    logger.debug("Nansen market screener OR-tag query completed", {
+      tags,
+      marketCount: data.length,
+    });
+    return { data };
   }
 
   private getPageConfig(pageId: CategoryPageId): PageConfig {
@@ -421,7 +450,7 @@ export class EditorialEngine {
     if (existingDraft) return existingDraft;
 
     const config = this.getPageConfig(pageId);
-    const { data } = await this.nansen.listPolymarketMarkets({
+    const { data } = await this.listPolymarketMarkets({
       status: "active",
       tags: config.kind === "category" ? config.nansenTags : undefined,
       orderBy: [{ field: "volume_24hr", direction: "DESC" }],

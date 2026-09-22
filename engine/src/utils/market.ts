@@ -1,4 +1,4 @@
-import type { PolymarketMarket } from "../types";
+import type { ListPolymarketMarketsParams, PolymarketMarket } from "../types";
 
 type MarketSearchInput = Pick<PolymarketMarket, "event_title" | "question">;
 
@@ -16,6 +16,22 @@ export function getMarketProbability(market: PolymarketMarket): number {
   }
 
   return 0.5;
+}
+
+export function sortMarkets(
+  markets: PolymarketMarket[],
+  orderBy: ListPolymarketMarketsParams["orderBy"],
+): PolymarketMarket[] {
+  if (!orderBy?.length) return markets;
+
+  return [...markets].sort((first, second) => {
+    for (const { field, direction } of orderBy) {
+      const difference = (first[field] ?? 0) - (second[field] ?? 0);
+      if (difference !== 0)
+        return direction === "ASC" ? difference : -difference;
+    }
+    return 0;
+  });
 }
 
 export function generateMarketSearchString(market: MarketSearchInput): {

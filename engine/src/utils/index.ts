@@ -9,6 +9,7 @@ export {
   clampProbability,
   generateMarketSearchString,
   getMarketProbability,
+  sortMarkets,
 } from "./market";
 export {
   toMarketBrief,
