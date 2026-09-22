@@ -41,6 +41,7 @@ export class NansenClient {
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
     logger.debug("Nansen market screener request", {
+      query: params.query,
       status: params.status,
       orderBy: params.orderBy,
       tags: params.tags,
@@ -52,6 +53,7 @@ export class NansenClient {
         "/api/v1/prediction-market/market-screener",
         {
           order_by: params.orderBy,
+          query: params.query,
           status: params.status,
           tags: params.tags,
           min_liquidity: params.minLiquidity,

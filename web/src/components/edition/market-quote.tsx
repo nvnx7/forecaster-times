@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetMarketDetail } from "@/api/getMarketDetail";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,14 +20,17 @@ import type { MarketPanel } from "@/types";
 function handleTrade() {}
 
 export function MarketQuote({ market }: { market: MarketPanel }) {
+  const { data: liveMarket } = useGetMarketDetail(market);
+  const displayedMarket = liveMarket ?? market;
+
   return (
-    <aside aria-label={`Market quote: ${market.question}`}>
+    <aside aria-label={`Market quote: ${displayedMarket.question}`}>
       <Card variant="quote">
         <CardHeader>
           <p className="font-sans text-[0.625rem] font-semibold tracking-[0.12em] uppercase">
             Market Quotation
           </p>
-          <CardTitle>{market.question}</CardTitle>
+          <CardTitle>{displayedMarket.question}</CardTitle>
         </CardHeader>
         <CardContent>
           <Separator />
@@ -37,7 +41,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                   Yes
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
-                  {formatProbabilityAsCents(market.yes)}
+                  {formatProbabilityAsCents(displayedMarket.yes)}
                 </dd>
               </div>
               <div>
@@ -45,39 +49,39 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                   No
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
-                  {formatProbabilityAsCents(market.no)}
+                  {formatProbabilityAsCents(displayedMarket.no)}
                 </dd>
               </div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 gap-3">
-              {market.change24h !== undefined ? (
+              {displayedMarket.change24h !== undefined ? (
                 <div>
                   <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] uppercase">
                     24h
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatChangeInPoints(market.change24h)}
+                    {formatChangeInPoints(displayedMarket.change24h)}
                   </dd>
                 </div>
               ) : null}
-              {market.volume24hUsd !== undefined ? (
+              {displayedMarket.volume24hUsd !== undefined ? (
                 <div>
                   <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] uppercase">
                     Volume
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsdCompact(market.volume24hUsd)}
+                    {formatUsdCompact(displayedMarket.volume24hUsd)}
                   </dd>
                 </div>
               ) : null}
-              {market.liquidityUsd !== undefined ? (
+              {displayedMarket.liquidityUsd !== undefined ? (
                 <div>
                   <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] uppercase">
                     Liquidity
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsdCompact(market.liquidityUsd)}
+                    {formatUsdCompact(displayedMarket.liquidityUsd)}
                   </dd>
                 </div>
               ) : null}

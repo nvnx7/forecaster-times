@@ -293,6 +293,7 @@ export type PolymarketMarketSortField =
 
 export type ListPolymarketMarketsParams = {
   orderBy?: { field: PolymarketMarketSortField; direction: "ASC" | "DESC" }[];
+  query?: string;
   status?: "active" | "closed" | "";
   tags?: string[];
   minLiquidity?: number;

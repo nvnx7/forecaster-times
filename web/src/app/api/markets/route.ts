@@ -21,6 +21,7 @@ const listPolymarketMarketsParamsSchema = z.object({
       }),
     )
     .optional(),
+  query: z.string().max(200).optional(),
   status: z.enum(["active", "closed", ""]).optional(),
   tags: z.array(z.string()).max(50).optional(),
   minLiquidity: z.number().min(-1).optional(),
