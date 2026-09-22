@@ -50,7 +50,6 @@ import type {
   StorySource,
 } from "../types";
 import {
-  delay,
   getMarketProbability,
   toMarketBrief,
   toMarketPanel,
@@ -185,8 +184,8 @@ export class EditorialEngine {
     this.storyGenerator = options.storyGenerator;
   }
 
-  get frontPageKey(): string {
-    return latestEditionKey;
+  get frontPageDraftKey(): string {
+    return draftPageKey("front");
   }
 
   async getPage(pageId: CategoryPageId): Promise<Page> {
@@ -201,6 +200,16 @@ export class EditorialEngine {
 
   async getFrontPage(): Promise<FrontPage> {
     return (await this.getPage("front")) as FrontPage;
+  }
+
+  async getDraftPage(pageId: CategoryPageId): Promise<Page> {
+    const draft = await this.getPageDraft(pageId);
+    if (!draft) throw new ObjectNotFoundError(`Draft page: ${pageId}`);
+    return this.createPage(pageId, draft);
+  }
+
+  async getDraftFrontPage(): Promise<FrontPage> {
+    return (await this.getDraftPage("front")) as FrontPage;
   }
 
   async getCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
@@ -230,6 +239,27 @@ export class EditorialEngine {
 
   async getFrontPageIllustration(storyId: string): Promise<StoredObject> {
     return this.getIllustration("front", storyId);
+  }
+
+  async getDraftIllustration(
+    pageId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    const page = await this.getDraftPage(pageId);
+    const story = [page.leadStory, ...page.secondaryStories].find(
+      (candidate) => candidate.id === storyId,
+    );
+    const asset = story?.illustration?.asset;
+    if (!asset) {
+      throw new ObjectNotFoundError(`${pageId} draft illustration: ${storyId}`);
+    }
+    return this.store.getObject(
+      draftIllustrationKey(pageId, story.id, asset.contentType),
+    );
+  }
+
+  async getDraftFrontPageIllustration(storyId: string): Promise<StoredObject> {
+    return this.getDraftIllustration("front", storyId);
   }
 
   async getCategoryPageIllustration(
@@ -270,19 +300,41 @@ export class EditorialEngine {
     }
   }
 
-  async publishPage(pageId: CategoryPageId): Promise<Page> {
-    const page = (await this.publishEdition()).get(pageId);
-    if (!page) throw new Error(`Edition is missing ${pageId}.`);
-    return page;
+  async draftFrontPage(): Promise<FrontPage> {
+    return (await this.draftPage("front")) as FrontPage;
   }
 
-  async publishFrontPage(): Promise<FrontPage> {
-    return (await this.publishPage("front")) as FrontPage;
-  }
-
-  async publishCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
+  async draftCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
     this.getCategoryConfig(categoryId);
-    return (await this.publishPage(categoryId)) as CategoryPage;
+    return (await this.draftPage(categoryId)) as CategoryPage;
+  }
+
+  async draftPage(pageId: CategoryPageId): Promise<Page> {
+    const operationId = crypto.randomUUID();
+    logger.info("Page draft generation started", { operationId, pageId });
+    try {
+      const state = await this.getOrCreateDraftState(operationId);
+      const pageDraft = await this.getOrCreatePageDraft(
+        pageId,
+        state,
+        operationId,
+      );
+      await this.generateDraftStories(pageId, pageDraft, operationId);
+      const page = this.createPage(pageId, pageDraft);
+      logger.info("Page draft generation completed", {
+        operationId,
+        pageId,
+        editionId: state.editionId,
+      });
+      return page;
+    } catch (error) {
+      logger.error("Page draft generation failed", {
+        operationId,
+        pageId,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
   }
 
   async listPolymarketMarkets(
@@ -458,8 +510,7 @@ export class EditorialEngine {
     operationId: string,
   ): Promise<void> {
     for (const [index, slot] of draft.stories.entries()) {
-      if (!slot.story)
-        await this.generateDraftStory(pageId, draft, index, operationId);
+      if (!slot.story) await this.generateDraftStory(pageId, draft, index);
       await this.generateDraftIllustration(pageId, draft, index, operationId);
     }
   }
@@ -468,7 +519,6 @@ export class EditorialEngine {
     pageId: CategoryPageId,
     draft: PageDraft,
     index: number,
-    operationId: string,
   ): Promise<void> {
     const slot = draft.stories[index];
     if (!slot) throw new Error(`Draft story ${index} does not exist.`);
@@ -476,42 +526,28 @@ export class EditorialEngine {
     slot.story = undefined;
     await this.savePageDraft(pageId, draft);
 
-    const maximumAttempts = this.config.generationRetryCount + 1;
-    for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
-      try {
-        const generated = await this.storyGenerator.generateStory(
-          slot.market,
-          slot.sources,
-        );
-        const config = this.getPageConfig(pageId);
-        slot.story =
-          config.kind === "category"
-            ? {
-                ...generated,
-                category: config.storyCategory,
-                market: toMarketPanel(slot.market),
-              }
-            : generated;
-        slot.attemptCount += 1;
-        delete slot.lastError;
-        await this.savePageDraft(pageId, draft);
-        return;
-      } catch (error) {
-        slot.attemptCount += 1;
-        slot.lastError =
-          error instanceof Error ? error.message : "Unknown error";
-        await this.savePageDraft(pageId, draft);
-        if (attempt === maximumAttempts) throw error;
-        logger.warn("Edition story generation retry scheduled", {
-          operationId,
-          pageId,
-          marketId: slot.market.market_id,
-          attempt,
-          maximumAttempts,
-          message: slot.lastError,
-        });
-        await delay(this.config.generationRetryBaseDelayMs * attempt);
-      }
+    try {
+      const generated = await this.storyGenerator.generateStory(
+        slot.market,
+        slot.sources,
+      );
+      const config = this.getPageConfig(pageId);
+      slot.story =
+        config.kind === "category"
+          ? {
+              ...generated,
+              category: config.storyCategory,
+              market: toMarketPanel(slot.market),
+            }
+          : generated;
+      slot.attemptCount += 1;
+      delete slot.lastError;
+      await this.savePageDraft(pageId, draft);
+    } catch (error) {
+      slot.attemptCount += 1;
+      slot.lastError = error instanceof Error ? error.message : "Unknown error";
+      await this.savePageDraft(pageId, draft);
+      throw error;
     }
   }
 
@@ -543,68 +579,55 @@ export class EditorialEngine {
     const role = getStoryRole(config, index);
     const preset = getImagePreset(role, story.category);
     if (!preset) return;
-    const maximumAttempts = this.config.generationRetryCount + 1;
-    for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
-      try {
-        const image = await this.storyImageGenerator.generateStoryImage({
-          story,
-          role,
+    try {
+      const image = await this.storyImageGenerator.generateStoryImage({
+        story,
+        role,
+        preset,
+      });
+      const draftKey = draftIllustrationKey(
+        pageId,
+        story.id,
+        image.contentType,
+      );
+      const editionKey = editionIllustrationKey(
+        draft.edition.id,
+        pageId,
+        story.id,
+        image.contentType,
+      );
+      await this.store.putObject(draftKey, image.bytes, image.contentType);
+      story.illustration = {
+        src: getIllustrationSource(pageId, story.id),
+        alt: image.alt,
+        placement:
+          config.kind === "category" &&
+          imagePresets[preset].aspectRatio === "4:5"
+            ? "float-left"
+            : "wide",
+        aspectRatio: imagePresets[preset].aspectRatio,
+        asset: {
+          objectKey: editionKey,
+          contentType: image.contentType,
           preset,
-        });
-        const draftKey = draftIllustrationKey(
-          pageId,
-          story.id,
-          image.contentType,
-        );
-        const editionKey = editionIllustrationKey(
-          draft.edition.id,
-          pageId,
-          story.id,
-          image.contentType,
-        );
-        await this.store.putObject(draftKey, image.bytes, image.contentType);
-        story.illustration = {
-          src: getIllustrationSource(pageId, story.id),
-          alt: image.alt,
-          placement:
-            config.kind === "category" &&
-            imagePresets[preset].aspectRatio === "4:5"
-              ? "float-left"
-              : "wide",
-          aspectRatio: imagePresets[preset].aspectRatio,
-          asset: {
-            objectKey: editionKey,
-            contentType: image.contentType,
-            preset,
-          },
-        };
-        slot.illustrationAttemptCount =
-          (slot.illustrationAttemptCount ?? 0) + 1;
-        delete slot.illustrationLastError;
-        await this.savePageDraft(pageId, draft);
-        logger.info("Draft illustration generated", {
-          operationId,
-          pageId,
-          storyId: story.id,
-        });
-        return;
-      } catch (error) {
-        slot.illustrationAttemptCount =
-          (slot.illustrationAttemptCount ?? 0) + 1;
-        slot.illustrationLastError =
-          error instanceof Error ? error.message : "Unknown error";
-        await this.savePageDraft(pageId, draft);
-        if (attempt === maximumAttempts) throw error;
-        logger.warn("Draft illustration generation retry scheduled", {
-          operationId,
-          pageId,
-          marketId: slot.market.market_id,
-          attempt,
-          maximumAttempts,
-          message: slot.illustrationLastError,
-        });
-        await delay(this.config.generationRetryBaseDelayMs * attempt);
-      }
+          generatedBy: image.generatedBy,
+        },
+      };
+      slot.illustrationAttemptCount = (slot.illustrationAttemptCount ?? 0) + 1;
+      delete slot.illustrationLastError;
+      await this.savePageDraft(pageId, draft);
+      logger.info("Draft illustration generated", {
+        operationId,
+        pageId,
+        storyId: story.id,
+        ...image.generatedBy,
+      });
+    } catch (error) {
+      slot.illustrationAttemptCount = (slot.illustrationAttemptCount ?? 0) + 1;
+      slot.illustrationLastError =
+        error instanceof Error ? error.message : "Unknown error";
+      await this.savePageDraft(pageId, draft);
+      throw error;
     }
   }
 

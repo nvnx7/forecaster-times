@@ -16,7 +16,7 @@ export async function POST(
   logger.info("Category-page generation request accepted", { categoryId });
 
   try {
-    const page = await editorialEngine.publishCategoryPage(
+    const page = await editorialEngine.draftCategoryPage(
       categoryId as CategoryPageId,
     );
     return NextResponse.json(page, { status: 201 });

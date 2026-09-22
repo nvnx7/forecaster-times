@@ -13,13 +13,13 @@ export async function GET(
   const { storyId } = await params;
 
   try {
-    const image = await editorialEngine.getFrontPageIllustration(storyId);
+    const image = await editorialEngine.getDraftFrontPageIllustration(storyId);
     const body = new ArrayBuffer(image.bytes.byteLength);
     new Uint8Array(body).set(image.bytes);
 
     return new NextResponse(body, {
       headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "no-store",
         "Content-Type": image.contentType,
       },
     });

@@ -18,23 +18,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    logger.info("Front-page generation request accepted");
-    const frontPage = await editorialEngine.publishFrontPage();
+    logger.info("Front-page draft generation request accepted");
+    const frontPage = await editorialEngine.draftFrontPage();
 
     return NextResponse.json(
       {
         editionId: frontPage.edition.id,
-        objectKey: editorialEngine.frontPageKey,
+        objectKey: editorialEngine.frontPageDraftKey,
       },
       { status: 201 },
     );
   } catch (error) {
-    logger.error("Front-page generation request failed", {
+    logger.error("Front-page draft generation request failed", {
       message: error instanceof Error ? error.message : "Unknown error",
     });
 
     return NextResponse.json(
-      { error: "Unable to generate the front-page edition." },
+      { error: "Unable to generate the front-page draft." },
       { status: 502 },
     );
   }

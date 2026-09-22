@@ -15,7 +15,7 @@ try {
   logger.info("Edition generation requested by category-page script", {
     categoryId,
   });
-  const page = await editorialEngine.publishCategoryPage(
+  const page = await editorialEngine.draftCategoryPage(
     categoryId as CategoryPageId,
   );
   logger.info("Edition generation completed", {
