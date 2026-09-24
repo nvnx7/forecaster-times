@@ -39,7 +39,7 @@ export function createScriptEditorialEngine() {
         client: new OpenRouterAIClient({
           apiKey: openRouterApiKey,
           model,
-          appName: "Probability Press",
+          appName: "Farcaster Times",
         }),
         config: defaultEditorialConfig,
         reasoningEffort,
@@ -55,7 +55,7 @@ export function createScriptEditorialEngine() {
           client: new OpenRouterAIClient({
             apiKey: openRouterApiKey,
             model,
-            appName: "Probability Press",
+            appName: "Farcaster Times",
           }),
           imageOptions,
         }),

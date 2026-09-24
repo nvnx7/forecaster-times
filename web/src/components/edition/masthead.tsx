@@ -47,7 +47,7 @@ function Nameplate() {
     <div className="order-first flex flex-col items-center gap-3 text-center lg:order-none">
       <Logo size={56} priority />
       <h1 className="masthead-title text-5xl uppercase md:text-7xl md:whitespace-nowrap">
-        Probability Press
+        Farcaster Times
       </h1>
       <p className="font-sans text-xl leading-7 italic text-muted-foreground">
         The Newspaper of What Happens Next

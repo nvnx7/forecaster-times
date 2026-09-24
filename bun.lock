@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "probability-press",
+      "name": "farcaster-times",
       "devDependencies": {
         "@biomejs/biome": "^2.5.10",
         "@repo/engine": "*",
