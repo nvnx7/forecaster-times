@@ -2,18 +2,24 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { marketCategories } from "@/config/categories";
+import type { CategoryPageId } from "@/types";
 
-const navigationCategories = [
-  { id: "front-page", label: "Front Page" },
-  ...marketCategories,
-] as const;
+export type EditionCategoryNavigationItem = {
+  id: Exclude<CategoryPageId, "front">;
+  label: string;
+};
 
-const activeMarketCategoryId = "front-page";
+export function MarketCategoryNavigation({
+  categories,
+  onCategorySelect,
+}: {
+  categories: readonly EditionCategoryNavigationItem[];
+  onCategorySelect: (categoryId: Exclude<CategoryPageId, "front">) => void;
+}) {
+  if (categories.length === 0) {
+    return null;
+  }
 
-function handleCategorySelect() {}
-
-export function MarketCategoryNavigation() {
   return (
     <nav aria-label="Market categories" className="flex flex-col gap-2">
       <Separator />
@@ -24,19 +30,12 @@ export function MarketCategoryNavigation() {
           </span>
           <div className="flex min-w-0 flex-1 justify-center">
             <div className="flex shrink-0 items-center gap-x-12 px-0.5">
-              {navigationCategories.map((category) => (
+              {categories.map((category) => (
                 <Button
                   key={category.id}
                   type="button"
-                  variant={
-                    category.id === activeMarketCategoryId
-                      ? "newspaperActive"
-                      : "newspaper"
-                  }
-                  onClick={handleCategorySelect}
-                  aria-current={
-                    category.id === activeMarketCategoryId ? "page" : undefined
-                  }
+                  variant="newspaper"
+                  onClick={() => onCategorySelect(category.id)}
                 >
                   {category.label}
                 </Button>

@@ -9,6 +9,7 @@ import { EditionPaper, EditionShell } from "@/components/edition/edition-shell";
 import { FrontPageBriefs } from "@/components/edition/front-page-briefs";
 import { HotMarketsTicker } from "@/components/edition/hot-markets-ticker";
 import { LeadStory } from "@/components/edition/lead-story";
+import type { EditionCategoryNavigationItem } from "@/components/edition/market-category-navigation";
 import { MarketCategoryNavigation } from "@/components/edition/market-category-navigation";
 import { Masthead } from "@/components/edition/masthead";
 import { SecondaryStoryRow } from "@/components/edition/secondary-story-row";
@@ -16,7 +17,15 @@ import { NewspaperLoader } from "@/components/newspaper-loader";
 
 const minimumLoadingDurationMs = 2_000;
 
-export function FrontPage({ embedded = false }: { embedded?: boolean }) {
+export function FrontPage({
+  embedded = false,
+  categories = [],
+  onCategorySelect,
+}: {
+  embedded?: boolean;
+  categories?: readonly EditionCategoryNavigationItem[];
+  onCategorySelect?: (categoryId: EditionCategoryNavigationItem["id"]) => void;
+}) {
   const { data: frontPage, isError, isPending } = useGetFrontPage();
   const [minimumLoadingElapsed, setMinimumLoadingElapsed] = useState(false);
 
@@ -54,7 +63,12 @@ export function FrontPage({ embedded = false }: { embedded?: boolean }) {
           pageNumber={frontPage.pageNumber}
         />
         <HotMarketsTicker hotMarkets={frontPage.hotMarkets} />
-        <MarketCategoryNavigation />
+        {onCategorySelect ? (
+          <MarketCategoryNavigation
+            categories={categories}
+            onCategorySelect={onCategorySelect}
+          />
+        ) : null}
         <LeadStory story={frontPage.leadStory} />
         <SecondaryStoryRow stories={frontPage.secondaryStories.slice(0, 2)} />
         <FrontPageBriefs briefs={frontPage.briefs} />
@@ -66,7 +80,7 @@ export function FrontPage({ embedded = false }: { embedded?: boolean }) {
   const content = (
     <EditionPaper>
       <div className="flex flex-col gap-3 px-3 py-4 md:px-5 md:py-6">
-        <Masthead />
+        <Masthead editionId={frontPage?.edition.id} />
         {editorialContent}
       </div>
     </EditionPaper>

@@ -18,15 +18,21 @@ import type { CategoryPageId } from "@/types";
 export function CategoryPage({
   embedded = false,
   categoryId = "world-politics",
+  forceLoad = false,
 }: {
   embedded?: boolean;
   categoryId?: CategoryPageId;
+  forceLoad?: boolean;
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
-  const [shouldLoad, setShouldLoad] = useState(!embedded);
+  const [shouldLoad, setShouldLoad] = useState(!embedded || forceLoad);
   const { data: page, isPending } = useGetCategoryPage(categoryId, shouldLoad);
 
   useEffect(() => {
+    if (forceLoad) {
+      setShouldLoad(true);
+      return;
+    }
     if (shouldLoad) return;
     const target = sentinel.current;
     if (!target) return;
@@ -41,7 +47,7 @@ export function CategoryPage({
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [shouldLoad]);
+  }, [forceLoad, shouldLoad]);
 
   if (!shouldLoad) return <div ref={sentinel} className="min-h-1" />;
 
