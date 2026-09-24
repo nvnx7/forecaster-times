@@ -696,6 +696,14 @@ export class EditorialEngine {
     return (await this.getPage("front")) as FrontPage;
   }
 
+  async getLatestEditionManifest(): Promise<EditionManifest> {
+    const latest = await this.getLatestEdition();
+    const manifest = await this.getEditionManifest(latest.editionId);
+    if (!manifest)
+      throw new ObjectNotFoundError(`Edition ${latest.editionId} manifest`);
+    return manifest;
+  }
+
   async getDraftPage(pageId: CategoryPageId): Promise<Page> {
     const publishablePage = await this.getPublishableDraftPage(pageId);
     if (publishablePage) return publishablePage;
