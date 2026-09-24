@@ -20,7 +20,7 @@ export async function GET(
   }
 
   try {
-    const image = await editorialEngine.getCategoryPageIllustration(
+    const image = await editorialEngine.getDraftCategoryPageIllustration(
       categoryId as CategoryPageId,
       storyId,
     );
@@ -28,7 +28,7 @@ export async function GET(
     new Uint8Array(body).set(image.bytes);
     return new NextResponse(body, {
       headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "no-store",
         "Content-Type": image.contentType,
       },
     });
@@ -39,7 +39,7 @@ export async function GET(
         { status: 404 },
       );
     }
-    console.error("Unable to read category-page illustration", error);
+    console.error("Unable to read category-page draft illustration", error);
     return NextResponse.json(
       { error: "Unable to load illustration." },
       { status: 500 },

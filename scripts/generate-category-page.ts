@@ -12,18 +12,18 @@ if (!categoryId || !Object.hasOwn(categoryPageConfigs, categoryId)) {
 const editorialEngine = createScriptEditorialEngine();
 
 try {
-  logger.info("Edition generation requested by category-page script", {
+  logger.info("Category-page draft generation requested by script", {
     categoryId,
   });
   const page = await editorialEngine.draftCategoryPage(
     categoryId as CategoryPageId,
   );
-  logger.info("Edition generation completed", {
+  logger.info("Category-page draft generation completed", {
     categoryId,
     editionId: page.edition.id,
   });
 } catch (error) {
-  logger.error("Edition generation failed", {
+  logger.error("Category-page draft generation failed", {
     categoryId,
     message: error instanceof Error ? error.message : "Unknown error",
   });

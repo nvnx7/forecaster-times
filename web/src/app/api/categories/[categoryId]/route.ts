@@ -21,7 +21,7 @@ export async function GET(
 
   try {
     return NextResponse.json(
-      await editorialEngine.getCategoryPage(categoryId as CategoryPageId),
+      await editorialEngine.getDraftCategoryPage(categoryId as CategoryPageId),
       {
         headers: { "Cache-Control": "no-store" },
       },
@@ -29,14 +29,14 @@ export async function GET(
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
       return NextResponse.json(
-        { error: "The current category edition has not been published." },
+        { error: "The current category draft has not been generated." },
         { status: 404 },
       );
     }
 
-    console.error("Unable to read category page", error);
+    console.error("Unable to read category-page draft", error);
     return NextResponse.json(
-      { error: "Unable to load the category edition." },
+      { error: "Unable to load the current category draft." },
       { status: 500 },
     );
   }
