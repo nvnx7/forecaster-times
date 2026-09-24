@@ -10,7 +10,10 @@ export async function getMarketDetail(
 ): Promise<MarketPanel> {
   const { data } = await axios.get<MarketPanel>(
     `/api/markets/${encodeURIComponent(market.marketId)}`,
-    { params: { query: market.question } },
+    {
+      params: { query: market.question },
+      headers: { "Cache-Control": "no-cache" },
+    },
   );
   return data;
 }
@@ -21,7 +24,7 @@ export function useGetMarketDetail(initialMarket: MarketPanel) {
     queryKey: ["marketDetail", initialMarket.marketId],
     queryFn: () => getMarketDetail(initialMarket),
     placeholderData: initialMarket,
-    refetchInterval: 60_000,
+    refetchInterval: 20_000,
     refetchOnWindowFocus: true,
   });
 }
