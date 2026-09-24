@@ -35,9 +35,6 @@ function LeftFolio() {
       <p className="font-sans text-base italic text-muted-foreground">
         Published at first light
       </p>
-      <p className="font-mono text-xs font-semibold tracking-[0.08em] text-destructive uppercase">
-        Edition sealed · 08:30 GMT
-      </p>
     </div>
   );
 }
@@ -56,10 +53,10 @@ function Nameplate() {
   );
 }
 
-function RightFolio() {
+function RightFolio({ publishedAt }: { publishedAt?: string }) {
   return (
     <div className="flex flex-col gap-1 text-center lg:text-right">
-      <EditionDate />
+      <EditionDate publishedAt={publishedAt} />
       <p className="font-mono text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
         Worldwide Edition
       </p>
@@ -88,7 +85,13 @@ function PublicationLine({ editionId }: { editionId?: number }) {
   );
 }
 
-export function Masthead({ editionId }: { editionId?: number }) {
+export function Masthead({
+  editionId,
+  publishedAt,
+}: {
+  editionId?: number;
+  publishedAt?: string;
+}) {
   return (
     <header className="flex flex-col gap-4">
       <HeaderStrap editionId={editionId} />
@@ -98,7 +101,7 @@ export function Masthead({ editionId }: { editionId?: number }) {
         <Separator className="hidden lg:block" orientation="vertical" />
         <Nameplate />
         <Separator className="hidden lg:block" orientation="vertical" />
-        <RightFolio />
+        <RightFolio publishedAt={publishedAt} />
       </div>
       <PublicationLine editionId={editionId} />
       <MastheadRule />

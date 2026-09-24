@@ -80,7 +80,10 @@ export function FrontPage({
   const content = (
     <EditionPaper>
       <div className="flex flex-col gap-3 px-3 py-4 md:px-5 md:py-6">
-        <Masthead editionId={frontPage?.edition.id} />
+        <Masthead
+          editionId={frontPage?.edition.id}
+          publishedAt={frontPage?.edition.now}
+        />
         {editorialContent}
       </div>
     </EditionPaper>
