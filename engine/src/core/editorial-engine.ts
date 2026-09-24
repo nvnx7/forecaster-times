@@ -173,6 +173,51 @@ export class EditorialEngine {
     }
   }
 
+  async publishDraftEdition(): Promise<Map<CategoryPageId, Page>> {
+    const operationId = crypto.randomUUID();
+    logger.info("Draft edition publication started", { operationId });
+    try {
+      const state =
+        (await this.getDraftState()) ?? (await this.migrateLegacyDraft());
+      if (!state) throw new ObjectNotFoundError("Edition draft");
+
+      const pages = new Map<CategoryPageId, Page>();
+      const skippedPages = new Map<Exclude<CategoryPageId, "front">, string>();
+      for (const pageId of pageIds) {
+        const page = await this.getPublishableDraftPage(pageId);
+        if (page) {
+          pages.set(pageId, page);
+          continue;
+        }
+        if (pageId === "front") {
+          throw new ObjectNotFoundError("Publishable front-page draft");
+        }
+        skippedPages.set(pageId, "Category page was not drafted.");
+      }
+
+      const published = await this.promotePublishableDraft(
+        state,
+        pages,
+        skippedPages,
+        operationId,
+        new Date().toISOString(),
+      );
+      logger.info("Draft edition publication completed", {
+        operationId,
+        editionId: state.editionId,
+        pageIds: [...published.keys()],
+        skippedPageIds: [...skippedPages.keys()],
+      });
+      return published;
+    } catch (error) {
+      logger.error("Draft edition publication failed", {
+        operationId,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
+  }
+
   async draftFrontPage(): Promise<FrontPage> {
     return (await this.draftPage("front")) as FrontPage;
   }
@@ -471,10 +516,36 @@ export class EditorialEngine {
   ): Promise<Map<CategoryPageId, Page>> {
     const publishedAt = new Date().toISOString();
     const pages = new Map<CategoryPageId, Page>();
-    const manifestPages: EditionManifestPage[] = [];
     for (const pageId of pageIds) {
       const draft = drafts.get(pageId);
       if (!draft) {
+        continue;
+      }
+      draft.edition = { id: state.editionId, now: publishedAt };
+      const page = await this.materializeDraftPage(pageId, draft);
+      pages.set(pageId, page);
+    }
+    return this.promotePublishableDraft(
+      state,
+      pages,
+      skippedPages,
+      operationId,
+      publishedAt,
+    );
+  }
+
+  private async promotePublishableDraft(
+    state: DraftState,
+    pages: ReadonlyMap<CategoryPageId, Page>,
+    skippedPages: ReadonlyMap<Exclude<CategoryPageId, "front">, string>,
+    operationId: string,
+    publishedAt: string,
+  ): Promise<Map<CategoryPageId, Page>> {
+    const publishedPages = new Map<CategoryPageId, Page>();
+    const manifestPages: EditionManifestPage[] = [];
+    for (const pageId of pageIds) {
+      const page = pages.get(pageId);
+      if (!page) {
         const reason = skippedPages.get(
           pageId as Exclude<CategoryPageId, "front">,
         );
@@ -486,9 +557,12 @@ export class EditorialEngine {
         });
         continue;
       }
-      draft.edition = { id: state.editionId, now: publishedAt };
-      const page = await this.materializeDraftPage(pageId, draft);
-      pages.set(pageId, page);
+      const publishedPage = this.parsePage(pageId, {
+        ...page,
+        edition: { id: state.editionId, now: publishedAt },
+      });
+      await this.store.putJson(draftPublishablePageKey(pageId), publishedPage);
+      publishedPages.set(pageId, publishedPage);
       manifestPages.push({
         id: pageId,
         status: "published",
@@ -515,7 +589,7 @@ export class EditorialEngine {
       publishedAt,
     } satisfies LatestEdition);
     await this.clearDraft(state, operationId);
-    return pages;
+    return publishedPages;
   }
 
   private async materializeDraftPage(
@@ -623,14 +697,8 @@ export class EditorialEngine {
   }
 
   async getDraftPage(pageId: CategoryPageId): Promise<Page> {
-    try {
-      return this.parsePage(
-        pageId,
-        await this.store.getJson<unknown>(draftPublishablePageKey(pageId)),
-      );
-    } catch (error) {
-      if (!(error instanceof ObjectNotFoundError)) throw error;
-    }
+    const publishablePage = await this.getPublishableDraftPage(pageId);
+    if (publishablePage) return publishablePage;
     let draft = await this.getDraftPageState(pageId);
     if (!draft) {
       await this.migrateLegacyDraft();
@@ -767,6 +835,20 @@ export class EditorialEngine {
     return pageId === "front"
       ? (frontPageSchema.parse(document) as FrontPage)
       : (categoryPageSchema.parse(document) as CategoryPage);
+  }
+
+  private async getPublishableDraftPage(
+    pageId: CategoryPageId,
+  ): Promise<Page | undefined> {
+    try {
+      return this.parsePage(
+        pageId,
+        await this.store.getJson<unknown>(draftPublishablePageKey(pageId)),
+      );
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
   }
 
   private async migrateLegacyDraft(): Promise<DraftState | undefined> {
