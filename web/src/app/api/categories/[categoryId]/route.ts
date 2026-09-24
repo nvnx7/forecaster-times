@@ -21,7 +21,7 @@ export async function GET(
 
   try {
     return NextResponse.json(
-      await editorialEngine.getDraftCategoryPage(categoryId as CategoryPageId),
+      await editorialEngine.getCategoryPage(categoryId as CategoryPageId),
       {
         headers: { "Cache-Control": "no-store" },
       },
@@ -29,14 +29,14 @@ export async function GET(
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
       return NextResponse.json(
-        { error: "The current category draft has not been generated." },
+        { error: "The latest category page has not been published." },
         { status: 404 },
       );
     }
 
-    console.error("Unable to read category-page draft", error);
+    console.error("Unable to read latest category page", error);
     return NextResponse.json(
-      { error: "Unable to load the current category draft." },
+      { error: "Unable to load the latest category page." },
       { status: 500 },
     );
   }

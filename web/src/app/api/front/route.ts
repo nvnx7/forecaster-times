@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const frontPage = await editorialEngine.getDraftFrontPage();
+    const frontPage = await editorialEngine.getFrontPage();
 
     return NextResponse.json(frontPage, {
       headers: { "Cache-Control": "no-store" },
@@ -16,15 +16,15 @@ export async function GET() {
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
       return NextResponse.json(
-        { error: "The current front-page draft has not been generated." },
+        { error: "The latest front page has not been published." },
         { status: 404 },
       );
     }
 
-    console.error("Unable to read the front-page draft", error);
+    console.error("Unable to read the latest front page", error);
 
     return NextResponse.json(
-      { error: "Unable to load the current front-page draft." },
+      { error: "Unable to load the latest front page." },
       { status: 500 },
     );
   }
