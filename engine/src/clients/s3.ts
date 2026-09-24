@@ -3,6 +3,7 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
@@ -293,6 +294,49 @@ export class S3JsonStore {
   async moveObject(sourceKey: string, destinationKey: string): Promise<void> {
     await this.copyObject(sourceKey, destinationKey);
     await this.deleteObject(sourceKey);
+  }
+
+  /** Moves every object below a prefix, preserving its path relative to that prefix. */
+  async movePrefix(
+    sourcePrefix: string,
+    destinationPrefix: string,
+  ): Promise<void> {
+    const keys = await this.listObjectKeys(sourcePrefix);
+    for (const sourceKey of keys) {
+      await this.moveObject(
+        sourceKey,
+        `${destinationPrefix}${sourceKey.slice(sourcePrefix.length)}`,
+      );
+    }
+  }
+
+  async deletePrefix(prefix: string): Promise<void> {
+    for (const key of await this.listObjectKeys(prefix)) {
+      await this.deleteObject(key);
+    }
+  }
+
+  private async listObjectKeys(prefix: string): Promise<string[]> {
+    const keys: string[] = [];
+    let continuationToken: string | undefined;
+    do {
+      const response = await this.send("object list", prefix, () =>
+        this.client.send(
+          new ListObjectsV2Command({
+            Bucket: this.options.bucketName,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          }),
+        ),
+      );
+      keys.push(
+        ...(response.Contents?.flatMap((object) =>
+          object.Key ? [object.Key] : [],
+        ) ?? []),
+      );
+      continuationToken = response.NextContinuationToken;
+    } while (continuationToken);
+    return keys;
   }
 
   async deleteObject(key: string): Promise<void> {

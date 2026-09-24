@@ -281,6 +281,26 @@ export type LatestEdition = {
   publishedAt: string;
 };
 
+export type EditionManifestPage =
+  | {
+      id: CategoryPageId;
+      status: "published";
+      objectKey: string;
+    }
+  | {
+      id: Exclude<CategoryPageId, "front">;
+      status: "skipped";
+      reason: string;
+    };
+
+export type EditionManifest = {
+  version: 1;
+  editionId: number;
+  createdAt: string;
+  publishedAt: string;
+  pages: EditionManifestPage[];
+};
+
 export type PolymarketMarketSortField =
   | "volume_24hr"
   | "volume"

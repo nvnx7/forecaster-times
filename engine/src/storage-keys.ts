@@ -2,7 +2,15 @@ import type { CategoryPageId } from "./types";
 import { getImageExtension } from "./utils";
 
 export const latestEditionKey = "latest.json";
-export const draftStateKey = "draft/state.json";
+export const draftRootPrefix = "draft/";
+export const draftWorkPrefix = "draft/work/";
+export const draftPublishablePrefix = "draft/publishable/";
+
+export const draftWorkStateKey = `${draftWorkPrefix}state.json`;
+
+export const legacyDraftStateKey = "draft/state.json";
+export const legacyDraftPagePrefix = "draft/pages/";
+export const legacyDraftIllustrationPrefix = "draft/illustrations/";
 
 function editionDirectory(editionId: number): string {
   if (!Number.isSafeInteger(editionId) || editionId < 1) {
@@ -11,23 +19,31 @@ function editionDirectory(editionId: number): string {
   return `edition-${editionId}`;
 }
 
-export function draftPageKey(pageId: CategoryPageId): string {
-  return `draft/pages/${pageId}.json`;
+export function editionPrefix(editionId: number): string {
+  return `${editionDirectory(editionId)}/`;
+}
+
+export function draftWorkPageKey(pageId: CategoryPageId): string {
+  return `${draftWorkPrefix}pages/${pageId}.json`;
+}
+
+export function draftPublishablePageKey(pageId: CategoryPageId): string {
+  return `${draftPublishablePrefix}pages/${pageId}.json`;
 }
 
 export function editionPageKey(
   editionId: number,
   pageId: CategoryPageId,
 ): string {
-  return `${editionDirectory(editionId)}/pages/${pageId}.json`;
+  return `${editionPrefix(editionId)}pages/${pageId}.json`;
 }
 
-export function draftIllustrationKey(
+export function draftPublishableIllustrationKey(
   pageId: CategoryPageId,
   storyId: string,
   contentType: string,
 ): string {
-  return `draft/illustrations/${pageId}/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
+  return `${draftPublishablePrefix}illustrations/${pageId}/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
 }
 
 export function editionIllustrationKey(
@@ -36,5 +52,11 @@ export function editionIllustrationKey(
   storyId: string,
   contentType: string,
 ): string {
-  return `${editionDirectory(editionId)}/illustrations/${pageId}/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
+  return `${editionPrefix(editionId)}illustrations/${pageId}/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
+}
+
+export const draftPublishableManifestKey = `${draftPublishablePrefix}manifest.json`;
+
+export function editionManifestKey(editionId: number): string {
+  return `${editionPrefix(editionId)}manifest.json`;
 }
