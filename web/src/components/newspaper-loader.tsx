@@ -103,7 +103,7 @@ export function NewspaperLoader() {
             <g transform="matrix(1 .12 0 1 0 -24.72)">
               <path d="M164 78h89m-89 2h89" strokeWidth=".55" />
               <text x="208" y="91" className={styles.imprint} stroke="none">
-                FARCASTER TIMES
+                FORECASTER TIMES
               </text>
               <path d="M164 95h89" strokeWidth=".55" />
               <path

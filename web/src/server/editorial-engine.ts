@@ -41,7 +41,7 @@ const storyGenerator = new FallbackStoryGenerator({
         client: new OpenRouterAIClient({
           apiKey: openRouterApiKey,
           model,
-          appName: "Farcaster Times",
+          appName: "Forecaster Times",
         }),
         config: defaultEditorialConfig,
         reasoningEffort,
@@ -60,7 +60,7 @@ const storyImageGenerator = new FallbackStoryImageGenerator({
           client: new OpenRouterAIClient({
             apiKey: openRouterApiKey,
             model,
-            appName: "Farcaster Times",
+            appName: "Forecaster Times",
           }),
           imageOptions,
         }),

@@ -1,5 +1,5 @@
 ---
-name: Farcaster Times
+name: Forecaster Times
 colors:
   surface: '#fff8f2'
   surface-dim: '#e7d8bf'

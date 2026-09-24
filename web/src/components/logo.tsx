@@ -11,7 +11,7 @@ export function Logo({ size = 48, className, priority = false }: LogoProps) {
   return (
     <Image
       src="/logo.png"
-      alt="Farcaster Times emblem"
+      alt="Forecaster Times emblem"
       width={200}
       height={300}
       sizes={`${size}px`}

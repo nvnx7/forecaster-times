@@ -68,7 +68,7 @@ function createPrompt(
   sources: PromptSource[],
   config: EditorialEngineConfig,
 ): string {
-  return `Write a Farcaster Times editorial from only this supplied context.
+  return `Write a Forecaster Times editorial from only this supplied context.
 MARKET:${JSON.stringify(market)}
 SOURCES:${JSON.stringify(sources)}
 Rules: summarize sources; do not browse, invent facts, or treat market values as proof. Use cautious attribution for market context. Return JSON only—no Markdown, prices, IDs, byline, metadata, illustration, or trade prompt.

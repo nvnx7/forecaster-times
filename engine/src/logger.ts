@@ -1,7 +1,7 @@
 import log from "loglevel";
 
 /** Shared logger for all engine infrastructure and editorial workflows. */
-export const logger = log.getLogger("farcaster-times");
+export const logger = log.getLogger("forecaster-times");
 
 const defaultMethodFactory = logger.methodFactory;
 

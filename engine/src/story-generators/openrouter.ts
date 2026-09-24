@@ -41,7 +41,7 @@ function getResponseDiagnostics(text: string) {
   }
 }
 
-/** Generates structured Farcaster Times stories with GPT-OSS through OpenRouter. */
+/** Generates structured Forecaster Times stories with GPT-OSS through OpenRouter. */
 export class OpenRouterStoryGenerator implements StoryGenerator {
   private readonly storySchema: ReturnType<typeof createGeneratedStorySchema>;
 
@@ -74,7 +74,7 @@ export class OpenRouterStoryGenerator implements StoryGenerator {
         createStoryPrompt(market, sources, this.options.config),
         {
           systemPrompt:
-            "You are the careful editor of Farcaster Times, a vintage-style newspaper covering prediction markets.",
+            "You are the careful editor of Forecaster Times, a vintage-style newspaper covering prediction markets.",
           temperature: 0.2,
           jsonMode: true,
           // maxCompletionTokens: this.options.config.story.maxCompletionTokens,
