@@ -2,13 +2,8 @@
 
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { getPolymarketUrl } from "@/lib/polymarket";
 import type { FrontPageHotMarket } from "@/types";
-
-function polymarketMarketUrl({ market }: FrontPageHotMarket) {
-  return market.slug
-    ? `https://polymarket.com/event/${encodeURIComponent(market.slug)}`
-    : undefined;
-}
 
 function TickerItems({
   markets,
@@ -23,7 +18,7 @@ function TickerItems({
       className="flex shrink-0 items-baseline gap-10 pr-10"
     >
       {markets.map((market) => {
-        const href = polymarketMarketUrl(market);
+        const href = getPolymarketUrl(market.market.slug);
         const content = (
           <>
             <span>{market.market.question}</span>

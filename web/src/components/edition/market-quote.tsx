@@ -18,6 +18,7 @@ import {
   formatProbabilityAsCents,
   formatUsdCompact,
 } from "@/lib/market-format";
+import { getPolymarketUrl } from "@/lib/polymarket";
 import type { MarketPanel } from "@/types";
 
 function handleTrade() {}
@@ -25,19 +26,37 @@ function handleTrade() {}
 export function MarketQuote({ market }: { market: MarketPanel }) {
   const { data: liveMarket } = useGetMarketDetail(market);
   const displayedMarket = liveMarket ?? market;
+  const polymarketUrl = getPolymarketUrl(displayedMarket.marketReference?.slug);
 
   return (
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
       <Card variant="quote">
         <CardHeader>
           <CardAction>
-            <Image
-              src="/polymarket.svg"
-              alt="Polymarket"
-              width={20}
-              height={20}
-              className="size-5"
-            />
+            {polymarketUrl ? (
+              <a
+                href={polymarketUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open this market on Polymarket"
+              >
+                <Image
+                  src="/polymarket.svg"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="size-5"
+                />
+              </a>
+            ) : (
+              <Image
+                src="/polymarket.svg"
+                alt="Polymarket"
+                width={20}
+                height={20}
+                className="size-5"
+              />
+            )}
           </CardAction>
           <p className="font-sans text-[0.625rem] font-semibold tracking-[0.12em] uppercase">
             Market Quotation
