@@ -8,10 +8,6 @@ export const draftPublishablePrefix = "draft/publishable/";
 
 export const draftWorkStateKey = `${draftWorkPrefix}state.json`;
 
-export const legacyDraftStateKey = "draft/state.json";
-export const legacyDraftPagePrefix = "draft/pages/";
-export const legacyDraftIllustrationPrefix = "draft/illustrations/";
-
 function editionDirectory(editionId: number): string {
   if (!Number.isSafeInteger(editionId) || editionId < 1) {
     throw new Error("Edition IDs must be positive integers.");

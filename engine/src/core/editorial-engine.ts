@@ -32,16 +32,12 @@ import {
   draftPublishablePrefix,
   draftRootPrefix,
   draftWorkPageKey,
-  draftWorkPrefix,
   draftWorkStateKey,
   editionIllustrationKey,
   editionManifestKey,
   editionPageKey,
   editionPrefix,
   latestEditionKey,
-  legacyDraftIllustrationPrefix,
-  legacyDraftPagePrefix,
-  legacyDraftStateKey,
 } from "../storage-keys";
 import type { StoryGenerator } from "../story-generators";
 import type {
@@ -177,8 +173,7 @@ export class EditorialEngine {
     const operationId = crypto.randomUUID();
     logger.info("Draft edition publication started", { operationId });
     try {
-      const state =
-        (await this.getDraftState()) ?? (await this.migrateLegacyDraft());
+      const state = await this.getDraftState();
       if (!state) throw new ObjectNotFoundError("Edition draft");
 
       const pages = new Map<CategoryPageId, Page>();
@@ -258,8 +253,7 @@ export class EditorialEngine {
   private async getOrCreateDraftState(
     operationId: string,
   ): Promise<DraftState> {
-    const state =
-      (await this.getDraftState()) ?? (await this.migrateLegacyDraft());
+    const state = await this.getDraftState();
     if (state && !this.isDraftExpired(state)) {
       logger.info("Edition draft resumed", {
         operationId,
@@ -707,11 +701,7 @@ export class EditorialEngine {
   async getDraftPage(pageId: CategoryPageId): Promise<Page> {
     const publishablePage = await this.getPublishableDraftPage(pageId);
     if (publishablePage) return publishablePage;
-    let draft = await this.getDraftPageState(pageId);
-    if (!draft) {
-      await this.migrateLegacyDraft();
-      draft = await this.getDraftPageState(pageId);
-    }
+    const draft = await this.getDraftPageState(pageId);
     if (!draft) throw new ObjectNotFoundError(`Draft page: ${pageId}`);
     return this.materializeDraftPage(pageId, draft);
   }
@@ -853,30 +843,6 @@ export class EditorialEngine {
         pageId,
         await this.store.getJson<unknown>(draftPublishablePageKey(pageId)),
       );
-    } catch (error) {
-      if (error instanceof ObjectNotFoundError) return undefined;
-      throw error;
-    }
-  }
-
-  private async migrateLegacyDraft(): Promise<DraftState | undefined> {
-    try {
-      const state = draftStateSchema.parse(
-        await this.store.getJson<unknown>(legacyDraftStateKey),
-      ) as DraftState;
-      await this.store.movePrefix(
-        legacyDraftPagePrefix,
-        `${draftWorkPrefix}pages/`,
-      );
-      await this.store.movePrefix(
-        legacyDraftIllustrationPrefix,
-        `${draftPublishablePrefix}illustrations/`,
-      );
-      await this.store.moveObject(legacyDraftStateKey, draftWorkStateKey);
-      logger.info("Legacy draft layout migrated", {
-        editionId: state.editionId,
-      });
-      return state;
     } catch (error) {
       if (error instanceof ObjectNotFoundError) return undefined;
       throw error;
