@@ -14,10 +14,11 @@ export async function getCategoryPage(
   return data;
 }
 
-export function useGetCategoryPage(categoryId: CategoryPageId) {
+export function useGetCategoryPage(categoryId: CategoryPageId, enabled = true) {
   return useQuery({
     queryKey: ["categoryPage", categoryId],
     queryFn: () => getCategoryPage(categoryId),
+    enabled,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
