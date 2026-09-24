@@ -20,7 +20,7 @@ export async function GET(
   }
 
   try {
-    const image = await editorialEngine.getDraftCategoryPageIllustration(
+    const image = await editorialEngine.getCategoryPageIllustration(
       categoryId as CategoryPageId,
       storyId,
     );
@@ -39,7 +39,7 @@ export async function GET(
         { status: 404 },
       );
     }
-    console.error("Unable to read category-page draft illustration", error);
+    console.error("Unable to read latest category-page illustration", error);
     return NextResponse.json(
       { error: "Unable to load illustration." },
       { status: 500 },

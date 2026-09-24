@@ -13,7 +13,7 @@ export async function GET(
   const { storyId } = await params;
 
   try {
-    const image = await editorialEngine.getDraftFrontPageIllustration(storyId);
+    const image = await editorialEngine.getFrontPageIllustration(storyId);
     const body = new ArrayBuffer(image.bytes.byteLength);
     new Uint8Array(body).set(image.bytes);
 
