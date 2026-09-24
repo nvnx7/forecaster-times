@@ -36,6 +36,11 @@ export const openRouterStoryGenerationCandidates = [
 
 export const openRouterImageGenerationCandidates = [
   {
+    model: "black-forest-labs/flux.2-klein-4b",
+    outputFormat: "png",
+    resolution: "512",
+  },
+  {
     model: "recraft/recraft-v4.1-flash",
     aspectRatioByPreset: {
       "3:2": "4:3",
@@ -43,11 +48,6 @@ export const openRouterImageGenerationCandidates = [
       "1:1": "1:1",
     },
     n: 1,
-  },
-  {
-    model: "black-forest-labs/flux.2-klein-4b",
-    outputFormat: "png",
-    resolution: "512",
   },
   {
     model: "qwen/qwen-image-3",
