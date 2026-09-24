@@ -1,3 +1,4 @@
+import { CompactMarketQuote } from "@/components/edition/compact-market-quote";
 import { Separator } from "@/components/ui/separator";
 import type { Story } from "@/types";
 
@@ -30,11 +31,7 @@ function SecondaryStory({ story }: { story: Story }) {
       {openingParagraph?.type === "paragraph" ? (
         <p className="font-sans text-base leading-6">{openingParagraph.text}</p>
       ) : null}
-      {story.market ? (
-        <p className="font-mono text-sm font-semibold tracking-[0.04em] text-destructive uppercase">
-          Yes {Math.round(story.market.yes * 100)}¢
-        </p>
-      ) : null}
+      {story.market ? <CompactMarketQuote market={story.market} /> : null}
     </article>
   );
 }
