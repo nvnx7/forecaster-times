@@ -1,10 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { FrontPageHotMarket } from "@/types";
 
-function handleMarketSelect() {}
+function polymarketMarketUrl({ market }: FrontPageHotMarket) {
+  return market.slug
+    ? `https://polymarket.com/event/${encodeURIComponent(market.slug)}`
+    : undefined;
+}
 
 function TickerItems({
   markets,
@@ -18,20 +22,37 @@ function TickerItems({
       aria-hidden={isDuplicate || undefined}
       className="flex shrink-0 items-baseline gap-10 pr-10"
     >
-      {markets.map((market) => (
-        <Button
-          key={market.market.marketId}
-          type="button"
-          variant="marketTicker"
-          onClick={handleMarketSelect}
-          tabIndex={isDuplicate ? -1 : undefined}
-        >
-          <span>{market.market.question}</span>
-          <span className="text-destructive">
-            {Math.round(market.probability * 100)}¢
+      {markets.map((market) => {
+        const href = polymarketMarketUrl(market);
+        const content = (
+          <>
+            <span>{market.market.question}</span>
+            <span className="text-destructive">
+              {Math.round(market.probability * 100)}¢
+            </span>
+          </>
+        );
+
+        return href ? (
+          <a
+            key={market.market.marketId}
+            className={buttonVariants({ variant: "marketTicker" })}
+            href={href}
+            rel="noreferrer"
+            tabIndex={isDuplicate ? -1 : undefined}
+            target="_blank"
+          >
+            {content}
+          </a>
+        ) : (
+          <span
+            key={market.market.marketId}
+            className={buttonVariants({ variant: "marketTicker" })}
+          >
+            {content}
           </span>
-        </Button>
-      ))}
+        );
+      })}
     </div>
   );
 }

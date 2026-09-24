@@ -140,7 +140,7 @@
     display: flex;
     width: max-content;
     align-items: baseline;
-    animation: hot-markets-scroll 30s linear infinite;
+    animation: hot-markets-scroll 45s linear infinite;
   }
 
   .hot-markets-ticker:hover .hot-markets-track {
