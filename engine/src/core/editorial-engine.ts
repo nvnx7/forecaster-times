@@ -20,17 +20,28 @@ import { logger } from "../logger";
 import {
   categoryPageSchema,
   draftStateSchema,
+  editionManifestSchema,
   frontPageSchema,
   latestEditionSchema,
   pageDraftSchema,
 } from "../schema";
 import {
-  draftIllustrationKey,
-  draftPageKey,
-  draftStateKey,
+  draftPublishableIllustrationKey,
+  draftPublishableManifestKey,
+  draftPublishablePageKey,
+  draftPublishablePrefix,
+  draftRootPrefix,
+  draftWorkPageKey,
+  draftWorkPrefix,
+  draftWorkStateKey,
   editionIllustrationKey,
+  editionManifestKey,
   editionPageKey,
+  editionPrefix,
   latestEditionKey,
+  legacyDraftIllustrationPrefix,
+  legacyDraftPagePrefix,
+  legacyDraftStateKey,
 } from "../storage-keys";
 import type { StoryGenerator } from "../story-generators";
 import type {
@@ -39,6 +50,8 @@ import type {
   CategoryPageId,
   CategorySidebar,
   DraftState,
+  EditionManifest,
+  EditionManifestPage,
   FrontPage,
   LatestEdition,
   ListPolymarketMarketsParams,
@@ -63,6 +76,13 @@ const pageIds = Object.keys(pageConfigs) as CategoryPageId[];
 
 type Page = FrontPage | CategoryPage;
 type ResearchedMarket = { market: PolymarketMarket; sources: StorySource[] };
+
+class NoResearchedMarketsError extends Error {
+  constructor(pageId: CategoryPageId) {
+    super(`No researched markets available for ${pageId}.`);
+    this.name = "NoResearchedMarketsError";
+  }
+}
 
 function toCategoryBrief(
   market: PolymarketMarket,
@@ -164,7 +184,7 @@ export type EditorialEngineOptions = {
   config?: EditorialEngineConfig;
 };
 
-/** Generates and serves complete, immutable editorial editions. */
+/** Generates draft pages and publishes complete, immutable editorial editions. */
 export class EditorialEngine {
   private readonly config;
   private readonly nansen;
@@ -185,108 +205,43 @@ export class EditorialEngine {
     this.storyGenerator = options.storyGenerator;
   }
 
-  get frontPageDraftKey(): string {
-    return draftPageKey("front");
-  }
-
-  async getPage(pageId: CategoryPageId): Promise<Page> {
-    const latest = await this.getLatestEdition();
-    const document = await this.store.getJson<unknown>(
-      editionPageKey(latest.editionId, pageId),
-    );
-    return pageId === "front"
-      ? (frontPageSchema.parse(document) as FrontPage)
-      : (categoryPageSchema.parse(document) as CategoryPage);
-  }
-
-  async getFrontPage(): Promise<FrontPage> {
-    return (await this.getPage("front")) as FrontPage;
-  }
-
-  async getDraftPage(pageId: CategoryPageId): Promise<Page> {
-    const draft = await this.getPageDraft(pageId);
-    if (!draft) throw new ObjectNotFoundError(`Draft page: ${pageId}`);
-    return this.createPage(pageId, draft);
-  }
-
-  async getDraftFrontPage(): Promise<FrontPage> {
-    return (await this.getDraftPage("front")) as FrontPage;
-  }
-
-  async getCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
-    this.getCategoryConfig(categoryId);
-    return (await this.getPage(categoryId)) as CategoryPage;
-  }
-
-  async getStory(pageId: CategoryPageId, storyId: string): Promise<Story> {
-    const page = await this.getPage(pageId);
-    const story = [page.leadStory, ...page.secondaryStories].find(
-      (candidate) => candidate.id === storyId,
-    );
-    if (!story) throw new ObjectNotFoundError(`${pageId} story: ${storyId}`);
-    return story;
-  }
-
-  async getIllustration(
-    pageId: CategoryPageId,
-    storyId: string,
-  ): Promise<StoredObject> {
-    const asset = (await this.getStory(pageId, storyId)).illustration?.asset;
-    if (!asset) {
-      throw new ObjectNotFoundError(`${pageId} illustration: ${storyId}`);
-    }
-    return this.store.getObject(asset.objectKey);
-  }
-
-  async getFrontPageIllustration(storyId: string): Promise<StoredObject> {
-    return this.getIllustration("front", storyId);
-  }
-
-  async getDraftIllustration(
-    pageId: CategoryPageId,
-    storyId: string,
-  ): Promise<StoredObject> {
-    const page = await this.getDraftPage(pageId);
-    const story = [page.leadStory, ...page.secondaryStories].find(
-      (candidate) => candidate.id === storyId,
-    );
-    const asset = story?.illustration?.asset;
-    if (!asset) {
-      throw new ObjectNotFoundError(`${pageId} draft illustration: ${storyId}`);
-    }
-    return this.store.getObject(
-      draftIllustrationKey(pageId, story.id, asset.contentType),
-    );
-  }
-
-  async getDraftFrontPageIllustration(storyId: string): Promise<StoredObject> {
-    return this.getDraftIllustration("front", storyId);
-  }
-
-  async getCategoryPageIllustration(
-    categoryId: CategoryPageId,
-    storyId: string,
-  ): Promise<StoredObject> {
-    this.getCategoryConfig(categoryId);
-    return this.getIllustration(categoryId, storyId);
-  }
-
   async publishEdition(): Promise<Map<CategoryPageId, Page>> {
     const operationId = crypto.randomUUID();
     logger.info("Edition generation started", { operationId });
     try {
       const state = await this.getOrCreateDraftState(operationId);
       const drafts = new Map<CategoryPageId, PageDraft>();
+      const skippedPages = new Map<Exclude<CategoryPageId, "front">, string>();
       for (const pageId of pageIds) {
-        const draft = await this.getOrCreatePageDraft(
-          pageId,
-          state,
-          operationId,
-        );
-        await this.generateDraftStories(pageId, draft, operationId);
-        drafts.set(pageId, draft);
+        try {
+          const draft = await this.getOrCreatePageDraft(
+            pageId,
+            state,
+            operationId,
+          );
+          await this.generateDraftStories(pageId, draft, operationId);
+          drafts.set(pageId, draft);
+        } catch (error) {
+          if (
+            pageId === "front" ||
+            !(error instanceof NoResearchedMarketsError)
+          ) {
+            throw error;
+          }
+          skippedPages.set(pageId, error.message);
+          logger.warn("Edition category page skipped", {
+            operationId,
+            pageId,
+            message: error.message,
+          });
+        }
       }
-      const pages = await this.publishDraft(state, drafts, operationId);
+      const pages = await this.publishDraft(
+        state,
+        drafts,
+        skippedPages,
+        operationId,
+      );
       logger.info("Edition generation completed", {
         operationId,
         editionId: state.editionId,
@@ -321,7 +276,7 @@ export class EditorialEngine {
         operationId,
       );
       await this.generateDraftStories(pageId, pageDraft, operationId);
-      const page = this.createPage(pageId, pageDraft);
+      const page = await this.materializeDraftPage(pageId, pageDraft);
       logger.info("Page draft generation completed", {
         operationId,
         pageId,
@@ -338,82 +293,11 @@ export class EditorialEngine {
     }
   }
 
-  async listPolymarketMarkets(
-    params: ListPolymarketMarketsParams = {},
-  ): Promise<ListPolymarketMarketsResponse> {
-    const tags = params.tags ? [...new Set(params.tags)] : [];
-    if (tags.length <= 1) {
-      return this.nansen.listPolymarketMarkets(
-        params.tags ? { ...params, tags } : params,
-      );
-    }
-
-    logger.debug("Nansen market screener OR-tag query started", {
-      tags,
-      requestCount: tags.length,
-    });
-    const responses = await Promise.all(
-      tags.map((tag) =>
-        this.nansen.listPolymarketMarkets({ ...params, tags: [tag] }),
-      ),
-    );
-    const uniqueMarkets = new Map<string, PolymarketMarket>();
-    for (const response of responses) {
-      for (const market of response.data) {
-        uniqueMarkets.set(market.market_id, market);
-      }
-    }
-    const data = sortMarkets([...uniqueMarkets.values()], params.orderBy);
-
-    logger.debug("Nansen market screener OR-tag query completed", {
-      tags,
-      marketCount: data.length,
-    });
-    return { data };
-  }
-
-  async getPolymarketMarket(
-    marketId: string,
-    searchQuery: string,
-  ): Promise<PolymarketMarket> {
-    if (!marketId.trim()) {
-      throw new Error("A market ID is required.");
-    }
-    if (!searchQuery.trim()) {
-      throw new Error("A market search query is required.");
-    }
-
-    const { data } = await this.nansen.listPolymarketMarkets({
-      query: searchQuery.slice(0, 200),
-      pagination: { page: 1, perPage: 100 },
-    });
-    const market = data.find((candidate) => candidate.market_id === marketId);
-    if (!market)
-      throw new ObjectNotFoundError(`Polymarket market: ${marketId}`);
-    return market;
-  }
-
-  private getPageConfig(pageId: CategoryPageId): PageConfig {
-    return pageConfigs[pageId];
-  }
-
-  private getCategoryConfig(pageId: CategoryPageId): CategoryPageConfig {
-    const config = this.getPageConfig(pageId);
-    if (config.kind !== "category") {
-      throw new Error("The front page is not a category page.");
-    }
-    return config;
-  }
-
-  private async getLatestEdition(): Promise<LatestEdition> {
-    const document = await this.store.getJson<unknown>(latestEditionKey);
-    return latestEditionSchema.parse(document) as LatestEdition;
-  }
-
   private async getOrCreateDraftState(
     operationId: string,
   ): Promise<DraftState> {
-    const state = await this.getDraftState();
+    const state =
+      (await this.getDraftState()) ?? (await this.migrateLegacyDraft());
     if (state && !this.isDraftExpired(state)) {
       logger.info("Edition draft resumed", {
         operationId,
@@ -432,34 +316,8 @@ export class EditorialEngine {
       startedAt: now,
       updatedAt: now,
     };
-    await this.store.putJson(draftStateKey, draftState);
+    await this.store.putJson(draftWorkStateKey, draftState);
     return draftState;
-  }
-
-  private async getDraftState(): Promise<DraftState | undefined> {
-    try {
-      const document = await this.store.getJson<unknown>(draftStateKey);
-      return draftStateSchema.parse(document) as DraftState;
-    } catch (error) {
-      if (error instanceof ObjectNotFoundError) return undefined;
-      throw error;
-    }
-  }
-
-  private isDraftExpired(state: DraftState): boolean {
-    return (
-      Date.now() - new Date(state.startedAt).getTime() >
-      this.config.draftExpirySeconds * 1_000
-    );
-  }
-
-  private async getNextEditionId(): Promise<number> {
-    try {
-      return (await this.getLatestEdition()).editionId + 1;
-    } catch (error) {
-      if (error instanceof ObjectNotFoundError) return 1;
-      throw error;
-    }
   }
 
   private async getOrCreatePageDraft(
@@ -467,7 +325,7 @@ export class EditorialEngine {
     state: DraftState,
     operationId: string,
   ): Promise<PageDraft> {
-    const existingDraft = await this.getPageDraft(pageId);
+    const existingDraft = await this.getDraftPageState(pageId);
     if (existingDraft) return existingDraft;
 
     const config = this.getPageConfig(pageId);
@@ -487,7 +345,7 @@ export class EditorialEngine {
       operationId,
     );
     if (selections.length === 0) {
-      throw new Error(`No researched markets available for ${pageId}.`);
+      throw new NoResearchedMarketsError(pageId);
     }
     const selectedIds = new Set(
       selections.map(({ market }) => market.market_id),
@@ -507,21 +365,8 @@ export class EditorialEngine {
       createdAt: state.startedAt,
       updatedAt: state.updatedAt,
     };
-    await this.savePageDraft(pageId, draft, state);
+    await this.saveDraftPage(pageId, draft, state);
     return draft;
-  }
-
-  private async getPageDraft(
-    pageId: CategoryPageId,
-  ): Promise<PageDraft | undefined> {
-    try {
-      return pageDraftSchema.parse(
-        await this.store.getJson<unknown>(draftPageKey(pageId)),
-      ) as PageDraft;
-    } catch (error) {
-      if (error instanceof ObjectNotFoundError) return undefined;
-      throw error;
-    }
   }
 
   private async selectStoryMarkets(
@@ -574,7 +419,7 @@ export class EditorialEngine {
     if (!slot) throw new Error(`Draft story ${index} does not exist.`);
     await this.invalidateDraftIllustration(pageId, slot.story);
     slot.story = undefined;
-    await this.savePageDraft(pageId, draft);
+    await this.saveDraftPage(pageId, draft);
 
     try {
       const generated = await this.storyGenerator.generateStory(
@@ -592,11 +437,11 @@ export class EditorialEngine {
           : generated;
       slot.attemptCount += 1;
       delete slot.lastError;
-      await this.savePageDraft(pageId, draft);
+      await this.saveDraftPage(pageId, draft);
     } catch (error) {
       slot.attemptCount += 1;
       slot.lastError = error instanceof Error ? error.message : "Unknown error";
-      await this.savePageDraft(pageId, draft);
+      await this.saveDraftPage(pageId, draft);
       throw error;
     }
   }
@@ -611,7 +456,7 @@ export class EditorialEngine {
     delete story.illustration;
     if (!asset) return;
     await this.store.deleteObject(
-      draftIllustrationKey(pageId, story.id, asset.contentType),
+      draftPublishableIllustrationKey(pageId, story.id, asset.contentType),
     );
   }
 
@@ -635,7 +480,7 @@ export class EditorialEngine {
         role,
         preset,
       });
-      const draftKey = draftIllustrationKey(
+      const draftKey = draftPublishableIllustrationKey(
         pageId,
         story.id,
         image.contentType,
@@ -665,7 +510,7 @@ export class EditorialEngine {
       };
       slot.illustrationAttemptCount = (slot.illustrationAttemptCount ?? 0) + 1;
       delete slot.illustrationLastError;
-      await this.savePageDraft(pageId, draft);
+      await this.saveDraftPage(pageId, draft);
       logger.info("Draft illustration generated", {
         operationId,
         pageId,
@@ -676,26 +521,26 @@ export class EditorialEngine {
       slot.illustrationAttemptCount = (slot.illustrationAttemptCount ?? 0) + 1;
       slot.illustrationLastError =
         error instanceof Error ? error.message : "Unknown error";
-      await this.savePageDraft(pageId, draft);
+      await this.saveDraftPage(pageId, draft);
       throw error;
     }
   }
 
-  private async savePageDraft(
+  private async saveDraftPage(
     pageId: CategoryPageId,
     draft: PageDraft,
     state?: DraftState,
   ): Promise<void> {
     draft.updatedAt = new Date().toISOString();
     await this.store.putJson(
-      draftPageKey(pageId),
+      draftWorkPageKey(pageId),
       pageDraftSchema.parse(draft),
     );
     const draftState = state ?? (await this.getDraftState());
     if (draftState) {
       draftState.updatedAt = draft.updatedAt;
       await this.store.putJson(
-        draftStateKey,
+        draftWorkStateKey,
         draftStateSchema.parse(draftState),
       );
     }
@@ -704,19 +549,50 @@ export class EditorialEngine {
   private async publishDraft(
     state: DraftState,
     drafts: Map<CategoryPageId, PageDraft>,
+    skippedPages: ReadonlyMap<Exclude<CategoryPageId, "front">, string>,
     operationId: string,
   ): Promise<Map<CategoryPageId, Page>> {
     const publishedAt = new Date().toISOString();
     const pages = new Map<CategoryPageId, Page>();
+    const manifestPages: EditionManifestPage[] = [];
     for (const pageId of pageIds) {
       const draft = drafts.get(pageId);
-      if (!draft) throw new Error(`Draft is missing ${pageId}.`);
+      if (!draft) {
+        const reason = skippedPages.get(
+          pageId as Exclude<CategoryPageId, "front">,
+        );
+        if (!reason) throw new Error(`Draft is missing ${pageId}.`);
+        manifestPages.push({
+          id: pageId as Exclude<CategoryPageId, "front">,
+          status: "skipped",
+          reason,
+        });
+        continue;
+      }
       draft.edition = { id: state.editionId, now: publishedAt };
-      await this.moveDraftIllustrations(pageId, draft);
-      const page = this.createPage(pageId, draft);
-      await this.store.putJson(editionPageKey(state.editionId, pageId), page);
+      const page = await this.materializeDraftPage(pageId, draft);
       pages.set(pageId, page);
+      manifestPages.push({
+        id: pageId,
+        status: "published",
+        objectKey: editionPageKey(state.editionId, pageId),
+      });
     }
+    const manifest: EditionManifest = {
+      version: 1,
+      editionId: state.editionId,
+      createdAt: state.startedAt,
+      publishedAt,
+      pages: manifestPages,
+    };
+    await this.store.putJson(
+      draftPublishableManifestKey,
+      editionManifestSchema.parse(manifest),
+    );
+    await this.store.movePrefix(
+      draftPublishablePrefix,
+      editionPrefix(state.editionId),
+    );
     await this.store.putJson(latestEditionKey, {
       editionId: state.editionId,
       publishedAt,
@@ -725,19 +601,13 @@ export class EditorialEngine {
     return pages;
   }
 
-  private async moveDraftIllustrations(
+  private async materializeDraftPage(
     pageId: CategoryPageId,
     draft: PageDraft,
-  ): Promise<void> {
-    for (const slot of draft.stories) {
-      const story = slot.story;
-      const asset = story?.illustration?.asset;
-      if (!story || !asset) continue;
-      await this.store.moveObject(
-        draftIllustrationKey(pageId, story.id, asset.contentType),
-        asset.objectKey,
-      );
-    }
+  ): Promise<Page> {
+    const page = this.createPage(pageId, draft);
+    await this.store.putJson(draftPublishablePageKey(pageId), page);
+    return page;
   }
 
   private createPage(pageId: CategoryPageId, draft: PageDraft): Page {
@@ -799,20 +669,7 @@ export class EditorialEngine {
     state: DraftState,
     operationId: string,
   ): Promise<void> {
-    for (const pageId of pageIds) {
-      const draft = await this.getPageDraft(pageId);
-      if (!draft) continue;
-      for (const slot of draft.stories) {
-        const story = slot.story;
-        const asset = story?.illustration?.asset;
-        if (!story || !asset) continue;
-        await this.store.deleteObject(
-          draftIllustrationKey(pageId, story.id, asset.contentType),
-        );
-      }
-      await this.store.deleteJson(draftPageKey(pageId));
-    }
-    await this.store.deleteJson(draftStateKey);
+    await this.store.deletePrefix(draftRootPrefix);
     logger.info("Expired draft discarded", {
       operationId,
       editionId: state.editionId,
@@ -823,14 +680,270 @@ export class EditorialEngine {
     state: DraftState,
     operationId: string,
   ): Promise<void> {
-    for (const pageId of pageIds) {
-      await this.store.deleteJson(draftPageKey(pageId));
-    }
-    await this.store.deleteJson(draftStateKey);
+    await this.store.deletePrefix(draftRootPrefix);
     logger.info("Published draft cleared", {
       operationId,
       editionId: state.editionId,
     });
+  }
+
+  get frontPageDraftKey(): string {
+    return draftPublishablePageKey("front");
+  }
+
+  async getPage(pageId: CategoryPageId): Promise<Page> {
+    const latest = await this.getLatestEdition();
+    const document = await this.store.getJson<unknown>(
+      await this.getPublishedPageKey(latest.editionId, pageId),
+    );
+    return pageId === "front"
+      ? (frontPageSchema.parse(document) as FrontPage)
+      : (categoryPageSchema.parse(document) as CategoryPage);
+  }
+
+  async getFrontPage(): Promise<FrontPage> {
+    return (await this.getPage("front")) as FrontPage;
+  }
+
+  async getDraftPage(pageId: CategoryPageId): Promise<Page> {
+    try {
+      return this.parsePage(
+        pageId,
+        await this.store.getJson<unknown>(draftPublishablePageKey(pageId)),
+      );
+    } catch (error) {
+      if (!(error instanceof ObjectNotFoundError)) throw error;
+    }
+    let draft = await this.getDraftPageState(pageId);
+    if (!draft) {
+      await this.migrateLegacyDraft();
+      draft = await this.getDraftPageState(pageId);
+    }
+    if (!draft) throw new ObjectNotFoundError(`Draft page: ${pageId}`);
+    return this.materializeDraftPage(pageId, draft);
+  }
+
+  async getDraftFrontPage(): Promise<FrontPage> {
+    return (await this.getDraftPage("front")) as FrontPage;
+  }
+
+  async getCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
+    this.getCategoryConfig(categoryId);
+    return (await this.getPage(categoryId)) as CategoryPage;
+  }
+
+  async getDraftCategoryPage(
+    categoryId: CategoryPageId,
+  ): Promise<CategoryPage> {
+    this.getCategoryConfig(categoryId);
+    return (await this.getDraftPage(categoryId)) as CategoryPage;
+  }
+
+  async getStory(pageId: CategoryPageId, storyId: string): Promise<Story> {
+    const page = await this.getPage(pageId);
+    const story = [page.leadStory, ...page.secondaryStories].find(
+      (candidate) => candidate.id === storyId,
+    );
+    if (!story) throw new ObjectNotFoundError(`${pageId} story: ${storyId}`);
+    return story;
+  }
+
+  async getIllustration(
+    pageId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    const asset = (await this.getStory(pageId, storyId)).illustration?.asset;
+    if (!asset)
+      throw new ObjectNotFoundError(`${pageId} illustration: ${storyId}`);
+    return this.store.getObject(asset.objectKey);
+  }
+
+  async getFrontPageIllustration(storyId: string): Promise<StoredObject> {
+    return this.getIllustration("front", storyId);
+  }
+
+  async getDraftIllustration(
+    pageId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    const page = await this.getDraftPage(pageId);
+    const story = [page.leadStory, ...page.secondaryStories].find(
+      (candidate) => candidate.id === storyId,
+    );
+    const asset = story?.illustration?.asset;
+    if (!asset)
+      throw new ObjectNotFoundError(`${pageId} draft illustration: ${storyId}`);
+    return this.store.getObject(
+      draftPublishableIllustrationKey(pageId, story.id, asset.contentType),
+    );
+  }
+
+  async getDraftFrontPageIllustration(storyId: string): Promise<StoredObject> {
+    return this.getDraftIllustration("front", storyId);
+  }
+
+  async getDraftCategoryPageIllustration(
+    categoryId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    this.getCategoryConfig(categoryId);
+    return this.getDraftIllustration(categoryId, storyId);
+  }
+
+  async getCategoryPageIllustration(
+    categoryId: CategoryPageId,
+    storyId: string,
+  ): Promise<StoredObject> {
+    this.getCategoryConfig(categoryId);
+    return this.getIllustration(categoryId, storyId);
+  }
+
+  async listPolymarketMarkets(
+    params: ListPolymarketMarketsParams = {},
+  ): Promise<ListPolymarketMarketsResponse> {
+    const tags = params.tags ? [...new Set(params.tags)] : [];
+    if (tags.length <= 1) {
+      return this.nansen.listPolymarketMarkets(
+        params.tags ? { ...params, tags } : params,
+      );
+    }
+    const responses = await Promise.all(
+      tags.map((tag) =>
+        this.nansen.listPolymarketMarkets({ ...params, tags: [tag] }),
+      ),
+    );
+    const markets = new Map<string, PolymarketMarket>();
+    for (const response of responses) {
+      for (const market of response.data) markets.set(market.market_id, market);
+    }
+    return { data: sortMarkets([...markets.values()], params.orderBy) };
+  }
+
+  async getPolymarketMarket(
+    marketId: string,
+    searchQuery: string,
+  ): Promise<PolymarketMarket> {
+    if (!marketId.trim()) throw new Error("A market ID is required.");
+    if (!searchQuery.trim())
+      throw new Error("A market search query is required.");
+    const { data } = await this.nansen.listPolymarketMarkets({
+      query: searchQuery.slice(0, 200),
+      pagination: { page: 1, perPage: 100 },
+    });
+    const market = data.find((candidate) => candidate.market_id === marketId);
+    if (!market)
+      throw new ObjectNotFoundError(`Polymarket market: ${marketId}`);
+    return market;
+  }
+
+  private async getDraftState(): Promise<DraftState | undefined> {
+    try {
+      const document = await this.store.getJson<unknown>(draftWorkStateKey);
+      return draftStateSchema.parse(document) as DraftState;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
+  }
+
+  private parsePage(pageId: CategoryPageId, document: unknown): Page {
+    return pageId === "front"
+      ? (frontPageSchema.parse(document) as FrontPage)
+      : (categoryPageSchema.parse(document) as CategoryPage);
+  }
+
+  private async migrateLegacyDraft(): Promise<DraftState | undefined> {
+    try {
+      const state = draftStateSchema.parse(
+        await this.store.getJson<unknown>(legacyDraftStateKey),
+      ) as DraftState;
+      await this.store.movePrefix(
+        legacyDraftPagePrefix,
+        `${draftWorkPrefix}pages/`,
+      );
+      await this.store.movePrefix(
+        legacyDraftIllustrationPrefix,
+        `${draftPublishablePrefix}illustrations/`,
+      );
+      await this.store.moveObject(legacyDraftStateKey, draftWorkStateKey);
+      logger.info("Legacy draft layout migrated", {
+        editionId: state.editionId,
+      });
+      return state;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
+  }
+
+  private async getDraftPageState(
+    pageId: CategoryPageId,
+  ): Promise<PageDraft | undefined> {
+    try {
+      return pageDraftSchema.parse(
+        await this.store.getJson<unknown>(draftWorkPageKey(pageId)),
+      ) as PageDraft;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
+  }
+
+  private async getLatestEdition(): Promise<LatestEdition> {
+    const document = await this.store.getJson<unknown>(latestEditionKey);
+    return latestEditionSchema.parse(document) as LatestEdition;
+  }
+
+  private async getPublishedPageKey(
+    editionId: number,
+    pageId: CategoryPageId,
+  ): Promise<string> {
+    const manifest = await this.getEditionManifest(editionId);
+    if (!manifest) return editionPageKey(editionId, pageId);
+    const page = manifest.pages.find((candidate) => candidate.id === pageId);
+    if (page?.status === "published") return page.objectKey;
+    throw new ObjectNotFoundError(`Edition ${editionId} page: ${pageId}`);
+  }
+
+  private async getEditionManifest(
+    editionId: number,
+  ): Promise<EditionManifest | undefined> {
+    try {
+      return editionManifestSchema.parse(
+        await this.store.getJson<unknown>(editionManifestKey(editionId)),
+      ) as EditionManifest;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return undefined;
+      throw error;
+    }
+  }
+
+  private getPageConfig(pageId: CategoryPageId): PageConfig {
+    return pageConfigs[pageId];
+  }
+
+  private getCategoryConfig(pageId: CategoryPageId): CategoryPageConfig {
+    const config = this.getPageConfig(pageId);
+    if (config.kind !== "category") {
+      throw new Error("The front page is not a category page.");
+    }
+    return config;
+  }
+
+  private isDraftExpired(state: DraftState): boolean {
+    return (
+      Date.now() - new Date(state.startedAt).getTime() >
+      this.config.draftExpirySeconds * 1_000
+    );
+  }
+
+  private async getNextEditionId(): Promise<number> {
+    try {
+      return (await this.getLatestEdition()).editionId + 1;
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return 1;
+      throw error;
+    }
   }
 }
 
