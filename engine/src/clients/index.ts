@@ -6,12 +6,6 @@ export {
   type GeneratedImage,
   type GenerateFlux2Klein4bImageParams,
 } from "./cloudflare";
-export {
-  GroqAIClient,
-  type GroqAIClientOptions,
-  type GroqPromptOptions,
-  groqGptOss120bModel as groqGptOss20bModel,
-} from "./groq";
 export { NansenClient, type NansenClientOptions } from "./nansen";
 export {
   OpenRouterAIClient,
@@ -21,7 +15,6 @@ export {
   type OpenRouterImageAspectRatio,
   type OpenRouterImageOptions,
   type OpenRouterPromptOptions,
-  openRouterGptOss20bModel,
 } from "./openrouter";
 export {
   ObjectNotFoundError,

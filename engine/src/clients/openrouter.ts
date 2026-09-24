@@ -5,8 +5,6 @@ import { logger } from "../logger";
 import type { ImageAspectRatio } from "../types";
 import { getLoggableServiceError } from "../utils";
 
-export const openRouterGptOss20bModel = "openai/gpt-oss-20b" as const;
-
 export type OpenRouterAIClientOptions = {
   apiKey: string;
   model: string;
