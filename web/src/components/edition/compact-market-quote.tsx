@@ -1,9 +1,12 @@
 "use client";
 
+import Image from "next/image";
+
 import { useGetMarketDetail } from "@/api/getMarketDetail";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardFooter,
   CardHeader,
@@ -25,6 +28,15 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
       <Card size="sm" variant="quote">
         <CardHeader>
+          <CardAction>
+            <Image
+              src="/polymarket.svg"
+              alt="Polymarket"
+              width={20}
+              height={20}
+              className="size-5"
+            />
+          </CardAction>
           <CardTitle>{displayedMarket.question}</CardTitle>
         </CardHeader>
         <CardContent>
