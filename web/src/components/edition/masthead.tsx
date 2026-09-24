@@ -41,8 +41,8 @@ function LeftFolio() {
 
 function Nameplate() {
   return (
-    <div className="order-first flex flex-col items-center gap-3 text-center lg:order-none">
-      <Logo size={56} priority />
+    <div className="order-first flex flex-col items-center gap-0 text-center lg:order-none">
+      <Logo size={150} priority />
       <h1 className="masthead-title text-5xl uppercase md:text-7xl md:whitespace-nowrap">
         Forecaster Times
       </h1>
