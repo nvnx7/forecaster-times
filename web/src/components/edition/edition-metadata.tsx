@@ -2,7 +2,7 @@ import { Separator } from "@/components/ui/separator";
 import type { FrontPage } from "@/types";
 
 const editionLabel = "Daily Edition";
-const editionTagline = "The newspaper of what happens next";
+const editionTagline = "The News, Priced In";
 
 function formatEditionDate(now: string) {
   return new Intl.DateTimeFormat("en-US", {

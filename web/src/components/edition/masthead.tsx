@@ -50,7 +50,7 @@ function Nameplate() {
         Farcaster Times
       </h1>
       <p className="font-sans text-xl leading-7 italic text-muted-foreground">
-        The Newspaper of What Happens Next
+        The News, Priced In.
       </p>
     </div>
   );
@@ -74,12 +74,12 @@ function PublicationLine({ editionId }: { editionId?: number }) {
         Vol. I · No. {formatEditionNumber(editionId)}
       </p>
       <div className="flex items-center justify-center gap-1.5">
-        <span>Market data by Nansen</span>
+        <span className="text-[0.8rem]">Market data by Nansen</span>
         <Image
           src="/nansen.svg"
-          alt=""
-          width={18}
-          height={18}
+          alt="nansen logo"
+          width={24}
+          height={24}
           className="size-4.5 brightness-0"
         />
       </div>
