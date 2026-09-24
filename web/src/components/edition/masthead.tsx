@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { EditionDate } from "@/components/edition/edition-date";
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
@@ -71,7 +73,16 @@ function PublicationLine({ editionId }: { editionId?: number }) {
       <p className="md:text-left">
         Vol. I · No. {formatEditionNumber(editionId)}
       </p>
-      <p>Printed for the Meridian Buildathon</p>
+      <div className="flex items-center justify-center gap-1.5">
+        <span>Market data by Nansen</span>
+        <Image
+          src="/nansen.svg"
+          alt=""
+          width={18}
+          height={18}
+          className="size-4.5 brightness-0"
+        />
+      </div>
       <p className="md:text-right">On Chain · Everywhere</p>
     </div>
   );
