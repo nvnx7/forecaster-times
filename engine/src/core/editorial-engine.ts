@@ -45,10 +45,8 @@ import {
 } from "../storage-keys";
 import type { StoryGenerator } from "../story-generators";
 import type {
-  CategoryBrief,
   CategoryPage,
   CategoryPageId,
-  CategorySidebar,
   DraftState,
   EditionManifest,
   EditionManifestPage,
@@ -59,12 +57,15 @@ import type {
   PageDraft,
   PolymarketMarket,
   Story,
-  StoryRole,
   StorySource,
 } from "../types";
 import {
+  createCategorySidebar,
+  getIllustrationSource,
   getMarketProbability,
+  getStoryRole,
   sortMarkets,
+  toCategoryBrief,
   toMarketBrief,
   toMarketPanel,
   toMarketReference,
@@ -82,90 +83,6 @@ class NoResearchedMarketsError extends Error {
     super(`No researched markets available for ${pageId}.`);
     this.name = "NoResearchedMarketsError";
   }
-}
-
-function toCategoryBrief(
-  market: PolymarketMarket,
-  category: CategoryBrief["category"],
-): CategoryBrief {
-  const probability = getMarketProbability(market);
-  return {
-    id: `brief-${market.market_id}`,
-    category,
-    kicker: market.event_title ?? undefined,
-    headline: market.question ?? "Untitled prediction market",
-    summary: `Traders currently price this outcome at ${Math.round(probability * 100)}%.`,
-    probability,
-    change24h: market.one_day_price_change ?? undefined,
-    market: toMarketReference(market),
-  };
-}
-
-function createSidebar(
-  config: CategoryPageConfig,
-  markets: PolymarketMarket[],
-): CategorySidebar {
-  const items = markets.slice(0, config.briefCount).map((market) => {
-    const probability = getMarketProbability(market);
-    const change = market.one_day_price_change ?? 0;
-    return {
-      id: market.market_id,
-      label: market.question ?? "Untitled prediction market",
-      probability,
-      change24h: change,
-      previousProbability: probability - change,
-      change,
-    };
-  });
-  if (config.sidebar.type === "changes") {
-    return {
-      type: "changes",
-      title: config.sidebar.title,
-      items: items.map(({ change24h: _change24h, ...item }) => item),
-    };
-  }
-  if (config.sidebar.type === "movers") {
-    return {
-      type: "movers",
-      title: config.sidebar.title,
-      items: items.map(
-        ({
-          previousProbability: _previousProbability,
-          change: _change,
-          ...item
-        }) => item,
-      ),
-    };
-  }
-  return {
-    type: "odds",
-    title: config.sidebar.title,
-    items: items.map(
-      ({
-        previousProbability: _previousProbability,
-        change24h: _change24h,
-        change: _change,
-        ...item
-      }) => item,
-    ),
-  };
-}
-
-function getStoryRole(config: PageConfig, index: number): StoryRole {
-  if (config.kind === "front") {
-    return index === 0 ? "front-lead" : "front-secondary";
-  }
-  return index === 0 ? "category-lead" : "category-secondary";
-}
-
-function getIllustrationSource(
-  pageId: CategoryPageId,
-  storyId: string,
-): string {
-  const encodedStoryId = encodeURIComponent(storyId);
-  return pageId === "front"
-    ? `/api/front/illustrations/${encodedStoryId}`
-    : `/api/categories/${pageId}/illustrations/${encodedStoryId}`;
 }
 
 export type EditorialEngineOptions = {
@@ -648,7 +565,7 @@ export class EditorialEngine {
       briefs: draft.briefMarkets.map((market) =>
         toCategoryBrief(market, config.storyCategory),
       ),
-      sidebar: createSidebar(config, draft.marketCandidates),
+      sidebar: createCategorySidebar(config, draft.marketCandidates),
       marketBoard: {
         title: `${config.label} Market Board`,
         items: draft.marketCandidates

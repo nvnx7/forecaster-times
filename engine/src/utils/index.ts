@@ -1,3 +1,4 @@
+export { createCategorySidebar } from "./category-content";
 export { delay } from "./delay";
 export {
   getLoggableServiceError,
@@ -12,9 +13,11 @@ export {
   sortMarkets,
 } from "./market";
 export {
+  toCategoryBrief,
   toMarketBrief,
   toMarketPanel,
   toMarketReference,
   withMarketPanel,
 } from "./market-content";
+export { getIllustrationSource, getStoryRole } from "./story";
 export { wordCount } from "./text";

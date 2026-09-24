@@ -1,5 +1,6 @@
 import type {
   Brief,
+  CategoryBrief,
   MarketPanel,
   MarketReference,
   PolymarketMarket,
@@ -60,6 +61,23 @@ export function toMarketBrief(market: PolymarketMarket): Brief {
     summary: `Traders price this outcome at ${Math.round(probability * 100)}¢${changeText}.`,
     probability,
     change24h,
+    market: toMarketReference(market),
+  };
+}
+
+export function toCategoryBrief(
+  market: PolymarketMarket,
+  category: CategoryBrief["category"],
+): CategoryBrief {
+  const probability = getMarketProbability(market);
+  return {
+    id: `brief-${market.market_id}`,
+    category,
+    kicker: market.event_title ?? undefined,
+    headline: market.question ?? "Untitled prediction market",
+    summary: `Traders currently price this outcome at ${Math.round(probability * 100)}%.`,
+    probability,
+    change24h: market.one_day_price_change ?? undefined,
     market: toMarketReference(market),
   };
 }
