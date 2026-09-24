@@ -1,3 +1,4 @@
+export type { EditionManifest, EditionManifestPage } from "@repo/engine";
 export type {
   CategoryBrief,
   CategoryLayoutVariant,
