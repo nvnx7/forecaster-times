@@ -1,8 +1,12 @@
-import { type OpenRouterAIClient, OpenRouterAIError } from "../clients";
+import {
+  type OpenRouterAIClient,
+  OpenRouterAIError,
+  type OpenRouterImageAspectRatio,
+} from "../clients";
 import { imagePresets } from "../config";
 import { GenerationError, isSafetyBlockedError } from "../generation";
 import { logger } from "../logger";
-import type { GeneratedBy } from "../types";
+import type { GeneratedBy, ImageAspectRatio } from "../types";
 import type {
   GeneratedStoryImage,
   StoryImageGenerationRequest,
@@ -16,6 +20,10 @@ export type OpenRouterStoryImageGeneratorOptions = {
     outputFormat?: "png" | "jpeg" | "webp";
     quality?: "auto" | "low" | "medium" | "high";
     resolution?: "512" | "1K" | "2K" | "4K";
+    n?: number;
+    aspectRatioByPreset?: Partial<
+      Record<ImageAspectRatio, OpenRouterImageAspectRatio>
+    >;
   };
 };
 
@@ -39,10 +47,13 @@ export class OpenRouterStoryImageGenerator implements StoryImageGenerator {
     });
 
     try {
+      const { aspectRatioByPreset, ...imageOptions } =
+        this.options.imageOptions ?? {};
       const image = await this.options.client.generateImage({
-        ...this.options.imageOptions,
+        ...imageOptions,
         prompt: createStoryImagePrompt(request.story),
-        aspectRatio: preset.aspectRatio,
+        aspectRatio:
+          aspectRatioByPreset?.[preset.aspectRatio] ?? preset.aspectRatio,
       });
       return {
         bytes: image.bytes,

@@ -36,8 +36,13 @@ export const openRouterStoryGenerationCandidates = [
 
 export const openRouterImageGenerationCandidates = [
   {
-    model: "meta/muse-image",
-    resolution: "512",
+    model: "recraft/recraft-v4.1-flash",
+    aspectRatioByPreset: {
+      "3:2": "4:3",
+      "4:5": "3:4",
+      "1:1": "1:1",
+    },
+    n: 1,
   },
   {
     model: "black-forest-labs/flux.2-klein-4b",

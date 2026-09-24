@@ -18,6 +18,7 @@ export {
   type OpenRouterAIClientOptions,
   OpenRouterAIError,
   type OpenRouterGeneratedImage,
+  type OpenRouterImageAspectRatio,
   type OpenRouterImageOptions,
   type OpenRouterPromptOptions,
   openRouterGptOss20bModel,

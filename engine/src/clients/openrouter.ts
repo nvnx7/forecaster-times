@@ -2,6 +2,7 @@ import { OpenRouter } from "@openrouter/sdk";
 import axios, { type AxiosInstance } from "axios";
 
 import { logger } from "../logger";
+import type { ImageAspectRatio } from "../types";
 import { getLoggableServiceError } from "../utils";
 
 export const openRouterGptOss20bModel = "openai/gpt-oss-20b" as const;
@@ -24,11 +25,20 @@ export type OpenRouterPromptOptions = {
 
 export type OpenRouterImageOptions = {
   prompt: string;
-  aspectRatio: "3:2" | "4:5" | "1:1";
+  aspectRatio: OpenRouterImageAspectRatio;
   outputFormat?: "png" | "jpeg" | "webp";
   quality?: "auto" | "low" | "medium" | "high";
   resolution?: "512" | "1K" | "2K" | "4K";
+  n?: number;
 };
+
+export type OpenRouterImageAspectRatio =
+  | ImageAspectRatio
+  | "4:3"
+  | "3:4"
+  | "16:9"
+  | "9:16"
+  | "auto";
 
 export type OpenRouterGeneratedImage = {
   bytes: Uint8Array;
@@ -182,11 +192,20 @@ export class OpenRouterAIClient {
     if (!options.prompt.trim()) {
       throw new Error("A prompt is required to generate an image.");
     }
+    if (
+      options.n !== undefined &&
+      (!Number.isInteger(options.n) || options.n < 1 || options.n > 6)
+    ) {
+      throw new Error(
+        "The number of requested images must be between 1 and 6.",
+      );
+    }
 
     const outputFormat = options.outputFormat ?? "png";
     logger.debug("OpenRouter image generation started", {
       model: this.model,
       aspectRatio: options.aspectRatio,
+      n: options.n,
       outputFormat,
     });
 
@@ -202,6 +221,7 @@ export class OpenRouterAIClient {
             : {}),
           ...(options.quality ? { quality: options.quality } : {}),
           ...(options.resolution ? { resolution: options.resolution } : {}),
+          ...(options.n ? { n: options.n } : {}),
           provider: { allow_fallbacks: false },
         },
       );
