@@ -1,22 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { internalEditionApiKey, nodeEnv } from "@/config/env";
 import { editorialEngine, logger } from "@/server/editorial-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  if (
-    nodeEnv !== "development" &&
-    (!internalEditionApiKey ||
-      request.headers.get("authorization") !==
-        `Bearer ${internalEditionApiKey}`)
-  ) {
-    logger.warn("Front-page generation request rejected");
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
+export async function POST() {
   try {
     logger.info("Front-page draft generation request accepted");
     const frontPage = await editorialEngine.draftFrontPage();
