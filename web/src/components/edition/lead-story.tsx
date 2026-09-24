@@ -1,5 +1,6 @@
 import { StoryBody } from "@/components/edition/story-body";
 import { StoryIllustration } from "@/components/edition/story-illustration";
+import { capitalizeWords } from "@/lib/text";
 import type { Story } from "@/types";
 
 export function LeadStory({ story }: { story: Story }) {
@@ -21,7 +22,7 @@ export function LeadStory({ story }: { story: Story }) {
           id={`story-${story.id}`}
           className="col-span-12 font-heading text-5xl leading-[0.9] font-bold tracking-[-0.03em] md:text-7xl"
         >
-          {story.headline.long}
+          {capitalizeWords(story.headline.long)}
         </h2>
         {story.dek ? (
           <p className="col-span-12 font-sans text-xl leading-7 font-semibold italic text-muted-foreground md:text-2xl md:leading-8">

@@ -3,6 +3,7 @@ import {
   formatChangeInPoints,
   formatProbabilityAsCents,
 } from "@/lib/market-format";
+import { capitalizeWords } from "@/lib/text";
 import type { CategoryBrief } from "@/types";
 
 // Compact editorial items supporting the category-page lower grid.
@@ -28,7 +29,7 @@ function BriefColumn({
               </p>
             ) : null}
             <h3 className="font-heading text-2xl leading-[0.98] font-semibold">
-              {brief.headline}
+              {capitalizeWords(brief.headline)}
             </h3>
             {brief.summary ? (
               <p className="font-sans text-base leading-5 text-muted-foreground">

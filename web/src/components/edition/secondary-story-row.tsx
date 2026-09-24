@@ -1,5 +1,6 @@
 import { CompactMarketQuote } from "@/components/edition/compact-market-quote";
 import { Separator } from "@/components/ui/separator";
+import { capitalizeWords } from "@/lib/text";
 import type { Story } from "@/types";
 
 function SecondaryStory({ story }: { story: Story }) {
@@ -21,7 +22,7 @@ function SecondaryStory({ story }: { story: Story }) {
         id={`secondary-story-${story.id}`}
         className="font-heading text-3xl leading-[0.95] font-semibold tracking-[-0.02em] md:text-4xl"
       >
-        {story.headline.medium}
+        {capitalizeWords(story.headline.medium)}
       </h2>
       {story.dek ? (
         <p className="font-sans text-lg leading-6 italic text-muted-foreground">

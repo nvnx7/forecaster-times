@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 
 import { Separator } from "@/components/ui/separator";
+import { capitalizeWords } from "@/lib/text";
 import type { Brief } from "@/types";
 
 function formatCategory(category: Brief["category"]): string {
@@ -29,7 +30,7 @@ function FrontPageBrief({ brief }: { brief: Brief }) {
         id={`front-page-brief-${brief.id}`}
         className="font-heading text-xl leading-[0.98] font-semibold tracking-[-0.01em]"
       >
-        {brief.headline}
+        {capitalizeWords(brief.headline)}
       </h3>
       {brief.summary ? (
         <p className="line-clamp-2 font-sans text-sm leading-5 text-muted-foreground">
