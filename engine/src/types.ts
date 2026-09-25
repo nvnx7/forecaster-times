@@ -40,6 +40,8 @@ export type MarketPanel = {
   marketReference?: MarketReference;
   yes: number;
   no: number;
+  yesLabel?: string;
+  noLabel?: string;
   change24h?: number;
   volume24hUsd?: number;
   liquidityUsd?: number;

@@ -24,6 +24,8 @@ const marketPanelSchema = z.object({
   marketReference: marketReferenceSchema.optional(),
   yes: z.number(),
   no: z.number(),
+  yesLabel: z.string().optional(),
+  noLabel: z.string().optional(),
   change24h: z.number().optional(),
   volume24hUsd: z.number().optional(),
   liquidityUsd: z.number().optional(),
