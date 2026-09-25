@@ -32,7 +32,7 @@ export const openRouterStoryGenerationCandidates = [
 export const openRouterImageGenerationModels = [
   "recraft/recraft-v4.1-flash",
   "black-forest-labs/flux.2-klein-4b",
-  "qwen/qwen-image-3",
+  "krea/krea-2-medium-turbo",
 ] as const;
 
 export type CategoryPageConfig = {

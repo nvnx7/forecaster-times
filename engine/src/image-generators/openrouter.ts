@@ -22,7 +22,7 @@ export type OpenRouterStoryImageGeneratorOptions = {
 
 const recraftModel = "recraft/recraft-v4.1-flash";
 const blackForestModel = "black-forest-labs/flux.2-klein-4b";
-const qwenModel = "qwen/qwen-image-3";
+const kreaModel = "krea/krea-2-medium-turbo";
 const recraftAspectRatios: Record<
   ImageAspectRatio,
   OpenRouterImageAspectRatio
@@ -45,12 +45,8 @@ function getImageOptions(model: string, aspectRatio: ImageAspectRatio) {
     };
   }
 
-  if (model === qwenModel) {
-    return {
-      aspectRatio,
-      outputFormat: "png" as const,
-      resolution: "512" as const,
-    };
+  if (model === kreaModel) {
+    return { aspectRatio, resolution: "1K" as const };
   }
 
   throw new Error(`Unsupported OpenRouter image model: ${model}`);
