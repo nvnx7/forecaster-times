@@ -1,10 +1,10 @@
 import { Separator } from "@/components/ui/separator";
+import type { CategoryBrief } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
-} from "@/lib/market-format";
-import { capitalizeWords } from "@/lib/text";
-import type { CategoryBrief } from "@/types";
+} from "@/utils/market-format";
+import { capitalizeWords } from "@/utils/text";
 
 // Compact editorial items supporting the category-page lower grid.
 

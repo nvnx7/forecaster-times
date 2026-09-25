@@ -14,13 +14,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { MarketPanel } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
   formatUsdCompact,
-} from "@/lib/market-format";
-import { getPolymarketUrl } from "@/lib/polymarket";
-import type { MarketPanel } from "@/types";
+} from "@/utils/market-format";
+import { getPolymarketUrl } from "@/utils/polymarket";
 
 function handleTrade() {}
 

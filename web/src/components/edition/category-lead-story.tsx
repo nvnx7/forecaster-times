@@ -1,7 +1,7 @@
 import { StoryBody } from "@/components/edition/story-body";
 import { StoryIllustration } from "@/components/edition/story-illustration";
-import { capitalizeWords } from "@/lib/text";
 import type { CategoryStory } from "@/types";
+import { capitalizeWords } from "@/utils/text";
 
 // The lead composition adapts between wide and portrait editorial illustrations.
 

@@ -1,10 +1,10 @@
 import { Separator } from "@/components/ui/separator";
+import type { CategoryMarketBoard as CategoryMarketBoardData } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
   formatUsdCompact,
-} from "@/lib/market-format";
-import type { CategoryMarketBoard as CategoryMarketBoardData } from "@/types";
+} from "@/utils/market-format";
 
 // A compact newspaper board, deliberately kept distinct from an app dashboard.
 

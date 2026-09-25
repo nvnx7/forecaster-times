@@ -12,9 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatProbabilityAsCents } from "@/lib/market-format";
-import { getPolymarketUrl } from "@/lib/polymarket";
 import type { MarketPanel } from "@/types";
+import { formatProbabilityAsCents } from "@/utils/market-format";
+import { getPolymarketUrl } from "@/utils/polymarket";
 
 function handleTrade() {}
 

@@ -1,7 +1,7 @@
 import { StoryBody } from "@/components/edition/story-body";
 import { StoryIllustration } from "@/components/edition/story-illustration";
-import { capitalizeWords } from "@/lib/text";
 import type { Story } from "@/types";
+import { capitalizeWords } from "@/utils/text";
 
 export function LeadStory({ story }: { story: Story }) {
   const wideIllustration =

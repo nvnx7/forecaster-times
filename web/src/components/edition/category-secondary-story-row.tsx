@@ -1,7 +1,7 @@
 import { CompactMarketQuote } from "@/components/edition/compact-market-quote";
 import { Separator } from "@/components/ui/separator";
-import { capitalizeWords } from "@/lib/text";
 import type { CategoryStory } from "@/types";
+import { capitalizeWords } from "@/utils/text";
 
 // Secondary reporting follows the lead as a paired editorial row.
 

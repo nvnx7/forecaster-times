@@ -2,8 +2,8 @@
 
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { getPolymarketUrl } from "@/lib/polymarket";
 import type { FrontPageHotMarket } from "@/types";
+import { getPolymarketUrl } from "@/utils/polymarket";
 
 function TickerItems({
   markets,

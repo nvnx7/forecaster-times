@@ -2,12 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import type { MarketPanel } from "@/types";
 import {
   polymarketGammaApiUrl,
   toMarketPanelFromGamma,
-} from "@/lib/polymarket-gamma";
-import type { MarketPanel } from "@/types";
+} from "@/utils/polymarket-gamma";
 
 export async function getMarketDetail(
   market: MarketPanel,

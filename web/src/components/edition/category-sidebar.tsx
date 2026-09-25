@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 
 import { Separator } from "@/components/ui/separator";
+import type { CategorySidebar as CategorySidebarData } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
-} from "@/lib/market-format";
-import type { CategorySidebar as CategorySidebarData } from "@/types";
+} from "@/utils/market-format";
 
 // Category-specific odds furniture for the right-hand newspaper rail.
 

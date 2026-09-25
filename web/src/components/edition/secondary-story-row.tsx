@@ -1,7 +1,7 @@
 import { CompactMarketQuote } from "@/components/edition/compact-market-quote";
 import { Separator } from "@/components/ui/separator";
-import { capitalizeWords } from "@/lib/text";
 import type { Story } from "@/types";
+import { capitalizeWords } from "@/utils/text";
 
 function SecondaryStory({ story }: { story: Story }) {
   const openingParagraph = story.body.find(

@@ -1,7 +1,7 @@
 import { MarketQuote } from "@/components/edition/market-quote";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import type { MarketPanel, ParagraphBlock } from "@/types";
+import { cn } from "@/utils/cn";
 
 type ArticleStory = {
   body: ParagraphBlock[];

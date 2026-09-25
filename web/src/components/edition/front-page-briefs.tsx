@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 
 import { Separator } from "@/components/ui/separator";
-import { capitalizeWords } from "@/lib/text";
 import type { Brief } from "@/types";
+import { capitalizeWords } from "@/utils/text";
 
 function formatCategory(category: Brief["category"]): string {
   return category.replaceAll("-", " ");
