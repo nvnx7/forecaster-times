@@ -40,25 +40,7 @@ export function CategoryLeadStory({ story }: { story: CategoryStory }) {
       {wideIllustration ? (
         <StoryIllustration illustration={wideIllustration} />
       ) : null}
-      {sideIllustration ? (
-        <div
-          className={
-            sideIllustration.placement === "float-right"
-              ? "grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.55fr)]"
-              : "grid items-start gap-5 md:grid-cols-[minmax(15rem,0.55fr)_minmax(0,1fr)]"
-          }
-        >
-          {sideIllustration.placement === "float-left" ? (
-            <StoryIllustration illustration={sideIllustration} />
-          ) : null}
-          <StoryBody story={story} />
-          {sideIllustration.placement === "float-right" ? (
-            <StoryIllustration illustration={sideIllustration} />
-          ) : null}
-        </div>
-      ) : (
-        <StoryBody story={story} />
-      )}
+      <StoryBody story={story} illustration={sideIllustration} />
     </article>
   );
 }

@@ -166,7 +166,7 @@
     line-height: 1.65;
   }
 
-  .article-paragraph:first-child::first-letter {
+  .article-paragraph-opening::first-letter {
     float: left;
     margin: 0.1em 0.1em 0 0;
     font-family: var(--font-heading);
@@ -194,8 +194,8 @@
     line-height: 1.1;
   }
 
-  .article-market-aside {
-    align-self: stretch;
+  .article-flow {
+    display: flow-root;
   }
 
   .article-market-full-width {
@@ -211,14 +211,24 @@
   }
 
   @media (min-width: 64rem) {
-    .article-body-layout.has-market {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
-      align-items: start;
+    .article-float-illustration {
+      width: clamp(17rem, 36%, 34rem);
+      margin-bottom: 1.25rem;
     }
 
-    .article-market-aside {
-      align-self: start;
+    .article-float-market {
+      width: clamp(18rem, 28%, 22rem);
+      margin-bottom: 1.25rem;
+    }
+
+    .article-float-left {
+      float: left;
+      margin-right: 1.5rem;
+    }
+
+    .article-float-right {
+      float: right;
+      margin-left: 1.5rem;
     }
   }
 
