@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { EditionDate } from "@/components/edition/edition-date";
+import { MastheadMarketPrices } from "@/components/edition/masthead-market-prices";
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
 
@@ -30,11 +31,9 @@ function LeftFolio() {
   return (
     <div className="flex flex-col gap-1 text-center lg:text-left">
       <p className="font-sans text-base font-semibold tracking-[0.04em] uppercase">
-        Price: Five Cents
+        Market Prices
       </p>
-      <p className="font-sans text-base italic text-muted-foreground">
-        Published at first light
-      </p>
+      <MastheadMarketPrices />
     </div>
   );
 }
