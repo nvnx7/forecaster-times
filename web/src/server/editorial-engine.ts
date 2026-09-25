@@ -1,21 +1,16 @@
 import {
-  CloudflareStoryImageGenerator,
-  CloudflareWorkersAiClient,
   createEditorialEngine,
   defaultEditorialConfig,
   FallbackStoryGenerator,
-  FallbackStoryImageGenerator,
   logger,
   OpenRouterAIClient,
   OpenRouterStoryGenerator,
   OpenRouterStoryImageGenerator,
-  openRouterImageGenerationCandidates,
+  openRouterImageGenerationModels,
   openRouterStoryGenerationCandidates,
 } from "@repo/engine";
 
 import {
-  cloudflareAccountId,
-  cloudflareApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
   openRouterApiKey,
@@ -28,11 +23,6 @@ import {
 } from "@/config/env";
 
 export { logger };
-
-const cloudflareClient = new CloudflareWorkersAiClient({
-  accountId: cloudflareAccountId,
-  apiToken: cloudflareApiKey,
-});
 
 const storyGenerator = new FallbackStoryGenerator({
   generators: openRouterStoryGenerationCandidates.map(
@@ -49,23 +39,10 @@ const storyGenerator = new FallbackStoryGenerator({
   ),
 });
 
-const storyImageGenerator = new FallbackStoryImageGenerator({
-  generators: [
-    new CloudflareStoryImageGenerator({
-      client: cloudflareClient,
-    }),
-    ...openRouterImageGenerationCandidates.map(
-      ({ model, ...imageOptions }) =>
-        new OpenRouterStoryImageGenerator({
-          client: new OpenRouterAIClient({
-            apiKey: openRouterApiKey,
-            model,
-            appName: "Forecaster Times",
-          }),
-          imageOptions,
-        }),
-    ),
-  ],
+const storyImageGenerator = new OpenRouterStoryImageGenerator({
+  apiKey: openRouterApiKey,
+  models: openRouterImageGenerationModels,
+  appName: "Forecaster Times",
 });
 
 /** Web's server boundary for the editorial engine and its infrastructure config. */

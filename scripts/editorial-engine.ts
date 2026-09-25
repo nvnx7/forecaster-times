@@ -1,21 +1,15 @@
 import {
-  CloudflareStoryImageGenerator,
-  CloudflareWorkersAiClient,
   createEditorialEngine,
   defaultEditorialConfig,
   FallbackStoryGenerator,
-  FallbackStoryImageGenerator,
   OpenRouterAIClient,
   OpenRouterStoryGenerator,
   OpenRouterStoryImageGenerator,
-  openRouterImageGenerationCandidates,
+  openRouterImageGenerationModels,
   openRouterStoryGenerationCandidates,
-  type StoryImageGenerator,
 } from "@repo/engine";
 
 import {
-  cloudflareAccountId,
-  cloudflareApiKey,
   nansenApiBaseUrl,
   nansenApiKey,
   openRouterApiKey,
@@ -29,10 +23,6 @@ import {
 
 /** Creates the same fully configured engine used by every local editorial job. */
 export function createScriptEditorialEngine() {
-  const cloudflareClient = new CloudflareWorkersAiClient({
-    accountId: cloudflareAccountId,
-    apiToken: cloudflareApiKey,
-  });
   const storyGenerators = openRouterStoryGenerationCandidates.map(
     ({ model, reasoningEffort }) =>
       new OpenRouterStoryGenerator({
@@ -45,23 +35,6 @@ export function createScriptEditorialEngine() {
         reasoningEffort,
       }),
   );
-  const imageGenerators: StoryImageGenerator[] = [
-    new CloudflareStoryImageGenerator({
-      client: cloudflareClient,
-    }),
-    ...openRouterImageGenerationCandidates.map(
-      ({ model, ...imageOptions }) =>
-        new OpenRouterStoryImageGenerator({
-          client: new OpenRouterAIClient({
-            apiKey: openRouterApiKey,
-            model,
-            appName: "Forecaster Times",
-          }),
-          imageOptions,
-        }),
-    ),
-  ];
-
   return createEditorialEngine({
     nansen: { apiKey: nansenApiKey, baseUrl: nansenApiBaseUrl },
     s3: {
@@ -75,8 +48,10 @@ export function createScriptEditorialEngine() {
     storyGenerator: new FallbackStoryGenerator({
       generators: storyGenerators,
     }),
-    storyImageGenerator: new FallbackStoryImageGenerator({
-      generators: imageGenerators,
+    storyImageGenerator: new OpenRouterStoryImageGenerator({
+      apiKey: openRouterApiKey,
+      models: openRouterImageGenerationModels,
+      appName: "Forecaster Times",
     }),
   });
 }

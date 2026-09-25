@@ -1,10 +1,4 @@
 export {
-  CloudflareWorkersAiClient,
-  type CloudflareWorkersAiClientOptions,
-  CloudflareWorkersAiError,
-  flux2Klein4bModel,
-  type GeneratedImage,
-  type GenerateFlux2Klein4bImageParams,
   OpenRouterAIClient,
   type OpenRouterAIClientOptions,
   OpenRouterAIError,
@@ -24,7 +18,7 @@ export {
   type ImagePreset,
   imageGenerationConfig,
   imagePresets as IMAGE_PRESETS,
-  openRouterImageGenerationCandidates,
+  openRouterImageGenerationModels,
   openRouterStoryGenerationCandidates,
   pageConfigs,
 } from "./config";
@@ -40,10 +34,6 @@ export {
   isSafetyBlockedError,
 } from "./generation";
 export {
-  CloudflareStoryImageGenerator,
-  type CloudflareStoryImageGeneratorOptions,
-  FallbackStoryImageGenerator,
-  type FallbackStoryImageGeneratorOptions,
   getImagePreset,
   OpenRouterStoryImageGenerator,
   type OpenRouterStoryImageGeneratorOptions,

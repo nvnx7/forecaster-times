@@ -32,9 +32,8 @@ latest.json          Pointer to the latest published edition.
 | `@repo/configs` | Shared TypeScript and Biome configuration. |
 
 The engine uses Nansen for market research and OHLCV history, OpenRouter for
-story and fallback image generation, Cloudflare Workers AI for the preferred
-image generator, TinyFish for web research, and S3-compatible storage for
-edition assets.
+story and image generation, TinyFish for web research, and S3-compatible
+storage for edition assets.
 
 ## Development
 

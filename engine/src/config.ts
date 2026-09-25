@@ -19,11 +19,6 @@ export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
 };
 
 export const imageGenerationConfig = {
-  dimensionsByAspectRatio: {
-    "3:2": { width: 512, height: 341 },
-    "4:5": { width: 410, height: 512 },
-    "1:1": { width: 512, height: 512 },
-  } satisfies Record<ImageAspectRatio, { width: number; height: number }>,
   stylePrompt:
     "Vintage newspaper editorial illustration in black ink engraving style, 19th-century woodcut, detailed cross-hatching, monochrome, off-white paper, strong single-scene composition, historically printed appearance.",
 } as const;
@@ -34,26 +29,10 @@ export const openRouterStoryGenerationCandidates = [
   { model: "qwen/qwen3.7-flash", reasoningEffort: "minimal" },
 ] as const;
 
-export const openRouterImageGenerationCandidates = [
-  {
-    model: "black-forest-labs/flux.2-klein-4b",
-    outputFormat: "png",
-    resolution: "512",
-  },
-  {
-    model: "recraft/recraft-v4.1-flash",
-    aspectRatioByPreset: {
-      "3:2": "4:3",
-      "4:5": "3:4",
-      "1:1": "1:1",
-    },
-    n: 1,
-  },
-  {
-    model: "qwen/qwen-image-3",
-    outputFormat: "png",
-    resolution: "512",
-  },
+export const openRouterImageGenerationModels = [
+  "recraft/recraft-v4.1-flash",
+  "black-forest-labs/flux.2-klein-4b",
+  "qwen/qwen-image-3",
 ] as const;
 
 export type CategoryPageConfig = {

@@ -14,8 +14,6 @@ export const nansenApiBaseUrl =
 
 export const openRouterApiKey = requiredEnv("API_KEY_OPENROUTER");
 export const tinyFishApiKey = requiredEnv("API_KEY_TINY_FISH");
-export const cloudflareApiKey = requiredEnv("API_KEY_CLOUDFLARE");
-export const cloudflareAccountId = requiredEnv("ACCOUNT_ID_CLOUDFLARE");
 
 export const s3Endpoint = requiredEnv("S3_ENDPOINT_URL");
 export const s3AccessKeyId = requiredEnv("S3_ACCESS_KEY_ID");
