@@ -25,7 +25,7 @@ export const imageGenerationConfig = {
     "1:1": { width: 512, height: 512 },
   } satisfies Record<ImageAspectRatio, { width: number; height: number }>,
   stylePrompt:
-    "Vintage newspaper editorial illustration, black ink engraving, 19th-century woodcut and cross-hatching style, monochrome, high contrast, off-white paper, no text, no typography, clear editorial composition, historically printed newspaper aesthetic.",
+    "Vintage newspaper editorial illustration in black ink engraving style, 19th-century woodcut, detailed cross-hatching, monochrome, off-white paper, strong single-scene composition, historically printed appearance.",
 } as const;
 
 export const openRouterStoryGenerationCandidates = [

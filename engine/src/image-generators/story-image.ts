@@ -2,11 +2,22 @@ import { imageGenerationConfig } from "../config";
 import type { Story } from "../types";
 
 export function createStoryImagePrompt(story: Story): string {
-  const editorialContext = [story.kicker, story.headline.long, story.dek]
+  const storyContext = [
+    story.kicker && `Kicker: ${story.kicker}`,
+    `Headline: ${story.headline.long}`,
+    story.dek && `Dek: ${story.dek}`,
+    `Story: ${story.body.map(({ text }) => text).join(" ")}`,
+  ]
     .filter(Boolean)
-    .join(". ");
+    .join("\n");
 
-  return `${imageGenerationConfig.stylePrompt}\n\nEditorial subject: ${editorialContext}`;
+  return `${imageGenerationConfig.stylePrompt}
+
+Scene:
+${storyContext}
+
+Absolutely no text, letters, numbers, captions, signs, labels, logos,
+watermarks, charts, newspaper pages, UI, or typography.`;
 }
 
 export function createStoryImageAltText(story: Story): string {
