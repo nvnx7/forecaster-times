@@ -3,28 +3,31 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+import {
+  polymarketGammaApiUrl,
+  toMarketPanelFromGamma,
+} from "@/lib/polymarket-gamma";
 import type { MarketPanel } from "@/types";
 
 export async function getMarketDetail(
   market: MarketPanel,
 ): Promise<MarketPanel> {
-  const { data } = await axios.get<MarketPanel>(
-    `/api/markets/${encodeURIComponent(market.marketId)}`,
+  const { data } = await axios.get(
+    `${polymarketGammaApiUrl}/markets/${encodeURIComponent(market.marketId)}`,
     {
-      params: { query: market.question },
-      headers: { "Cache-Control": "no-cache" },
+      params: { include_tag: false },
     },
   );
-  return data;
+  return toMarketPanelFromGamma(data, market);
 }
 
-/** Shows the saved editorial quote immediately, then replaces it with Nansen's live quote. */
+/** Shows the saved editorial quote immediately, then replaces it with Gamma data. */
 export function useGetMarketDetail(initialMarket: MarketPanel) {
   return useQuery({
     queryKey: ["marketDetail", initialMarket.marketId],
     queryFn: () => getMarketDetail(initialMarket),
     placeholderData: initialMarket,
-    refetchInterval: 20_000,
+    refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
 }

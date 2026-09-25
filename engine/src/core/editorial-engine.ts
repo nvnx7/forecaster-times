@@ -52,7 +52,6 @@ import type {
   ListPolymarketMarketsResponse,
   PageDraft,
   PolymarketMarket,
-  PolymarketMarketOhlcvResponse,
   Story,
   StorySource,
 } from "../types";
@@ -801,31 +800,6 @@ export class EditorialEngine {
       for (const market of response.data) markets.set(market.market_id, market);
     }
     return { data: sortMarkets([...markets.values()], params.orderBy) };
-  }
-
-  async getPolymarketMarket(
-    marketId: string,
-    searchQuery: string,
-  ): Promise<PolymarketMarket> {
-    if (!marketId.trim()) throw new Error("A market ID is required.");
-    if (!searchQuery.trim())
-      throw new Error("A market search query is required.");
-    const { data } = await this.nansen.listPolymarketMarkets({
-      query: searchQuery.slice(0, 200),
-      pagination: { page: 1, perPage: 100 },
-    });
-    const market = data.find((candidate) => candidate.market_id === marketId);
-    if (!market)
-      throw new ObjectNotFoundError(`Polymarket market: ${marketId}`);
-    return market;
-  }
-
-  async getPolymarketMarketOhlcv(
-    marketId: string,
-    from: string,
-    to: string,
-  ): Promise<PolymarketMarketOhlcvResponse> {
-    return this.nansen.getPolymarketMarketOhlcv(marketId, from, to);
   }
 
   private async getDraftState(): Promise<DraftState | undefined> {

@@ -28,21 +28,6 @@ export const polymarketMarketSchema = z.object({
   age_hours: z.number().nullable().optional(),
 });
 
-export const polymarketMarketOhlcvCandleSchema = z.object({
-  market_id: z.string(),
-  token_id: z.string(),
-  side: z.string(),
-  outcome_index: z.number(),
-  period_start: z.string(),
-  open: z.number(),
-  high: z.number(),
-  low: z.number(),
-  close: z.number(),
-  volume_usd: z.number(),
-  trade_count: z.number().int(),
-  unique_traders: z.number().int(),
-});
-
 /** Immutable market context retained in a published editorial document. */
 export const marketReferenceSchema = z.object({
   marketId: z.string(),
