@@ -29,7 +29,7 @@ function HeaderStrap({ editionId }: { editionId?: number }) {
 
 function LeftFolio() {
   return (
-    <div className="flex flex-col gap-1 text-center lg:text-left">
+    <div className="flex flex-col gap-2 text-center lg:text-left">
       <p className="font-sans text-base font-semibold tracking-[0.04em] uppercase">
         Market Prices
       </p>
