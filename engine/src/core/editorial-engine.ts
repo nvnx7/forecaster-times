@@ -52,6 +52,7 @@ import type {
   ListPolymarketMarketsResponse,
   PageDraft,
   PolymarketMarket,
+  PolymarketMarketOhlcvResponse,
   Story,
   StorySource,
 } from "../types";
@@ -817,6 +818,14 @@ export class EditorialEngine {
     if (!market)
       throw new ObjectNotFoundError(`Polymarket market: ${marketId}`);
     return market;
+  }
+
+  async getPolymarketMarketOhlcv(
+    marketId: string,
+    from: string,
+    to: string,
+  ): Promise<PolymarketMarketOhlcvResponse> {
+    return this.nansen.getPolymarketMarketOhlcv(marketId, from, to);
   }
 
   private async getDraftState(): Promise<DraftState | undefined> {

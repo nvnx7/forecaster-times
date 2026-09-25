@@ -97,6 +97,8 @@ export type {
   PageDraftStory,
   ParagraphBlock,
   PolymarketMarket,
+  PolymarketMarketOhlcvCandle,
+  PolymarketMarketOhlcvResponse,
   PolymarketMarketSortField,
   SidebarBlock,
   Story,
