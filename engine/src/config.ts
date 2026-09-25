@@ -20,7 +20,7 @@ export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
 
 export const imageGenerationConfig = {
   stylePrompt:
-    "Vintage newspaper editorial illustration in black ink engraving style, 19th-century woodcut, detailed cross-hatching, monochrome, off-white paper, strong single-scene composition, historically printed appearance.",
+    "Vintage newspaper editorial illustration in black ink engraving style: 19th-century woodcut, detailed cross-hatching, monochrome black ink on a warm off-white paper background matching #FFF0D6. Strong single-scene composition, historically printed appearance, with no border or frame.",
 } as const;
 
 export const openRouterStoryGenerationCandidates = [

@@ -2,22 +2,18 @@ import { imageGenerationConfig } from "../config";
 import type { Story } from "../types";
 
 export function createStoryImagePrompt(story: Story): string {
-  const storyContext = [
-    story.kicker && `Kicker: ${story.kicker}`,
-    `Headline: ${story.headline.long}`,
-    story.dek && `Dek: ${story.dek}`,
-    `Story: ${story.body.map(({ text }) => text).join(" ")}`,
-  ]
+  const storyContext = [story.kicker, story.headline.long, story.dek]
     .filter(Boolean)
-    .join("\n");
+    .join(" ");
 
   return `${imageGenerationConfig.stylePrompt}
 
-Scene:
+Create one visual scene inspired by this news brief. Use it only to determine
+the subject, people, setting, and mood; never reproduce or depict any of its words:
+
 ${storyContext}
 
-Absolutely no text, letters, numbers, captions, signs, labels, logos,
-watermarks, charts, newspaper pages, UI, or typography.`;
+Absolutely no visible text or text-like marks.`;
 }
 
 export function createStoryImageAltText(story: Story): string {
