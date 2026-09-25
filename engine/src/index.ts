@@ -18,6 +18,7 @@ export {
 export {
   type CategoryPageConfig,
   categoryPageConfigs,
+  categoryPageIds,
   defaultEditorialEngineConfig as defaultEditorialConfig,
   type EditorialEngineConfig as EditorialConfig,
   type ImagePreset,

@@ -67,8 +67,8 @@ Draft and publish editorial pages with the local environment file:
 # Create or update the front-page draft.
 bun --env-file=web/.env scripts/generate-front-page.ts
 
-# Draft one category page. Valid IDs are printed if omitted.
-bun --env-file=web/.env scripts/generate-category-page.ts world
+# Draft selected category pages, or omit IDs to draft all category pages.
+bun --env-file=web/.env scripts/generate-category-page.ts world-politics sports
 
 # Publish the currently available draft pages as the next edition.
 bun --env-file=web/.env scripts/publish-draft-edition.ts

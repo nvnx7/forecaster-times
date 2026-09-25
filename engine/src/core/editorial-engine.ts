@@ -9,6 +9,7 @@ import {
 } from "../clients";
 import {
   type CategoryPageConfig,
+  categoryPageIds,
   defaultEditorialEngineConfig,
   type EditorialEngineConfig,
   imagePresets,
@@ -69,7 +70,6 @@ import {
 } from "../utils";
 
 const maxSourcesPerStory = 2;
-const pageIds = Object.keys(pageConfigs) as CategoryPageId[];
 
 type Page = FrontPage | CategoryPage;
 type ResearchedMarket = { market: PolymarketMarket; sources: StorySource[] };
@@ -118,10 +118,13 @@ export class EditorialEngine {
     this.storyGenerator = options.storyGenerator;
   }
 
-  async publishEdition(): Promise<Map<CategoryPageId, Page>> {
+  async publishEdition(
+    categoryIds: readonly Exclude<CategoryPageId, "front">[] = categoryPageIds,
+  ): Promise<Map<CategoryPageId, Page>> {
     const operationId = crypto.randomUUID();
     logger.info("Edition generation started", { operationId });
     try {
+      const pageIds = this.getSelectedPageIds(categoryIds);
       const state = await this.getOrCreateDraftState(operationId);
       const drafts = new Map<CategoryPageId, PageDraft>();
       const skippedPages = new Map<Exclude<CategoryPageId, "front">, string>();
@@ -153,6 +156,7 @@ export class EditorialEngine {
         state,
         drafts,
         skippedPages,
+        pageIds,
         operationId,
       );
       logger.info("Edition generation completed", {
@@ -169,10 +173,13 @@ export class EditorialEngine {
     }
   }
 
-  async publishDraftEdition(): Promise<Map<CategoryPageId, Page>> {
+  async publishDraftEdition(
+    categoryIds: readonly Exclude<CategoryPageId, "front">[] = categoryPageIds,
+  ): Promise<Map<CategoryPageId, Page>> {
     const operationId = crypto.randomUUID();
     logger.info("Draft edition publication started", { operationId });
     try {
+      const pageIds = this.getSelectedPageIds(categoryIds);
       const state = await this.getDraftState();
       if (!state) throw new ObjectNotFoundError("Edition draft");
 
@@ -194,6 +201,7 @@ export class EditorialEngine {
         state,
         pages,
         skippedPages,
+        pageIds,
         operationId,
         new Date().toISOString(),
       );
@@ -220,6 +228,16 @@ export class EditorialEngine {
   async draftCategoryPage(categoryId: CategoryPageId): Promise<CategoryPage> {
     this.getCategoryConfig(categoryId);
     return (await this.draftPage(categoryId)) as CategoryPage;
+  }
+
+  async draftCategoryPages(
+    categoryIds: readonly Exclude<CategoryPageId, "front">[] = categoryPageIds,
+  ): Promise<Map<Exclude<CategoryPageId, "front">, CategoryPage>> {
+    const pages = new Map<Exclude<CategoryPageId, "front">, CategoryPage>();
+    for (const categoryId of this.getSelectedCategoryIds(categoryIds)) {
+      pages.set(categoryId, await this.draftCategoryPage(categoryId));
+    }
+    return pages;
   }
 
   async draftPage(pageId: CategoryPageId): Promise<Page> {
@@ -506,6 +524,7 @@ export class EditorialEngine {
     state: DraftState,
     drafts: Map<CategoryPageId, PageDraft>,
     skippedPages: ReadonlyMap<Exclude<CategoryPageId, "front">, string>,
+    pageIds: readonly CategoryPageId[],
     operationId: string,
   ): Promise<Map<CategoryPageId, Page>> {
     const publishedAt = new Date().toISOString();
@@ -523,6 +542,7 @@ export class EditorialEngine {
       state,
       pages,
       skippedPages,
+      pageIds,
       operationId,
       publishedAt,
     );
@@ -532,6 +552,7 @@ export class EditorialEngine {
     state: DraftState,
     pages: ReadonlyMap<CategoryPageId, Page>,
     skippedPages: ReadonlyMap<Exclude<CategoryPageId, "front">, string>,
+    pageIds: readonly CategoryPageId[],
     operationId: string,
     publishedAt: string,
   ): Promise<Map<CategoryPageId, Page>> {
@@ -876,6 +897,20 @@ export class EditorialEngine {
 
   private getPageConfig(pageId: CategoryPageId): PageConfig {
     return pageConfigs[pageId];
+  }
+
+  private getSelectedPageIds(
+    categoryIds: readonly Exclude<CategoryPageId, "front">[],
+  ): CategoryPageId[] {
+    return ["front", ...this.getSelectedCategoryIds(categoryIds)];
+  }
+
+  private getSelectedCategoryIds(
+    categoryIds: readonly Exclude<CategoryPageId, "front">[],
+  ): Exclude<CategoryPageId, "front">[] {
+    const selectedIds = [...new Set(categoryIds)];
+    for (const categoryId of selectedIds) this.getCategoryConfig(categoryId);
+    return selectedIds;
   }
 
   private getCategoryConfig(pageId: CategoryPageId): CategoryPageConfig {

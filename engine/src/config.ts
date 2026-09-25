@@ -171,6 +171,11 @@ export const categoryPageConfigs = Object.fromEntries(
   Object.entries(pageConfigs).filter(([pageId]) => pageId !== "front"),
 ) as Record<Exclude<CategoryPageId, "front">, CategoryPageConfig>;
 
+export const categoryPageIds = Object.keys(categoryPageConfigs) as Exclude<
+  CategoryPageId,
+  "front"
+>[];
+
 export type EditorialEngineConfig = {
   draftExpirySeconds: number;
   generationTimeoutMs: number;
