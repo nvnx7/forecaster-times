@@ -74,7 +74,7 @@ export class OpenRouterStoryGenerator implements StoryGenerator {
         createStoryPrompt(market, sources, this.options.config),
         {
           systemPrompt:
-            "You are the careful editor of Forecaster Times, a vintage-style newspaper covering prediction markets.",
+            "You are the careful news editor of Forecaster Times. Write concise, factual newspaper copy from supplied sources only. Preserve uncertainty and never invent facts, causes, quotes, or conclusions.",
           temperature: 0.2,
           jsonMode: true,
           // maxCompletionTokens: this.options.config.story.maxCompletionTokens,

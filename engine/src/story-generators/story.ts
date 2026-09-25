@@ -33,13 +33,9 @@ export function createStoryPrompt(
   const marketContext = {
     question: market.question,
     eventTitle: market.event_title,
-    tags: market.tags,
-    endDate: market.end_date,
   };
   const promptWithoutSources = createPrompt(marketContext, [], config);
-  const sourceBudget =
-    config.story.maxInputCharacters - promptWithoutSources.length;
-  if (sourceBudget <= 0) {
+  if (promptWithoutSources.length >= config.story.maxInputCharacters) {
     throw new Error(
       "Story input budget is too small for the editorial prompt.",
     );
@@ -47,7 +43,7 @@ export function createStoryPrompt(
 
   return createPrompt(
     marketContext,
-    packSources(sources, sourceBudget),
+    packSources(marketContext, sources, config),
     config,
   );
 }
@@ -62,23 +58,67 @@ function createPrompt(
   market: {
     question: string | null | undefined;
     eventTitle: string | null | undefined;
-    tags: string[] | null | undefined;
-    endDate: string | null | undefined;
   },
   sources: PromptSource[],
   config: EditorialEngineConfig,
 ): string {
-  return `Write a Forecaster Times editorial from only this supplied context.
-MARKET:${JSON.stringify(market)}
-SOURCES:${JSON.stringify(sources)}
-Rules: summarize sources; do not browse, invent facts, or treat market values as proof. Use cautious attribution for market context. Return JSON only—no Markdown, prices, IDs, byline, metadata, illustration, or trade prompt.
-Limits: kicker ${config.story.kickerMaxWords} words; headlines ${config.story.headline.longMaxWords}/${config.story.headline.mediumMaxWords}/${config.story.headline.shortMaxWords} words; dek ${config.story.dekMaxWords} words; body ${config.story.body.minBlocks}-${config.story.body.maxBlocks} blocks, ${config.story.body.maxWords} words total.
-JSON:{"category":"world","kicker":"...","headline":{"long":"...","medium":"...","short":"..."},"dek":"...","body":[{"type":"paragraph","text":"..."}]}`;
+  return `You are writing one factual news story for Forecaster Times from supplied material only.
+
+MARKET
+Event: ${market.eventTitle ?? "Not provided"}
+Question: ${market.question ?? "Not provided"}
+
+SOURCES
+${sources.map(formatSource).join("\n\n")}
+
+TASK
+Write a concise newspaper report focused only on developments materially relevant to the market question.
+
+Rules:
+- Use only supplied sources.
+- Do not browse, invent facts, infer causes, or treat market odds as proof.
+- Prefer recent concrete developments over background.
+- Merge duplicate facts across sources.
+- If sources conflict, preserve the disagreement.
+- Avoid repeating the same fact in dek and body.
+- Neutral newspaper tone; no opinion or hype.
+
+Limits:
+- kicker: ${config.story.kickerMaxWords} words
+- headline long/medium/short: ${config.story.headline.longMaxWords}/${config.story.headline.mediumMaxWords}/${config.story.headline.shortMaxWords} words
+- dek: ${config.story.dekMaxWords} words
+- body: ${config.story.body.minBlocks}-${config.story.body.maxBlocks} paragraphs, ${config.story.body.maxWords} words total
+
+Return JSON only:
+{
+  "category": "world|politics|money|technology|crypto|sports|culture|oddities",
+  "kicker": "...",
+  "headline": {
+    "long": "...",
+    "medium": "...",
+    "short": "..."
+  },
+  "dek": "...",
+  "body": [
+    {"type": "paragraph", "text": "..."}
+  ]
+}`;
+}
+
+function formatSource(source: PromptSource, index: number): string {
+  return `SOURCE ${index + 1}
+Title: ${source.title ?? "Not provided"}
+Summary: ${source.description ?? "Not provided"}
+Text: ${source.text}`;
 }
 
 function packSources(
+  market: {
+    question: string | null | undefined;
+    eventTitle: string | null | undefined;
+  },
   sources: readonly StorySource[],
-  characterBudget: number,
+  config: EditorialEngineConfig,
 ): PromptSource[] {
   const packed: PromptSource[] = [];
 
@@ -88,13 +128,16 @@ function packSources(
       description: source.description,
       text: source.text,
     };
-    if (JSON.stringify([...packed, candidate]).length <= characterBudget) {
+    if (
+      createPrompt(market, [...packed, candidate], config).length <=
+      config.story.maxInputCharacters
+    ) {
       packed.push(candidate);
       continue;
     }
 
     if (packed.length === 0) {
-      const truncated = truncateSourceToFit(candidate, characterBudget);
+      const truncated = truncateSourceToFit(market, candidate, config);
       if (truncated) {
         packed.push(truncated);
       }
@@ -107,8 +150,12 @@ function packSources(
 }
 
 function truncateSourceToFit(
+  market: {
+    question: string | null | undefined;
+    eventTitle: string | null | undefined;
+  },
   source: PromptSource,
-  characterBudget: number,
+  config: EditorialEngineConfig,
 ): PromptSource | undefined {
   let lowerBound = 0;
   let upperBound = source.text.length;
@@ -118,7 +165,10 @@ function truncateSourceToFit(
     const midpoint = Math.floor((lowerBound + upperBound) / 2);
     const candidate = { ...source, text: source.text.slice(0, midpoint) };
 
-    if (JSON.stringify([candidate]).length <= characterBudget) {
+    if (
+      createPrompt(market, [candidate], config).length <=
+      config.story.maxInputCharacters
+    ) {
       result = candidate;
       lowerBound = midpoint + 1;
     } else {
