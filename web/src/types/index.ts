@@ -20,7 +20,6 @@ export type {
   Story,
   StoryCategory,
 } from "./front-page";
-export type { HotMarket } from "./hot-market";
 export type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
