@@ -18,7 +18,7 @@ import type { MarketPanel } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
-  formatUsdCompact,
+  formatUsd,
 } from "@/utils/market-format";
 import { getPolymarketUrl } from "@/utils/polymarket";
 
@@ -106,7 +106,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                     Volume
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsdCompact(displayedMarket.volume24hUsd)}
+                    {formatUsd(displayedMarket.volume24hUsd)}
                   </dd>
                 </div>
               ) : null}
@@ -116,7 +116,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
                     Liquidity
                   </dt>
                   <dd className="font-sans text-sm font-semibold">
-                    {formatUsdCompact(displayedMarket.liquidityUsd)}
+                    {formatUsd(displayedMarket.liquidityUsd)}
                   </dd>
                 </div>
               ) : null}

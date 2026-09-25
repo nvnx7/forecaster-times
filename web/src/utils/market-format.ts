@@ -6,11 +6,10 @@ export function formatChangeInPoints(change: number): string {
   return `${change >= 0 ? "+" : ""}${Math.round(change * 100)} pts`;
 }
 
-export function formatUsdCompact(value: number): string {
+export function formatUsd(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 0,
   }).format(value);
 }

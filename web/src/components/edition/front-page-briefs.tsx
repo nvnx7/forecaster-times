@@ -38,7 +38,7 @@ function FrontPageBrief({ brief }: { brief: Brief }) {
         </p>
       ) : null}
       {brief.probability !== undefined ? (
-        <p className="mt-0.5 font-mono text-xs font-medium tabular-nums tracking-[0.04em] uppercase">
+        <p className="mt-0.5 font-sans text-xs font-semibold tabular-nums tracking-[0.04em] uppercase">
           {formatProbability(brief.probability)}
           {brief.change24h !== undefined
             ? ` · ${formatChange(brief.change24h)}`

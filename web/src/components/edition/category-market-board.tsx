@@ -3,7 +3,7 @@ import type { CategoryMarketBoard as CategoryMarketBoardData } from "@/types";
 import {
   formatChangeInPoints,
   formatProbabilityAsCents,
-  formatUsdCompact,
+  formatUsd,
 } from "@/utils/market-format";
 
 // A compact newspaper board, deliberately kept distinct from an app dashboard.
@@ -49,7 +49,7 @@ export function CategoryMarketBoard({
               </p>
               <p className="font-sans text-sm text-muted-foreground">
                 {item.volume24hUsd !== undefined
-                  ? `Vol. ${formatUsdCompact(item.volume24hUsd)}`
+                  ? `Vol. ${formatUsd(item.volume24hUsd)}`
                   : ""}
               </p>
             </div>

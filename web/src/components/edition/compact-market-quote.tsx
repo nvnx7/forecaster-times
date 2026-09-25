@@ -61,18 +61,22 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
           <CardTitle>{displayedMarket.question}</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-2 font-mono text-sm font-semibold tabular-nums">
+          <dl className="grid grid-cols-2 gap-3">
             <div>
-              <dt className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">
+              <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
                 {yesLabel} odds
               </dt>
-              <dd>{yes}</dd>
+              <dd className="font-heading text-lg leading-none font-semibold tabular-nums">
+                {yes}
+              </dd>
             </div>
             <div>
-              <dt className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">
+              <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
                 {noLabel} odds
               </dt>
-              <dd>{no}</dd>
+              <dd className="font-heading text-lg leading-none font-semibold tabular-nums">
+                {no}
+              </dd>
             </div>
           </dl>
         </CardContent>
