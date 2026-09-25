@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { useGetMarketDetail } from "@/api/getMarketDetail";
+import { MarketProbabilityChart } from "@/components/edition/market-probability-chart";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -62,6 +63,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
             Market Quotation
           </p>
           <CardTitle>{displayedMarket.question}</CardTitle>
+          <MarketProbabilityChart marketId={displayedMarket.marketId} />
         </CardHeader>
         <CardContent>
           <Separator />
