@@ -1,4 +1,6 @@
-# Forecaster Times
+<h1 align="center">Forecaster Times</h1>
+
+![Forecaster Times](./web/public/logo.png)
 
 Forecaster Times is an AI-produced prediction-market newspaper. It researches
 Polymarket markets through Nansen, writes an illustrated front page and category
