@@ -28,6 +28,8 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
   const { data: liveMarket } = useGetMarketDetail(market);
   const displayedMarket = liveMarket ?? market;
   const polymarketUrl = getPolymarketUrl(displayedMarket.marketReference?.slug);
+  const yesLabel = displayedMarket.yesLabel ?? "Yes";
+  const noLabel = displayedMarket.noLabel ?? "No";
 
   return (
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
@@ -71,7 +73,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] uppercase">
-                  Yes
+                  {yesLabel}
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
                   {formatProbabilityAsCents(displayedMarket.yes)}
@@ -79,7 +81,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
               </div>
               <div>
                 <dt className="font-sans text-[0.625rem] font-semibold tracking-[0.1em] uppercase">
-                  No
+                  {noLabel}
                 </dt>
                 <dd className="font-heading text-4xl font-semibold">
                   {formatProbabilityAsCents(displayedMarket.no)}
@@ -129,7 +131,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
             size="default"
             onClick={handleTrade}
           >
-            Yes
+            {yesLabel}
           </Button>
           <Button
             type="button"
@@ -137,7 +139,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
             size="default"
             onClick={handleTrade}
           >
-            No
+            {noLabel}
           </Button>
         </CardFooter>
       </Card>

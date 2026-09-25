@@ -25,6 +25,8 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
   const polymarketUrl = getPolymarketUrl(displayedMarket.marketReference?.slug);
   const yes = formatProbabilityAsCents(displayedMarket.yes);
   const no = formatProbabilityAsCents(displayedMarket.no);
+  const yesLabel = displayedMarket.yesLabel ?? "Yes";
+  const noLabel = displayedMarket.noLabel ?? "No";
 
   return (
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
@@ -62,13 +64,13 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
           <dl className="grid grid-cols-2 gap-2 font-mono text-sm font-semibold tabular-nums">
             <div>
               <dt className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">
-                Yes odds
+                {yesLabel} odds
               </dt>
               <dd>{yes}</dd>
             </div>
             <div>
               <dt className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">
-                No odds
+                {noLabel} odds
               </dt>
               <dd>{no}</dd>
             </div>
@@ -81,7 +83,7 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
             size="sm"
             onClick={handleTrade}
           >
-            Yes · {yes}
+            {yesLabel} · {yes}
           </Button>
           <Button
             type="button"
@@ -89,7 +91,7 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
             size="sm"
             onClick={handleTrade}
           >
-            No · {no}
+            {noLabel} · {no}
           </Button>
         </CardFooter>
       </Card>

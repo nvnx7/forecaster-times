@@ -15,11 +15,15 @@ const gammaMarketSchema = z.object({
   liquidityNum: z.number().optional(),
 });
 
-function parseOutcomeValues(value: string, field: string) {
-  const parsed = z
-    .array(z.union([z.string(), z.number()]))
-    .safeParse(JSON.parse(value));
-  if (!parsed.success) throw new Error(`Invalid Gamma ${field}.`);
+function parseOutcomePrices(value: string) {
+  const parsed = z.array(z.coerce.number()).safeParse(JSON.parse(value));
+  if (!parsed.success) throw new Error("Invalid Gamma outcome prices.");
+  return parsed.data;
+}
+
+function parseOutcomeLabels(value: string) {
+  const parsed = z.array(z.string().trim().min(1)).safeParse(JSON.parse(value));
+  if (!parsed.success) throw new Error("Invalid Gamma outcomes.");
   return parsed.data;
 }
 
@@ -28,21 +32,16 @@ export function toMarketPanelFromGamma(
   initialMarket: MarketPanel,
 ): MarketPanel {
   const market = gammaMarketSchema.parse(source);
-  const outcomes = parseOutcomeValues(market.outcomes, "outcomes").map(String);
-  const prices = parseOutcomeValues(market.outcomePrices, "outcome prices").map(
-    Number,
-  );
-  const yesIndex = outcomes.findIndex(
-    (outcome) => outcome.toLowerCase() === "yes",
-  );
-  const noIndex = outcomes.findIndex(
-    (outcome) => outcome.toLowerCase() === "no",
-  );
-  const yes = prices[yesIndex];
-  const no = prices[noIndex];
+  const [yesLabel, noLabel] = parseOutcomeLabels(market.outcomes);
+  const [yes, no] = parseOutcomePrices(market.outcomePrices);
 
-  if (yes === undefined || !Number.isFinite(yes)) {
-    throw new Error("Gamma market has no Yes price.");
+  if (
+    yes === undefined ||
+    no === undefined ||
+    !Number.isFinite(yes) ||
+    !Number.isFinite(no)
+  ) {
+    throw new Error("Gamma market has invalid outcome prices.");
   }
 
   return {
@@ -57,7 +56,9 @@ export function toMarketPanelFromGamma(
       tags: initialMarket.marketReference?.tags ?? [],
     },
     yes,
-    no: no !== undefined && Number.isFinite(no) ? no : 1 - yes,
+    no,
+    yesLabel,
+    noLabel,
     change24h: market.oneDayPriceChange,
     volume24hUsd: market.volume24hr,
     liquidityUsd: market.liquidityNum,
