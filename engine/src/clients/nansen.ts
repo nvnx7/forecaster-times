@@ -2,14 +2,10 @@ import axios, { type AxiosInstance } from "axios";
 import { z } from "zod";
 
 import { logger } from "../logger";
-import {
-  polymarketMarketOhlcvCandleSchema,
-  polymarketMarketSchema,
-} from "../schema/market";
+import { polymarketMarketSchema } from "../schema/market";
 import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
-  PolymarketMarketOhlcvResponse,
 } from "../types";
 import { getLoggableServiceError } from "../utils";
 
@@ -24,16 +20,22 @@ const listPolymarketMarketsResponseSchema = z.object({
   data: z.array(polymarketMarketSchema),
 });
 
-const polymarketMarketOhlcvResponseSchema = z.object({
-  pagination: z
-    .object({
-      page: z.number().int(),
-      per_page: z.number().int(),
-      is_last_page: z.boolean(),
-    })
-    .optional(),
-  data: z.array(polymarketMarketOhlcvCandleSchema),
-});
+function normalizeMarketScreenerQuery(value?: string) {
+  return (value ?? "")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/≥/g, " at least ")
+    .replace(/≤/g, " at most ")
+    .replace(/>/g, " greater than ")
+    .replace(/</g, " less than ")
+    .replace(/\+/g, " plus ")
+    .replace(/%/g, " percent ")
+    .replace(/\$/g, " dollars ")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+}
 
 export type NansenClientOptions = {
   apiKey: string;
@@ -55,7 +57,7 @@ export class NansenClient {
   async listPolymarketMarkets(
     params: ListPolymarketMarketsParams = {},
   ): Promise<ListPolymarketMarketsResponse> {
-    const query = (params.query ?? "").trim().slice(0, 200);
+    const query = normalizeMarketScreenerQuery(params.query);
 
     logger.debug("Nansen market screener request", {
       query,
@@ -93,48 +95,6 @@ export class NansenClient {
       return markets;
     } catch (error) {
       logger.error("Nansen market screener failed", {
-        responseBody: getLoggableServiceError(error),
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
-  }
-
-  async getPolymarketMarketOhlcv(
-    marketId: string,
-    from: string,
-    to: string,
-  ): Promise<PolymarketMarketOhlcvResponse> {
-    if (!marketId.trim()) throw new Error("A market ID is required.");
-
-    logger.debug("Nansen market OHLCV request", { marketId, from, to });
-
-    try {
-      const response = await this.client.post<unknown>(
-        "/api/v1/prediction-market/ohlcv",
-        {
-          market_id: marketId,
-          date: { from, to },
-          order_by: [{ field: "period_start", direction: "ASC" }],
-          pagination: { page: 1, per_page: 100 },
-        },
-      );
-      const candles = polymarketMarketOhlcvResponseSchema.parse(
-        response.data,
-      ) as PolymarketMarketOhlcvResponse;
-
-      logger.debug("Nansen market OHLCV response", {
-        marketId,
-        candleCount: candles.data.length,
-        requestId: response.headers["x-request-id"],
-      });
-
-      return candles;
-    } catch (error) {
-      logger.error("Nansen market OHLCV failed", {
-        marketId,
-        from,
-        to,
         responseBody: getLoggableServiceError(error),
         message: error instanceof Error ? error.message : "Unknown error",
       });
