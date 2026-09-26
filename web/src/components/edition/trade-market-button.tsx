@@ -24,7 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { formatProbabilityAsCents } from "@/utils/market-format";
-import type { LiveMarketPanel } from "@/utils/polymarket-gamma";
+import {
+  getMarketTradingStatus,
+  type LiveMarketPanel,
+} from "@/utils/polymarket-gamma";
 
 type TradeMarketButtonProps = {
   market: LiveMarketPanel;
@@ -62,6 +65,7 @@ export function TradeMarketButton({
   const [shares, setShares] = useState("");
   const order = usePlaceMarketOrder();
   const tokenId = market.outcomeTokenIds?.[outcomeIndex];
+  const tradingStatus = getMarketTradingStatus(market);
   const label =
     outcomeIndex === 0 ? (market.yesLabel ?? "Yes") : (market.noLabel ?? "No");
   const price = outcomeIndex === 0 ? market.yes : market.no;
@@ -75,6 +79,8 @@ export function TradeMarketButton({
     estimatedTotal >= 0.01;
 
   function openTrade() {
+    if (tradingStatus) return;
+
     if (!isConnected) {
       setConnectModalOpen(true);
       return;
@@ -108,6 +114,7 @@ export function TradeMarketButton({
         variant="marketQuote"
         size={size}
         onClick={openTrade}
+        disabled={Boolean(tradingStatus)}
       >
         {children}
       </Button>

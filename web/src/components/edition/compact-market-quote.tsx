@@ -15,6 +15,7 @@ import {
 import type { MarketPanel } from "@/types";
 import { formatProbabilityAsCents } from "@/utils/market-format";
 import { getPolymarketUrl } from "@/utils/polymarket";
+import { getMarketTradingStatusLabel } from "@/utils/polymarket-gamma";
 
 /** A compact, live quote for secondary editorial stories. */
 export function CompactMarketQuote({ market }: { market: MarketPanel }) {
@@ -25,6 +26,7 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
   const no = formatProbabilityAsCents(displayedMarket.no);
   const yesLabel = displayedMarket.yesLabel ?? "Yes";
   const noLabel = displayedMarket.noLabel ?? "No";
+  const tradingStatus = getMarketTradingStatusLabel(displayedMarket);
 
   return (
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
@@ -77,6 +79,11 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
               </dd>
             </div>
           </dl>
+          {tradingStatus ? (
+            <p className="mt-3 font-sans text-[0.625rem] font-semibold tracking-[0.1em] text-destructive uppercase">
+              {tradingStatus}
+            </p>
+          ) : null}
         </CardContent>
         <CardFooter variant="quote">
           <TradeMarketButton

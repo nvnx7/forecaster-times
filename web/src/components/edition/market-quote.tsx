@@ -21,6 +21,7 @@ import {
   formatUsd,
 } from "@/utils/market-format";
 import { getPolymarketUrl } from "@/utils/polymarket";
+import { getMarketTradingStatusLabel } from "@/utils/polymarket-gamma";
 
 export function MarketQuote({ market }: { market: MarketPanel }) {
   const { data: liveMarket } = useGetMarketDetail(market);
@@ -28,6 +29,7 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
   const polymarketUrl = getPolymarketUrl(displayedMarket.marketReference?.slug);
   const yesLabel = displayedMarket.yesLabel ?? "Yes";
   const noLabel = displayedMarket.noLabel ?? "No";
+  const tradingStatus = getMarketTradingStatusLabel(displayedMarket);
 
   return (
     <aside aria-label={`Market quote: ${displayedMarket.question}`}>
@@ -62,6 +64,11 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
           <p className="font-sans text-[0.625rem] font-semibold tracking-[0.12em] uppercase">
             Market Quotation
           </p>
+          {tradingStatus ? (
+            <p className="font-sans text-[0.625rem] font-semibold tracking-[0.12em] text-destructive uppercase">
+              {tradingStatus}
+            </p>
+          ) : null}
           <CardTitle>{displayedMarket.question}</CardTitle>
           <MarketProbabilityChart marketId={displayedMarket.marketId} />
         </CardHeader>

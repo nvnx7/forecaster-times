@@ -4,6 +4,7 @@ import type { MarketPanel } from "@/types";
 
 export type LiveMarketPanel = MarketPanel & {
   outcomeTokenIds?: [string, string];
+  tradingStatus?: "closed" | "inactive" | "orders-paused";
 };
 
 export const polymarketGammaApiUrl = "https://gamma-api.polymarket.com";
@@ -15,6 +16,9 @@ const gammaMarketSchema = z.object({
   outcomes: z.string(),
   outcomePrices: z.string(),
   clobTokenIds: z.string().optional(),
+  active: z.boolean().optional(),
+  closed: z.boolean().optional(),
+  acceptingOrders: z.boolean().optional(),
   oneDayPriceChange: z.number().optional(),
   volume24hr: z.number().optional(),
   liquidityNum: z.number().optional(),
@@ -40,6 +44,21 @@ function parseOutcomeTokenIds(value: string | undefined) {
   return [parsed.data[0], parsed.data[1]] as [string, string];
 }
 
+export function getMarketTradingStatus(market: LiveMarketPanel) {
+  if (market.tradingStatus) return market.tradingStatus;
+  if (market.marketReference?.closed) return "closed";
+  if (market.marketReference?.active === false) return "inactive";
+  return undefined;
+}
+
+export function getMarketTradingStatusLabel(market: LiveMarketPanel) {
+  const status = getMarketTradingStatus(market);
+  if (status === "closed") return "Market closed";
+  if (status === "inactive") return "Market inactive";
+  if (status === "orders-paused") return "Orders paused";
+  return undefined;
+}
+
 export function toMarketPanelFromGamma(
   source: unknown,
   initialMarket: MarketPanel,
@@ -47,6 +66,13 @@ export function toMarketPanelFromGamma(
   const market = gammaMarketSchema.parse(source);
   const [yesLabel, noLabel] = parseOutcomeLabels(market.outcomes);
   const [yes, no] = parseOutcomePrices(market.outcomePrices);
+  const tradingStatus = market.closed
+    ? "closed"
+    : market.active === false
+      ? "inactive"
+      : market.acceptingOrders === false
+        ? "orders-paused"
+        : undefined;
 
   if (
     yes === undefined ||
@@ -73,6 +99,7 @@ export function toMarketPanelFromGamma(
     yesLabel,
     noLabel,
     outcomeTokenIds: parseOutcomeTokenIds(market.clobTokenIds),
+    tradingStatus,
     change24h: market.oneDayPriceChange,
     volume24hUsd: market.volume24hr,
     liquidityUsd: market.liquidityNum,
