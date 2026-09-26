@@ -6,7 +6,7 @@ export const pageIdSchema = z.enum([
   "money-markets",
   "technology-culture",
   "sports",
-  "odds-oddities",
+  "crypto",
 ]);
 
 export const categoryPageIdSchema = pageIdSchema.exclude(["front"]);

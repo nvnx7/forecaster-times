@@ -183,7 +183,7 @@ export type CategoryPageId =
   | "money-markets"
   | "technology-culture"
   | "sports"
-  | "odds-oddities";
+  | "crypto";
 
 export type CategoryLayoutVariant =
   | "category-lead"

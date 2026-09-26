@@ -13,7 +13,7 @@ const categoryLabels: Record<Exclude<CategoryPageId, "front">, string> = {
   "money-markets": "Money & Markets",
   "technology-culture": "Technology & Culture",
   sports: "Sports",
-  "odds-oddities": "Odds & Oddities",
+  crypto: "Crypto",
 };
 
 export function NewspaperIssue() {

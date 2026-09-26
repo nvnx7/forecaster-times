@@ -7,7 +7,7 @@ const categoryIds = [
   "money-markets",
   "technology-culture",
   "sports",
-  "odds-oddities",
+  "crypto",
 ] as const satisfies readonly Exclude<CategoryPageId, "front">[];
 
 const editorialEngine = createScriptEditorialEngine();
