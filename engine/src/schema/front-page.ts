@@ -57,7 +57,7 @@ export const storySchema = z.object({
       caption: z.string().optional(),
       credit: z.string().optional(),
       placement: z.enum(["wide", "float-left", "float-right"]).optional(),
-      aspectRatio: z.enum(["3:2", "4:5", "1:1"]).optional(),
+      aspectRatio: z.enum(["16:9", "3:2", "4:5", "1:1"]).optional(),
       asset: z
         .object({
           objectKey: z.string(),
