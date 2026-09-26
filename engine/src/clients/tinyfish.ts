@@ -19,14 +19,23 @@ type MarketNewsResearch = {
   sources: StorySource[];
 };
 
-const excludedNewsPaths = ["/watch", "/stream", "/live", "/video"];
+const excludedNewsPaths = ["/watch", "/stream", "/live", "/video", "/football"];
+const excludedNewsDomains = [
+  "espn.com",
+  "streamespn.org",
+  "czechinvest.gov.cz",
+];
 
 function isExcludedNewsUrl(url: string): boolean {
   try {
-    const { pathname } = new URL(url);
-    return excludedNewsPaths.some(
+    const { hostname, pathname } = new URL(url);
+    const hasExcludedDomain = excludedNewsDomains.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+    );
+    const hasExcludedPath = excludedNewsPaths.some(
       (path) => pathname === path || pathname.startsWith(`${path}/`),
     );
+    return hasExcludedDomain || hasExcludedPath;
   } catch {
     return false;
   }
@@ -161,7 +170,12 @@ export class TinyFishClient {
 
   private toStorySources(response: FetchResponse): StorySource[] {
     return response.results.flatMap((result) => {
-      if (result.format !== "markdown" || !result.text) {
+      if (
+        result.format !== "markdown" ||
+        !result.text ||
+        isExcludedNewsUrl(result.url) ||
+        (result.final_url && isExcludedNewsUrl(result.final_url))
+      ) {
         return [];
       }
 

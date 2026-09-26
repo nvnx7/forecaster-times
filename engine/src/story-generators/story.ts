@@ -75,8 +75,8 @@ TASK
 Write a concise newspaper report focused only on developments materially relevant to the market question.
 
 Rules:
-- Use only supplied sources.
-- Do not browse, invent facts, infer causes, or treat market odds as proof.
+- Treat supplied sources as the primary material. If they contain no substantive news text (for example, navigation, a streaming landing page, or boilerplate) and reporting requires it, you may independently search for recent, credible news.
+- Do not invent facts, infer causes, or treat market odds as proof.
 - Prefer recent concrete developments over background.
 - Merge duplicate facts across sources.
 - If sources conflict, preserve the disagreement.
