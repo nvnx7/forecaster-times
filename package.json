@@ -12,9 +12,9 @@
     "format": "biome format --write .",
     "check": "biome check --write .",
     "cron": "bun cron/src/index.ts",
-    "generate:edition": "bun scripts/generate-edition.ts",
-    "generate:front": "bun scripts/generate-front-page.ts",
-    "generate:category": "bun scripts/generate-category-page.ts"
+    "generate:edition": "bun --env-file=.env scripts/generate-edition.ts",
+    "generate:front": "bun --env-file=.env scripts/generate-front-page.ts",
+    "generate:category": "bun --env-file=.env scripts/generate-category-page.ts"
   },
   "workspaces": [
     "web",

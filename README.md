@@ -52,6 +52,7 @@ bun install
 Create local environment files from the package templates:
 
 ```sh
+cp .env.example .env
 cp web/.env.example web/.env
 cp cron/.env.example cron/.env
 ```
@@ -76,9 +77,25 @@ bun run check-types
 bun run check-scripts
 ```
 
-For local, one-off edition generation, use the existing script with the
-generation credentials:
+## Local Editorial Scripts
+
+With root `.env` configured, use the scripts directly or their matching `just`
+recipes:
 
 ```sh
-bun --env-file=cron/.env scripts/generate-edition.ts
+# Generate and publish the front page plus every configured category.
+bun --env-file=.env scripts/generate-edition.ts
+
+# Generate or resume only the front-page draft.
+bun --env-file=.env scripts/generate-front-page.ts
+
+# Generate or resume selected category-page drafts.
+bun --env-file=.env scripts/generate-category-page.ts world-politics crypto
+
+# Publish the currently available draft pages as an edition.
+bun --env-file=.env scripts/publish-draft-edition.ts
 ```
+
+Equivalent shortcuts include `just generate-edition`, `just
+generate-front-page`, `just generate-category-page world-politics`, and `just
+publish-draft-edition`.
