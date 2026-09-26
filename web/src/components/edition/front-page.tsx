@@ -14,6 +14,7 @@ import { MarketCategoryNavigation } from "@/components/edition/market-category-n
 import { Masthead } from "@/components/edition/masthead";
 import { SecondaryStoryRow } from "@/components/edition/secondary-story-row";
 import { NewspaperLoader } from "@/components/newspaper-loader";
+import type { CategoryPageId } from "@/types";
 
 const minimumLoadingDurationMs = 2_000;
 
@@ -24,7 +25,7 @@ export function FrontPage({
 }: {
   embedded?: boolean;
   categories?: readonly EditionCategoryNavigationItem[];
-  onCategorySelect?: (categoryId: EditionCategoryNavigationItem["id"]) => void;
+  onCategorySelect?: (pageId: CategoryPageId) => void;
 }) {
   const { data: frontPage, isError, isPending } = useGetFrontPage();
   const [minimumLoadingElapsed, setMinimumLoadingElapsed] = useState(false);

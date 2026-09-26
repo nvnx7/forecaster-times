@@ -26,21 +26,23 @@ export function NewspaperIssue() {
       : [],
   );
 
-  function selectCategory(categoryId: Exclude<CategoryPageId, "front">) {
-    setRequestedCategoryId(categoryId);
+  function selectCategory(pageId: CategoryPageId) {
+    if (pageId !== "front") setRequestedCategoryId(pageId);
     document
-      .getElementById(`edition-page-${categoryId}`)
+      .getElementById(`edition-page-${pageId}`)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
     <EditionShell>
       <div className="flex flex-col gap-3 md:gap-5">
-        <FrontPage
-          categories={categories ?? []}
-          embedded
-          onCategorySelect={selectCategory}
-        />
+        <div id="edition-page-front" className="scroll-mt-3">
+          <FrontPage
+            categories={categories ?? []}
+            embedded
+            onCategorySelect={selectCategory}
+          />
+        </div>
         {categories?.map((category) => (
           <div
             key={category.id}

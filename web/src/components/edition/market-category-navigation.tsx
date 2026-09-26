@@ -9,17 +9,15 @@ export type EditionCategoryNavigationItem = {
   label: string;
 };
 
+const frontPageNavigationItem = { id: "front", label: "Front Page" } as const;
+
 export function MarketCategoryNavigation({
   categories,
   onCategorySelect,
 }: {
   categories: readonly EditionCategoryNavigationItem[];
-  onCategorySelect: (categoryId: Exclude<CategoryPageId, "front">) => void;
+  onCategorySelect: (pageId: CategoryPageId) => void;
 }) {
-  if (categories.length === 0) {
-    return null;
-  }
-
   return (
     <nav aria-label="Market categories" className="flex flex-col gap-2">
       <Separator />
@@ -30,7 +28,7 @@ export function MarketCategoryNavigation({
           </span>
           <div className="flex min-w-0 flex-1 justify-center">
             <div className="flex shrink-0 items-center gap-x-12 px-0.5">
-              {categories.map((category) => (
+              {[frontPageNavigationItem, ...categories].map((category) => (
                 <Button
                   key={category.id}
                   type="button"
