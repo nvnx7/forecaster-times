@@ -1,0 +1,24 @@
+{
+  "name": "@repo/cron",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": ">=1.4.0"
+  },
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "lint": "biome check .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/engine": "*",
+    "hono": "^4.13.8"
+  },
+  "devDependencies": {
+    "@repo/configs": "*",
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
+  }
+}

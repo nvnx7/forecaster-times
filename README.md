@@ -13,6 +13,7 @@ a Next.js newspaper experience with live market odds and probability charts.
 engine/   Editorial domain: research, story and image generation, validation, and storage.
 web/      Next.js reader experience and its edition, illustration, and market-data APIs.
 scripts/  Local commands for drafting pages and publishing a completed edition.
+cron/     Hono scheduler that generates and publishes a daily edition.
 configs/  Shared TypeScript and Biome configuration.
 ```
 
@@ -31,6 +32,7 @@ latest.json          Pointer to the latest published edition.
 | --- | --- |
 | `@repo/engine` | Editorial engine, provider clients, generation fallbacks, schemas, and S3 persistence. |
 | `web` | Next.js 16 application for reading published editions and refreshing live market data. |
+| `@repo/cron` | Hono process that schedules daily complete-edition generation with Bun cron. |
 | `@repo/configs` | Shared TypeScript and Biome configuration. |
 
 The engine uses Nansen for market research and OHLCV history, OpenRouter for
@@ -39,7 +41,7 @@ storage for edition assets.
 
 ## Development
 
-Prerequisites: Bun `1.3.6` and the credentials required by the services above.
+Prerequisites: Bun `1.4.2` or later and the credentials required by the services above.
 
 Create local environment configuration from the provided template:
 
@@ -76,3 +78,12 @@ bun --env-file=web/.env scripts/publish-draft-edition.ts
 ```
 
 Use `bun run build` for a production build and `bun run start` to serve it.
+
+Start the editorial scheduler with the same environment variables. It listens on
+port `3001` by default, exposes `GET /health`, and generates a full edition at
+00:15 UTC daily:
+
+```sh
+cp cron/.env.example cron/.env
+bun --env-file=cron/.env cron/src/index.ts
+```
