@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 
+import { editionCron } from "./config";
 import { createCronEditorialEngine } from "./editorial-engine";
 import { generateEdition } from "./generate-edition";
 
 const port = Number(process.env.PORT ?? 3001);
-const editionCron = "15 0 * * *";
 const engine = createCronEditorialEngine();
 
 const app = new Hono();

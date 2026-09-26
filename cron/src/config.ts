@@ -14,3 +14,4 @@ export const s3AccessKeyId = requiredEnv("S3_ACCESS_KEY_ID");
 export const s3SecretAccessKey = requiredEnv("S3_SECRET_ACCESS_KEY");
 export const s3Region = requiredEnv("S3_REGION");
 export const s3BucketName = requiredEnv("S3_BUCKET_NAME");
+export const editionCron = process.env.EDITION_CRON ?? "15 0 * * *";

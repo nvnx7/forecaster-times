@@ -1,14 +1,22 @@
 # Forecaster Times Cron
 
-This is the long-running Hono process that schedules and publishes a complete
-Forecaster Times edition each day. It owns generation credentials and depends on
+This is the long-running Hono process that schedules and publishes complete
+Forecaster Times editions. It owns generation credentials and depends on
 `@repo/engine`.
 
 ## How It Works
 
-`src/index.ts` starts a Hono server and registers Bun's in-process cron at
-`15 0 * * *` in UTC. The callback runs `generateEdition`, which publishes the
-front page and every configured category through `EditorialEngine`.
+`src/index.ts` starts a Hono server and registers Bun's in-process cron using
+the UTC `EDITION_CRON` expression. It defaults to `15 0 * * *` (daily at
+00:15 UTC). The callback runs `generateEdition`, which publishes the front page
+and every configured category through `EditorialEngine`.
+
+Set `EDITION_CRON` in `cron/.env` to change the cadence. For example:
+
+```dotenv
+# Every six hours, at minute 15 (UTC)
+EDITION_CRON="15 */6 * * *"
+```
 
 The server exposes only:
 
