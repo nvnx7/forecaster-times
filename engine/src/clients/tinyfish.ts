@@ -19,6 +19,19 @@ type MarketNewsResearch = {
   sources: StorySource[];
 };
 
+const excludedNewsPaths = ["/watch", "/stream", "/live", "/video"];
+
+function isExcludedNewsUrl(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return excludedNewsPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export class TinyFishMarketNewsResearchError extends Error {
   constructor(
     marketQuestion: string | null | undefined,
@@ -99,26 +112,33 @@ export class TinyFishClient {
         break;
       }
 
+      const results = searchResponse.results.filter(
+        (result) => !isExcludedNewsUrl(result.url),
+      );
+
       logger.debug("TinyFish market news sources selected", {
         page: searchResponse.page,
         availableResultCount: searchResponse.results.length,
+        excludedResultCount: searchResponse.results.length - results.length,
         usableSourceCount: sources.length,
       });
 
-      const fetchResponse = await this.fetch({
-        urls: searchResponse.results.map((result) => result.url),
-        purpose: params.purpose,
-        format: "markdown",
-      });
-      fetchErrors.push(...fetchResponse.errors);
-      sources.push(...this.toStorySources(fetchResponse));
+      if (results.length > 0) {
+        const fetchResponse = await this.fetch({
+          urls: results.map((result) => result.url),
+          purpose: params.purpose,
+          format: "markdown",
+        });
+        fetchErrors.push(...fetchResponse.errors);
+        sources.push(...this.toStorySources(fetchResponse));
 
-      logger.debug("TinyFish market news research page completed", {
-        page: searchResponse.page,
-        fetchedResultCount: fetchResponse.results.length,
-        fetchErrorCount: fetchResponse.errors.length,
-        usableSourceCount: sources.length,
-      });
+        logger.debug("TinyFish market news research page completed", {
+          page: searchResponse.page,
+          fetchedResultCount: fetchResponse.results.length,
+          fetchErrorCount: fetchResponse.errors.length,
+          usableSourceCount: sources.length,
+        });
+      }
 
       const lastResultPosition = Math.max(
         ...searchResponse.results.map((result) => result.position),
