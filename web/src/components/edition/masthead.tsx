@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { EditionDate } from "@/components/edition/edition-date";
 import { MastheadMarketPrices } from "@/components/edition/masthead-market-prices";
 import { Logo } from "@/components/logo";
@@ -20,10 +21,16 @@ function formatEditionNumber(editionId?: number) {
 
 function HeaderStrap({ editionId }: { editionId?: number }) {
   return (
-    <p className="text-center font-sans text-[0.6875rem] font-semibold tracking-[0.14em] text-foreground uppercase">
-      Probability Is a Public Record · Morning Broadsheet · Edition{" "}
-      {formatEditionNumber(editionId)}
-    </p>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <span aria-hidden="true" />
+      <p className="text-center font-sans text-[0.6875rem] font-semibold tracking-[0.14em] text-foreground uppercase">
+        Probability Is a Public Record · Morning Broadsheet · Edition{" "}
+        {formatEditionNumber(editionId)}
+      </p>
+      <div className="justify-self-end">
+        <ConnectWalletButton />
+      </div>
+    </div>
   );
 }
 
