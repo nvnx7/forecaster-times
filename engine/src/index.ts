@@ -106,6 +106,7 @@ export type {
 export {
   generateMarketSearchString,
   getMarketProbability,
+  isActiveMarket,
   toMarketBrief,
   toMarketPanel,
   toMarketReference,

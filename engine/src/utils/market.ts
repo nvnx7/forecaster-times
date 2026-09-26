@@ -18,6 +18,11 @@ export function getMarketProbability(market: PolymarketMarket): number {
   return 0.5;
 }
 
+/** Rejects markets that Nansen explicitly marks as inactive or closed. */
+export function isActiveMarket(market: PolymarketMarket): boolean {
+  return market.active !== false && market.closed !== true;
+}
+
 export function sortMarkets(
   markets: PolymarketMarket[],
   orderBy: ListPolymarketMarketsParams["orderBy"],

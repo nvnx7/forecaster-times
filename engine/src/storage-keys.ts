@@ -39,7 +39,13 @@ export function draftPublishableIllustrationKey(
   storyId: string,
   contentType: string,
 ): string {
-  return `${draftPublishablePrefix}illustrations/${pageId}/${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
+  return `${draftPublishableIllustrationPrefix(pageId)}${encodeURIComponent(storyId)}.${getImageExtension(contentType)}`;
+}
+
+export function draftPublishableIllustrationPrefix(
+  pageId: CategoryPageId,
+): string {
+  return `${draftPublishablePrefix}illustrations/${pageId}/`;
 }
 
 export function editionIllustrationKey(

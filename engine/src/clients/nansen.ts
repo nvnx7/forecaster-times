@@ -7,7 +7,7 @@ import type {
   ListPolymarketMarketsParams,
   ListPolymarketMarketsResponse,
 } from "../types";
-import { getLoggableServiceError } from "../utils";
+import { getLoggableServiceError, isActiveMarket } from "../utils";
 
 const listPolymarketMarketsResponseSchema = z.object({
   pagination: z
@@ -83,16 +83,21 @@ export class NansenClient {
           },
         },
       );
-      const markets = listPolymarketMarketsResponseSchema.parse(
+      const parsed = listPolymarketMarketsResponseSchema.parse(
         response.data,
       ) as ListPolymarketMarketsResponse;
+      const data =
+        params.status === "active"
+          ? parsed.data.filter(isActiveMarket)
+          : parsed.data;
 
       logger.debug("Nansen market screener response", {
-        marketCount: markets.data.length,
+        marketCount: data.length,
+        excludedMarketCount: parsed.data.length - data.length,
         requestId: response.headers["x-request-id"],
       });
 
-      return markets;
+      return { data, pagination: parsed.pagination };
     } catch (error) {
       logger.error("Nansen market screener failed", {
         responseBody: getLoggableServiceError(error),

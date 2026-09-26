@@ -28,6 +28,7 @@ import {
 } from "../schema";
 import {
   draftPublishableIllustrationKey,
+  draftPublishableIllustrationPrefix,
   draftPublishableManifestKey,
   draftPublishablePageKey,
   draftPublishablePrefix,
@@ -61,6 +62,7 @@ import {
   getIllustrationSource,
   getMarketProbability,
   getStoryRole,
+  isActiveMarket,
   sortMarkets,
   toCategoryBrief,
   toMarketBrief,
@@ -300,23 +302,64 @@ export class EditorialEngine {
     operationId: string,
   ): Promise<PageDraft> {
     const existingDraft = await this.getDraftPageState(pageId);
-    if (existingDraft) return existingDraft;
+    if (existingDraft) {
+      if (this.hasOnlyActiveMarkets(existingDraft)) return existingDraft;
+      await this.discardInactivePageDraft(pageId, existingDraft, operationId);
+    }
 
     const config = this.getPageConfig(pageId);
-    const { data } = await this.listPolymarketMarkets({
-      status: "active",
-      tags: config.kind === "category" ? config.nansenTags : undefined,
-      orderBy: [{ field: "volume_24hr", direction: "DESC" }],
-      pagination: { page: 1, perPage: config.candidateLimit },
-    });
-    const candidates = [...data].sort(
+    const candidates: PolymarketMarket[] = [];
+    const candidateIds = new Set<string>();
+    const selections: ResearchedMarket[] = [];
+    let page = 1;
+
+    while (true) {
+      const response = await this.listPolymarketMarkets({
+        status: "active",
+        tags: config.kind === "category" ? config.nansenTags : undefined,
+        orderBy: [{ field: "volume_24hr", direction: "DESC" }],
+        pagination: { page, perPage: config.candidateLimit },
+      });
+      const pageCandidates = response.data.filter(
+        (market) =>
+          isActiveMarket(market) && !candidateIds.has(market.market_id),
+      );
+      for (const market of pageCandidates) candidateIds.add(market.market_id);
+      candidates.push(...pageCandidates);
+
+      if (selections.length < config.storyCount) {
+        selections.push(
+          ...(await this.selectStoryMarkets(
+            pageId,
+            pageCandidates,
+            config.storyCount - selections.length,
+            operationId,
+          )),
+        );
+      }
+
+      logger.debug("Edition market candidate page completed", {
+        operationId,
+        pageId,
+        nansenPage: page,
+        candidateCount: candidates.length,
+        selectionCount: selections.length,
+        isLastPage: response.pagination?.is_last_page,
+      });
+
+      if (
+        (candidates.length >= config.candidateLimit &&
+          selections.length >= config.storyCount) ||
+        response.data.length === 0 ||
+        response.pagination?.is_last_page !== false
+      ) {
+        break;
+      }
+      page += 1;
+    }
+
+    candidates.sort(
       (first, second) => (second.volume_24hr ?? 0) - (first.volume_24hr ?? 0),
-    );
-    const selections = await this.selectStoryMarkets(
-      pageId,
-      candidates,
-      config.storyCount,
-      operationId,
     );
     if (selections.length === 0) {
       throw new NoResearchedMarketsError(pageId);
@@ -699,6 +742,37 @@ export class EditorialEngine {
     });
   }
 
+  private hasOnlyActiveMarkets(draft: PageDraft): boolean {
+    return [
+      ...draft.marketCandidates,
+      ...draft.briefMarkets,
+      ...draft.stories.map((slot) => slot.market),
+    ].every(isActiveMarket);
+  }
+
+  private async discardInactivePageDraft(
+    pageId: CategoryPageId,
+    draft: PageDraft,
+    operationId: string,
+  ): Promise<void> {
+    const inactiveMarketIds = [
+      ...draft.marketCandidates,
+      ...draft.briefMarkets,
+      ...draft.stories.map((slot) => slot.market),
+    ].flatMap((market) => (isActiveMarket(market) ? [] : [market.market_id]));
+
+    await Promise.all([
+      this.store.deleteJson(draftWorkPageKey(pageId)),
+      this.store.deleteJson(draftPublishablePageKey(pageId)),
+      this.store.deletePrefix(draftPublishableIllustrationPrefix(pageId)),
+    ]);
+    logger.warn("Draft page discarded after market closure", {
+      operationId,
+      pageId,
+      inactiveMarketIds: [...new Set(inactiveMarketIds)],
+    });
+  }
+
   get frontPageDraftKey(): string {
     return draftPublishablePageKey("front");
   }
@@ -826,7 +900,18 @@ export class EditorialEngine {
     for (const response of responses) {
       for (const market of response.data) markets.set(market.market_id, market);
     }
-    return { data: sortMarkets([...markets.values()], params.orderBy) };
+    const page = params.pagination?.page ?? 1;
+    const perPage = params.pagination?.perPage ?? 100;
+    return {
+      data: sortMarkets([...markets.values()], params.orderBy),
+      pagination: {
+        page,
+        per_page: perPage,
+        is_last_page: responses.every(
+          (response) => response.pagination?.is_last_page !== false,
+        ),
+      },
+    };
   }
 
   private async getDraftState(): Promise<DraftState | undefined> {
