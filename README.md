@@ -1,62 +1,74 @@
 <h1 align="center">Forecaster Times</h1>
 
-![Forecaster Times](./web/public/logo.png)
+<p align="center">
+  <img src="./web/public/logo.png" alt="Forecaster Times" width="720" />
+</p>
 
 Forecaster Times is an AI-produced prediction-market newspaper. It researches
-Polymarket markets through Nansen, writes an illustrated front page and category
-pages, publishes complete editions to S3-compatible storage, and renders them in
-a Next.js newspaper experience with live market odds and probability charts.
+active Polymarket markets, writes and illustrates newspaper pages, publishes
+immutable editions to S3-compatible storage, and presents them in a vintage
+Next.js reader with live market data and trading controls.
 
 ## Contents
 
-```
-engine/   Editorial domain: research, story and image generation, validation, and storage.
-web/      Next.js reader experience and its edition, illustration, and market-data APIs.
-scripts/  Local commands for drafting pages and publishing a completed edition.
-cron/     Hono scheduler that generates and publishes a daily edition.
-configs/  Shared TypeScript and Biome configuration.
-```
-
-Generated editorial assets are organized in object storage as follows:
-
-```
-draft/work/          In-progress editorial state and pages.
-draft/publishable/   Pages and illustrations ready to publish.
-edition-<id>/        A published edition: pages, illustrations, and manifest.json.
-latest.json          Pointer to the latest published edition.
-```
+- [Engine](./engine/README.md)
+- [Cron](./cron/README.md)
+- [Web](./web/README.md)
+- [Development](#development)
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| `@repo/engine` | Editorial engine, provider clients, generation fallbacks, schemas, and S3 persistence. |
-| `web` | Next.js 16 application for reading published editions and refreshing live market data. |
-| `@repo/cron` | Hono process that schedules daily complete-edition generation with Bun cron. |
-| `@repo/configs` | Shared TypeScript and Biome configuration. |
+### [`engine/`](./engine/README.md)
 
-The engine uses Nansen for market research and OHLCV history, OpenRouter for
-story and image generation, TinyFish for web research, and S3-compatible
-storage for edition assets.
+The editorial domain package. It selects markets through Nansen, researches
+news with TinyFish, generates stories and illustrations through OpenRouter, and
+persists drafts and published editions to S3-compatible storage. Read the
+[engine architecture and API guide](./engine/README.md).
+
+### [`cron/`](./cron/README.md)
+
+The long-running Bun and Hono scheduler. It owns generation credentials and
+publishes a complete edition daily through the engine, while exposing only a
+small health endpoint. Read the [cron setup and deployment guide](./cron/README.md).
+
+### [`web/`](./web/README.md)
+
+The Next.js reader experience. It reads published editions from storage,
+refreshes live market data, and supports Polymarket trading with a connected
+wallet. Read the [web data-flow and development guide](./web/README.md).
+
+### [`configs/`](./configs)
+
+Shared TypeScript and Biome configuration for all workspaces.
 
 ## Development
 
-Prerequisites: Bun `1.4.2` or later and the credentials required by the services above.
-
-Create local environment configuration from the provided template:
+Requires Bun `1.4.2` or later.
 
 ```sh
-cp web/.env.example web/.env
 bun install
 ```
 
-Start the web application at [http://localhost:3000](http://localhost:3000):
+Create local environment files from the package templates:
+
+```sh
+cp web/.env.example web/.env
+cp cron/.env.example cron/.env
+```
+
+Start the reader:
 
 ```sh
 bun dev
 ```
 
-Run the workspace checks:
+Start the scheduled editorial process:
+
+```sh
+bun --env-file=cron/.env cron/src/index.ts
+```
+
+Run all workspace checks:
 
 ```sh
 bun run lint
@@ -64,26 +76,9 @@ bun run check-types
 bun run check-scripts
 ```
 
-Draft and publish editorial pages with the local environment file:
+For local, one-off edition generation, use the existing script with the
+generation credentials:
 
 ```sh
-# Create or update the front-page draft.
-bun --env-file=web/.env scripts/generate-front-page.ts
-
-# Draft selected category pages, or omit IDs to draft all category pages.
-bun --env-file=web/.env scripts/generate-category-page.ts world-politics sports
-
-# Publish the currently available draft pages as the next edition.
-bun --env-file=web/.env scripts/publish-draft-edition.ts
-```
-
-Use `bun run build` for a production build and `bun run start` to serve it.
-
-Start the editorial scheduler with the same environment variables. It listens on
-port `3001` by default, exposes `GET /health`, and generates a full edition at
-00:15 UTC daily:
-
-```sh
-cp cron/.env.example cron/.env
-bun --env-file=cron/.env cron/src/index.ts
+bun --env-file=cron/.env scripts/generate-edition.ts
 ```
