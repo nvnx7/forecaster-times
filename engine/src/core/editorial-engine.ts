@@ -496,7 +496,13 @@ export class EditorialEngine {
       slot.illustrationLastError =
         error instanceof Error ? error.message : "Unknown error";
       await this.saveDraftPage(pageId, draft);
-      throw error;
+      logger.warn("Draft illustration generation failed", {
+        operationId,
+        pageId,
+        storyId: story.id,
+        attempt: slot.illustrationAttemptCount,
+        message: slot.illustrationLastError,
+      });
     }
   }
 
