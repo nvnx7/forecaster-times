@@ -5,7 +5,7 @@ import {
 } from "@repo/engine";
 import { NextResponse } from "next/server";
 
-import { editorialEngine } from "@/server/editorial-engine";
+import { editionStore } from "@/server/edition-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export async function GET(
   }
 
   try {
-    const image = await editorialEngine.getCategoryPageIllustration(
+    const image = await editionStore.getCategoryPageIllustration(
       categoryId as CategoryPageId,
       storyId,
     );

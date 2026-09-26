@@ -1,14 +1,14 @@
 import { ObjectNotFoundError } from "@repo/engine";
 import { NextResponse } from "next/server";
 
-import { editorialEngine } from "@/server/editorial-engine";
+import { editionStore } from "@/server/edition-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const frontPage = await editorialEngine.getFrontPage();
+    const frontPage = await editionStore.getFrontPage();
 
     return NextResponse.json(frontPage, {
       headers: { "Cache-Control": "no-store" },

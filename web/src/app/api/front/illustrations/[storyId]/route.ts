@@ -1,7 +1,7 @@
 import { ObjectNotFoundError } from "@repo/engine";
 import { NextResponse } from "next/server";
 
-import { editorialEngine } from "@/server/editorial-engine";
+import { editionStore } from "@/server/edition-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET(
   const { storyId } = await params;
 
   try {
-    const image = await editorialEngine.getFrontPageIllustration(storyId);
+    const image = await editionStore.getFrontPageIllustration(storyId);
     const body = new ArrayBuffer(image.bytes.byteLength);
     new Uint8Array(body).set(image.bytes);
 

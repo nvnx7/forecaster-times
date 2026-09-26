@@ -5,6 +5,9 @@ export {
   type OpenRouterGeneratedImage,
   type OpenRouterImageOptions,
   type OpenRouterPromptOptions,
+  S3JsonStore,
+  type S3JsonStoreOptions,
+  type StoredObject,
   TinyFishClient,
   type TinyFishClientOptions,
   TinyFishMarketNewsResearchError,
@@ -50,6 +53,11 @@ export {
   latestEditionSchema,
   pageDraftSchema,
 } from "./schema";
+export {
+  editionManifestKey,
+  editionPageKey,
+  latestEditionKey,
+} from "./storage-keys";
 export {
   FallbackStoryGenerator,
   type FallbackStoryGeneratorOptions,
