@@ -1,12 +1,19 @@
-import { categoryPageIds, logger } from "@repo/engine";
+import { type CategoryPageId, logger } from "@repo/engine";
 
 import { createScriptEditorialEngine } from "./editorial-engine";
 
-const categoryIds = categoryPageIds.slice(0, 2);
+const categoryIds = [
+  "world-politics",
+  "money-markets",
+  "technology-culture",
+  "sports",
+  "odds-oddities",
+] as const satisfies readonly Exclude<CategoryPageId, "front">[];
+
 const editorialEngine = createScriptEditorialEngine();
 
 try {
-  logger.info("Edition generation requested by script", { categoryIds });
+  logger.info("Full edition generation requested by script", { categoryIds });
   const pages = await editorialEngine.publishEdition(categoryIds);
   const frontPage = pages.get("front");
   logger.info("Edition generation completed", {

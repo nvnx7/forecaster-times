@@ -11,10 +11,10 @@ export type ImagePreset = {
 };
 
 export const imagePresets: Record<ImagePresetKey, ImagePreset> = {
-  frontLeadWide: { aspectRatio: "3:2" },
-  categoryLeadWide: { aspectRatio: "3:2" },
+  frontLeadWide: { aspectRatio: "16:9" },
+  categoryLeadWide: { aspectRatio: "16:9" },
   categoryLeadPortrait: { aspectRatio: "4:5" },
-  secondaryWide: { aspectRatio: "3:2" },
+  secondaryWide: { aspectRatio: "16:9" },
   secondarySquare: { aspectRatio: "1:1" },
 };
 
@@ -30,8 +30,8 @@ export const openRouterStoryGenerationCandidates = [
 ] as const;
 
 export const openRouterImageGenerationModels = [
-  "recraft/recraft-v4.1-flash",
   "black-forest-labs/flux.2-klein-4b",
+  "recraft/recraft-v4.1-flash",
   "krea/krea-2-medium-turbo",
 ] as const;
 
@@ -107,7 +107,7 @@ export const pageConfigs: Record<CategoryPageId, PageConfig> = {
     description: "The machine age, culture, and the stories gathering force.",
     layoutVariant: "visual-lead",
     storyCategory: "technology",
-    nansenTags: ["Technology", "Entertainment"],
+    nansenTags: ["Technology"],
     sidebar: { type: "odds", title: "At a Glance" },
     candidateLimit: 16,
     storyCount: 3,

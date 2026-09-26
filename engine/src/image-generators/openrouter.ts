@@ -26,11 +26,11 @@ const kreaModel = "krea/krea-2-medium-turbo";
 const recraftAspectRatios: Record<
   ImageAspectRatio,
   OpenRouterImageAspectRatio
-> = { "3:2": "4:3", "4:5": "3:4", "1:1": "1:1" };
+> = { "16:9": "16:9", "3:2": "4:3", "4:5": "3:4", "1:1": "1:1" };
 const blackForestAspectRatios: Record<
   ImageAspectRatio,
   OpenRouterImageAspectRatio
-> = { "3:2": "3:2", "4:5": "3:4", "1:1": "1:1" };
+> = { "16:9": "16:9", "3:2": "3:2", "4:5": "3:4", "1:1": "1:1" };
 
 function getImageOptions(model: string, aspectRatio: ImageAspectRatio) {
   if (model === recraftModel) {

@@ -8,7 +8,7 @@ export type StoryCategory =
   | "culture"
   | "oddities";
 
-export type ImageAspectRatio = "3:2" | "4:5" | "1:1";
+export type ImageAspectRatio = "16:9" | "3:2" | "4:5" | "1:1";
 
 export type ImagePresetKey =
   | "frontLeadWide"
