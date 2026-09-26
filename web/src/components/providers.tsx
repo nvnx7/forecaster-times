@@ -6,6 +6,8 @@ import { type ReactNode, useState } from "react";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { polygon } from "wagmi/chains";
 
+import { Toaster } from "@/components/ui/sonner";
+
 const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: "Forecaster Times",
@@ -69,6 +71,7 @@ export function Providers({ children }: { children: ReactNode }) {
           }}
         >
           {children}
+          <Toaster position="top-center" />
         </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

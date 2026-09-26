@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { useGetMarketDetail } from "@/api/getMarketDetail";
-import { Button } from "@/components/ui/button";
+import { TradeMarketButton } from "@/components/edition/trade-market-button";
 import {
   Card,
   CardAction,
@@ -15,8 +15,6 @@ import {
 import type { MarketPanel } from "@/types";
 import { formatProbabilityAsCents } from "@/utils/market-format";
 import { getPolymarketUrl } from "@/utils/polymarket";
-
-function handleTrade() {}
 
 /** A compact, live quote for secondary editorial stories. */
 export function CompactMarketQuote({ market }: { market: MarketPanel }) {
@@ -81,22 +79,20 @@ export function CompactMarketQuote({ market }: { market: MarketPanel }) {
           </dl>
         </CardContent>
         <CardFooter variant="quote">
-          <Button
-            type="button"
-            variant="marketQuote"
+          <TradeMarketButton
+            market={displayedMarket}
+            outcomeIndex={0}
             size="sm"
-            onClick={handleTrade}
           >
             {yesLabel} · {yes}
-          </Button>
-          <Button
-            type="button"
-            variant="marketQuote"
+          </TradeMarketButton>
+          <TradeMarketButton
+            market={displayedMarket}
+            outcomeIndex={1}
             size="sm"
-            onClick={handleTrade}
           >
             {noLabel} · {no}
-          </Button>
+          </TradeMarketButton>
         </CardFooter>
       </Card>
     </aside>

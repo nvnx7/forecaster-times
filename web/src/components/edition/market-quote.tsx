@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { useGetMarketDetail } from "@/api/getMarketDetail";
 import { MarketProbabilityChart } from "@/components/edition/market-probability-chart";
-import { Button } from "@/components/ui/button";
+import { TradeMarketButton } from "@/components/edition/trade-market-button";
 import {
   Card,
   CardAction,
@@ -21,8 +21,6 @@ import {
   formatUsd,
 } from "@/utils/market-format";
 import { getPolymarketUrl } from "@/utils/polymarket";
-
-function handleTrade() {}
 
 export function MarketQuote({ market }: { market: MarketPanel }) {
   const { data: liveMarket } = useGetMarketDetail(market);
@@ -125,22 +123,20 @@ export function MarketQuote({ market }: { market: MarketPanel }) {
           <Separator />
         </CardContent>
         <CardFooter variant="quote">
-          <Button
-            type="button"
-            variant="marketQuote"
+          <TradeMarketButton
+            market={displayedMarket}
+            outcomeIndex={0}
             size="default"
-            onClick={handleTrade}
           >
             {yesLabel}
-          </Button>
-          <Button
-            type="button"
-            variant="marketQuote"
+          </TradeMarketButton>
+          <TradeMarketButton
+            market={displayedMarket}
+            outcomeIndex={1}
             size="default"
-            onClick={handleTrade}
           >
             {noLabel}
-          </Button>
+          </TradeMarketButton>
         </CardFooter>
       </Card>
     </aside>

@@ -22,6 +22,8 @@ const buttonVariants = cva(
           "h-auto gap-2 bg-transparent px-0 font-mono text-sm font-semibold tracking-[0.035em] text-foreground hover:text-destructive focus-visible:ring-0",
         marketQuote:
           "border-foreground bg-transparent font-sans text-xs font-semibold tracking-[0.08em] text-foreground hover:bg-foreground hover:text-background focus-visible:ring-0",
+        marketTrade:
+          "min-w-36 bg-foreground font-sans text-xs text-background hover:bg-destructive",
         destructive:
           "bg-destructive text-primary-foreground hover:bg-destructive/85 focus-visible:border-destructive focus-visible:ring-destructive/20",
         link: "text-primary underline-offset-4 hover:underline",

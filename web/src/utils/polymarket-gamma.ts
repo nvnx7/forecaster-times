@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import type { MarketPanel } from "@/types";
 
+export type LiveMarketPanel = MarketPanel & {
+  outcomeTokenIds?: [string, string];
+};
+
 export const polymarketGammaApiUrl = "https://gamma-api.polymarket.com";
 
 const gammaMarketSchema = z.object({
@@ -10,6 +14,7 @@ const gammaMarketSchema = z.object({
   slug: z.string().optional(),
   outcomes: z.string(),
   outcomePrices: z.string(),
+  clobTokenIds: z.string().optional(),
   oneDayPriceChange: z.number().optional(),
   volume24hr: z.number().optional(),
   liquidityNum: z.number().optional(),
@@ -27,10 +32,18 @@ function parseOutcomeLabels(value: string) {
   return parsed.data;
 }
 
+function parseOutcomeTokenIds(value: string | undefined) {
+  if (!value) return undefined;
+
+  const parsed = z.array(z.string().trim().min(1)).safeParse(JSON.parse(value));
+  if (!parsed.success || parsed.data.length < 2) return undefined;
+  return [parsed.data[0], parsed.data[1]] as [string, string];
+}
+
 export function toMarketPanelFromGamma(
   source: unknown,
   initialMarket: MarketPanel,
-): MarketPanel {
+): LiveMarketPanel {
   const market = gammaMarketSchema.parse(source);
   const [yesLabel, noLabel] = parseOutcomeLabels(market.outcomes);
   const [yes, no] = parseOutcomePrices(market.outcomePrices);
@@ -59,6 +72,7 @@ export function toMarketPanelFromGamma(
     no,
     yesLabel,
     noLabel,
+    outcomeTokenIds: parseOutcomeTokenIds(market.clobTokenIds),
     change24h: market.oneDayPriceChange,
     volume24hUsd: market.volume24hr,
     liquidityUsd: market.liquidityNum,
