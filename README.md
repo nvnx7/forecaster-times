@@ -11,10 +11,101 @@ Next.js reader with live market data and trading controls.
 
 ## Contents
 
+- [Architecture Flow](#architecture-flow)
+- [How It Works](#how-it-works)
 - [Engine](./engine/README.md)
 - [Cron](./cron/README.md)
 - [Web](./web/README.md)
 - [Development](#development)
+
+## Architecture Flow
+
+```mermaid
+flowchart TB
+    nansen[Nansen API]
+
+    subgraph engine[Forecaster Times Engine]
+        direction TB
+        markets[Market Curator]
+        research[TinyFish Research]
+        stories[LLM Story Generation]
+        images[LLM Story Illustration Generation]
+        publishing[Drafting and Publishing]
+
+        markets --> research --> stories --> images --> publishing
+    end
+
+    subgraph apiServer[API Server]
+        direction TB
+        storage[(S3 Storage)]
+        liveMarketData[Live Market Data]
+    end
+
+    ui[Forecaster Times UI]
+
+    nansen --> markets
+    nansen -->|Live data for trade panels| liveMarketData
+    publishing --> storage
+    storage -->|Published editions| ui
+    liveMarketData -->|Live trade-panel updates| ui
+
+    classDef nansen fill:#1a2933,stroke:#8ad0e8,color:#ffffff,stroke-width:2px
+    classDef engine fill:#fff0d6,stroke:#9f855e,color:#241b0f
+    classDef storage fill:#f6e5c6,stroke:#9f855e,color:#241b0f
+    classDef live fill:#f6e5c6,stroke:#9f855e,color:#241b0f
+    classDef ui fill:#f8e8c9,stroke:#241b0f,color:#241b0f,stroke-width:2px
+
+    class nansen nansen
+    class markets,research,stories,images,publishing engine
+    class storage storage
+    class liveMarketData live
+    class ui ui
+```
+
+## How It Works
+
+### Nansen API
+
+Nansen is the primary market-data source. The engine queries its prediction
+market screener endpoints to discover relevant, actively tradable Polymarket markets and
+gathers enough candidates across categories as result pages to build each editorial section.
+Nansen also supplies live data like prices, OHLCV data to show in dynamic sections like trade
+panels.
+
+### Forecaster Times Engine
+
+For every market selected by the curator, TinyFish collects supporting
+reporting. An OpenRouter text model turns that material into source-grounded
+newspaper copy, and an OpenRouter image model produces a matching illustration.
+The engine assembles the resulting stories, illustrations, and initial market
+data into front and category pages.
+
+### API Server
+
+The publishing workflow is draft-first. The engine writes working files under
+the draft area, records every completed page and illustration in a manifest,
+then promotes the publishable set to a numbered edition in S3-compatible
+storage. Finally, it updates some metadata to make that edition available to
+the reader. The manifest ensures that an unavailable category never prevents
+the rest of an edition from appearing.
+
+The API Server also retrieves fresh market data for trade panels. Editorial
+pages remain immutable snapshots in storage while their associated market
+prices and charts can update independently.
+
+### Forecaster Times UI
+
+The Next.js reader loads global metadata, the edition manifest, and only the
+published pages named by that manifest. It presents those pages as a newspaper,
+then hydrates their trade panels with current data and lets a connected wallet
+place trades on active Polymarket markets.
+
+### Scheduled Publication
+
+A cron job runs the engine as a long-lived Bun service. Its `EDITION_CRON`
+environment variable can be set to the desired cadence—for example, every six
+hours during active testing or once per day for regular publication. The current
+deployment schedule is documented in the [cron package guide](./cron/README.md).
 
 ## Packages
 
