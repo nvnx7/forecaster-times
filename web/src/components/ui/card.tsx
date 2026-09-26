@@ -18,7 +18,7 @@ function Card({
       className={cn(
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-none border py-(--card-spacing) text-sm [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
         variant === "quote"
-          ? "border-foreground bg-transparent text-foreground"
+          ? "border-rule bg-paper-inset/45 text-foreground"
           : "bg-card text-card-foreground",
         className,
       )}
@@ -102,7 +102,7 @@ function CardFooter({
       className={cn(
         "flex items-center rounded-none p-(--card-spacing)",
         variant === "quote"
-          ? "grid grid-cols-2 gap-2 border-t bg-transparent"
+          ? "grid grid-cols-2 gap-2 border-rule border-t bg-paper-inset/65"
           : "border-t bg-muted/50",
         className,
       )}
